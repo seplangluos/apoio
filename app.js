@@ -1,5 +1,6 @@
 // Sistema GLUOS - Gerência de Licenciamento de Uso e Ocupação do Solo
-// Versão integrada com Firebase Realtime Database
+// Versão integrada com Firebase Realtime Database + Relatórios Admin
+// VERSÃO CORRIGIDA - Bugs de input e login resolvidos
 
 // ===== CONFIGURAÇÃO FIREBASE =====
 // INSTRUÇÃO: Substitua os valores abaixo pela sua configuração do Firebase
@@ -24,7 +25,7 @@ function debugLog(message, data = null) {
 
 // ===== DADOS DA APLICAÇÃO =====
 const GLUOS_DATA = {
-    usuarios: ["Eduardo", "Wendel", "Júlia", "Tati", "Sônia", "Rita", "Mara"],
+    usuarios: ["Eduardo", "Wendel", "Júlia", "Tati", "Sônia", "Rita", "Mara", "Admin"],
     assuntos: [
         {id: 1, texto: "Separar e Preparar os Processos Agendados no Dia"},
         {id: 2, texto: "Inserção de Avisos de Vistoria na E&L"},
@@ -85,10 +86,40 @@ let userPasswords = {};
 let entriesListener = null;
 let passwordsListener = null;
 
+// ===== PROTEÇÃO DOM - Evitar corrupção da página =====
+function protectDOM() {
+    // Prevenir eventos que podem corromper a página
+    document.addEventListener('selectstart', function(e) {
+        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA')) {
+            // Permitir seleção em campos de formulário
+            return;
+        }
+        // Para outros elementos, prevenir seleção acidental
+        if (e.ctrlKey) {
+            e.preventDefault();
+        }
+    }, false);
+
+    // Prevenir Ctrl+A em contextos perigosos
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 'a') {
+            const activeElement = document.activeElement;
+            if (!activeElement || (activeElement.tagName !== 'INPUT' && activeElement.tagName !== 'TEXTAREA' && activeElement.tagName !== 'SELECT')) {
+                e.preventDefault();
+                debugLog('Prevented dangerous Ctrl+A');
+            }
+        }
+    }, false);
+}
+
 // ===== INICIALIZAÇÃO PRINCIPAL =====
 document.addEventListener('DOMContentLoaded', function() {
     debugLog('DOM loaded, starting GLUOS Firebase initialization');
     
+    // Proteger DOM contra corrupção
+    protectDOM();
+    
+    // Aguardar um momento para garantir DOM estável
     setTimeout(() => {
         try {
             // Verificar se Firebase deve ser inicializado
@@ -113,7 +144,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error during initialization:', error);
             updateFirebaseStatus('error', 'Erro na inicialização');
         }
-    }, 200);
+    }, 500);
 });
 
 // ===== VERIFICAR CONFIGURAÇÃO FIREBASE =====
@@ -194,7 +225,7 @@ function initializeApp() {
             populateSubjectSelect();
             populateFilterSelects();
             debugLog('Selects populated successfully');
-        }, 100);
+        }, 300);
         
         showScreen('login');
         debugLog('App initialization completed successfully');
@@ -425,46 +456,67 @@ function setupRealtimeListeners() {
     }
 }
 
-// ===== CONFIGURAR EVENT LISTENERS =====
+// ===== CONFIGURAR EVENT LISTENERS - VERSÃO CORRIGIDA =====
 function setupEventListeners() {
     debugLog('Setting up event listeners - INÍCIO');
     
-    // ===== LOGIN - CORRIGIDO =====
+    // Aguardar elementos estarem disponíveis
+    setTimeout(() => {
+        setupLoginListeners();
+        setupNavigationListeners();
+        setupFormListeners();
+        setupModalListeners();
+        setupReportsListeners();
+        
+        debugLog('Event listeners setup COMPLETED successfully');
+    }, 100);
+}
+
+function setupLoginListeners() {
     const loginForm = document.getElementById('login-form');
     const loginBtn = document.getElementById('login-btn');
     
-    if (loginForm && loginBtn) {
-        debugLog('Login elements found - setting up listeners');
+    if (loginForm) {
+        debugLog('Login form found - setting up listeners');
         
-        // Event listener para o form
-        loginForm.addEventListener('submit', function(e) {
+        // Remover listeners antigos se existirem
+        const newForm = loginForm.cloneNode(true);
+        loginForm.parentNode.replaceChild(newForm, loginForm);
+        
+        // Configurar novo listener
+        newForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
             debugLog('LOGIN FORM SUBMIT TRIGGERED!');
-            e.preventDefault();
             handleLogin(e);
-        });
+            return false;
+        }, true);
         
-        // Event listener para o botão (backup)
-        loginBtn.addEventListener('click', function(e) {
-            debugLog('LOGIN BUTTON CLICKED!');
-            e.preventDefault();
-            handleLogin(e);
-        });
-        
-        debugLog('Login listeners configured successfully');
-    } else {
-        console.error('CRITICAL: Login elements not found!');
+        debugLog('Login form listener configured successfully');
     }
     
-    // ===== DASHBOARD NAVIGATION =====
-    setupNavigationListeners();
+    if (loginBtn) {
+        debugLog('Login button found - setting up click listener');
+        
+        // Remover listeners antigos
+        const newBtn = loginBtn.cloneNode(true);
+        loginBtn.parentNode.replaceChild(newBtn, loginBtn);
+        
+        // Configurar novo listener
+        newBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            debugLog('LOGIN BUTTON CLICKED!');
+            handleLogin(e);
+            return false;
+        }, true);
+        
+        debugLog('Login button listener configured successfully');
+    }
     
-    // ===== FORMS =====
-    setupFormListeners();
-    
-    // ===== MODALS =====
-    setupModalListeners();
-    
-    debugLog('Event listeners setup COMPLETED successfully');
+    if (!loginForm || !loginBtn) {
+        console.error('CRITICAL: Login elements not found!');
+    }
 }
 
 function setupNavigationListeners() {
@@ -474,22 +526,26 @@ function setupNavigationListeners() {
             id: 'new-entry-btn', 
             action: () => {
                 showScreen('new-entry');
-                // Repovoar select quando a tela for mostrada
                 setTimeout(populateSubjectSelect, 100);
             }
         },
         { id: 'search-btn', action: () => showScreen('search') },
         { id: 'database-btn', action: () => { showScreen('database'); loadDatabaseTable(); } },
         { id: 'profile-btn', action: showProfileModal },
+        { id: 'reports-btn', action: () => showScreen('reports') },
         { id: 'back-to-dashboard-1', action: () => showScreen('dashboard') },
         { id: 'back-to-dashboard-2', action: () => showScreen('dashboard') },
-        { id: 'back-to-dashboard-3', action: () => showScreen('dashboard') }
+        { id: 'back-to-dashboard-3', action: () => showScreen('dashboard') },
+        { id: 'back-to-dashboard-reports', action: () => showScreen('dashboard') }
     ];
     
     navigationButtons.forEach(btn => {
         const element = document.getElementById(btn.id);
         if (element) {
-            element.addEventListener('click', btn.action);
+            element.addEventListener('click', function(e) {
+                e.preventDefault();
+                btn.action();
+            });
             debugLog(`Navigation button ${btn.id} configured`);
         }
     });
@@ -564,6 +620,13 @@ function setupModalListeners() {
     }
 }
 
+function setupReportsListeners() {
+    const generateReportBtn = document.getElementById('generate-report');
+    if (generateReportBtn) {
+        generateReportBtn.addEventListener('click', handleGenerateReport);
+    }
+}
+
 // ===== GERENCIAMENTO DE TELAS =====
 function showScreen(screenName) {
     debugLog(`Changing to screen: ${screenName}`);
@@ -585,21 +648,23 @@ function showScreen(screenName) {
             setTimeout(() => {
                 populateSubjectSelect();
                 debugLog('Subject select repopulated for new-entry screen');
-            }, 50);
+            }, 100);
         }
     } else {
         console.error(`Screen not found: ${screenName}-screen`);
     }
 }
 
-// ===== LOGIN - CORRIGIDO =====
+// ===== LOGIN - VERSÃO TOTALMENTE CORRIGIDA =====
 function handleLogin(e) {
     debugLog('=== INÍCIO DO PROCESSO DE LOGIN ===');
     
-    if (e && e.preventDefault) {
+    if (e) {
         e.preventDefault();
+        e.stopPropagation();
     }
     
+    // Buscar elementos sempre fresh
     const userSelect = document.getElementById('user-select');
     const passwordInput = document.getElementById('password');
     const loginError = document.getElementById('login-error');
@@ -607,27 +672,39 @@ function handleLogin(e) {
     if (!userSelect || !passwordInput) {
         console.error('CRITICAL: Login elements not found');
         showError('Erro interno: elementos de login não encontrados');
-        return;
+        return false;
     }
+    
+    debugLog('Login elements found successfully');
     
     // Mostrar loading
     setButtonLoading('login-btn', true);
     
-    // Pequeno delay para mostrar loading
+    // Pequeno delay para mostrar loading e garantir DOM estabilidade
     setTimeout(() => {
-        performLogin(userSelect, passwordInput, loginError);
+        try {
+            performLogin(userSelect, passwordInput, loginError);
+        } catch (error) {
+            console.error('Error in performLogin:', error);
+            setButtonLoading('login-btn', false);
+            showError('Erro interno durante login');
+        }
     }, 300);
+    
+    return false;
 }
 
 function performLogin(userSelect, passwordInput, loginError) {
-    const user = userSelect.value.trim();
-    const password = passwordInput.value.trim();
+    const user = userSelect ? userSelect.value.trim() : '';
+    const password = passwordInput ? passwordInput.value.trim() : '';
     
     debugLog('Login attempt:', {
         user: user,
         passwordLength: password.length,
         hasUser: !!user,
-        hasPassword: !!password
+        hasPassword: !!password,
+        userSelectFound: !!userSelect,
+        passwordInputFound: !!passwordInput
     });
     
     // Limpar erro anterior
@@ -677,10 +754,15 @@ function performLogin(userSelect, passwordInput, loginError) {
         userInfo.textContent = `Usuário: ${currentUser}`;
     }
     
+    // Configurar interface para Admin ou usuário normal
+    setupUserInterface(user);
+    
     // Limpar formulário
-    const loginForm = document.getElementById('login-form');
-    if (loginForm) {
-        loginForm.reset();
+    try {
+        if (userSelect) userSelect.value = '';
+        if (passwordInput) passwordInput.value = '';
+    } catch (error) {
+        debugLog('Error clearing form:', error);
     }
     
     // Remover loading
@@ -690,7 +772,41 @@ function performLogin(userSelect, passwordInput, loginError) {
     setTimeout(() => {
         showScreen('dashboard');
         debugLog('Redirected to dashboard successfully');
-    }, 200);
+    }, 500);
+}
+
+// ===== CONFIGURAÇÃO DA INTERFACE DO USUÁRIO =====
+function setupUserInterface(user) {
+    const reportsBtn = document.getElementById('reports-btn');
+    const dashboardButtons = document.querySelector('.dashboard-buttons');
+    
+    if (user === 'Admin') {
+        // Mostrar botão de relatórios para Admin
+        if (reportsBtn) {
+            reportsBtn.classList.remove('hidden');
+            reportsBtn.classList.add('visible');
+        }
+        
+        // Ajustar layout para 5 botões
+        if (dashboardButtons) {
+            dashboardButtons.classList.add('admin-layout');
+        }
+        
+        debugLog('Admin interface configured');
+    } else {
+        // Esconder botão de relatórios para usuários normais
+        if (reportsBtn) {
+            reportsBtn.classList.add('hidden');
+            reportsBtn.classList.remove('visible');
+        }
+        
+        // Layout normal para 4 botões
+        if (dashboardButtons) {
+            dashboardButtons.classList.remove('admin-layout');
+        }
+        
+        debugLog('Regular user interface configured');
+    }
 }
 
 // ===== GERENCIAMENTO DE SENHAS =====
@@ -938,6 +1054,238 @@ function clearDatabaseFilters() {
     loadDatabaseTable();
 }
 
+// ===== RELATÓRIOS - NOVA FUNCIONALIDADE =====
+function handleGenerateReport() {
+    debugLog('Generating productivity report');
+    
+    // Verificar se é Admin
+    if (currentUser !== 'Admin') {
+        showError('Apenas o Admin pode gerar relatórios.');
+        return;
+    }
+    
+    const startDate = document.getElementById('start-date').value;
+    const endDate = document.getElementById('end-date').value;
+    const dateError = document.getElementById('date-error');
+    
+    // Limpar erro anterior
+    if (dateError) {
+        dateError.classList.add('hidden');
+        dateError.textContent = '';
+    }
+    
+    // Validação das datas
+    if (startDate && endDate && startDate > endDate) {
+        showReportError('A data início não pode ser maior que a data final.');
+        return;
+    }
+    
+    setButtonLoading('generate-report', true);
+    
+    setTimeout(() => {
+        try {
+            generateProductivityReport(startDate, endDate);
+        } finally {
+            setButtonLoading('generate-report', false);
+        }
+    }, 500);
+}
+
+function generateProductivityReport(startDate, endDate) {
+    debugLog('Generating report with date filters:', { startDate, endDate });
+    
+    // Filtrar entradas por data
+    let filteredEntries = allEntries;
+    
+    if (startDate || endDate) {
+        filteredEntries = allEntries.filter(entry => {
+            const entryDate = convertDateToComparison(entry.date);
+            const start = startDate ? convertDateToComparison(startDate, true) : null;
+            const end = endDate ? convertDateToComparison(endDate, true) : null;
+            
+            let includeEntry = true;
+            
+            if (start && entryDate < start) {
+                includeEntry = false;
+            }
+            
+            if (end && entryDate > end) {
+                includeEntry = false;
+            }
+            
+            return includeEntry;
+        });
+    }
+    
+    debugLog(`Filtered entries: ${filteredEntries.length} of ${allEntries.length}`);
+    
+    // Gerar dados do relatório
+    const reportData = generateReportData(filteredEntries);
+    
+    // Exibir relatório
+    displayReport(reportData, startDate, endDate);
+}
+
+function convertDateToComparison(dateStr, isInputDate = false) {
+    if (isInputDate) {
+        // Formato yyyy-mm-dd do input date
+        const [year, month, day] = dateStr.split('-');
+        return `${day}/${month}/${year}`;
+    } else {
+        // Já está em formato dd/mm/yyyy
+        return dateStr;
+    }
+}
+
+function generateReportData(entries) {
+    debugLog('Processing report data for entries:', entries.length);
+    
+    const servers = ["Eduardo", "Wendel", "Júlia", "Tati", "Sônia", "Rita", "Mara", "Admin"];
+    const subjectStats = {};
+    const serverTotals = {};
+    let grandTotal = 0;
+    
+    // Inicializar totais por servidor
+    servers.forEach(server => {
+        serverTotals[server] = 0;
+    });
+    
+    // Processar cada entrada
+    entries.forEach(entry => {
+        const subjectId = entry.subjectId;
+        const subjectText = entry.subjectText;
+        const server = entry.server;
+        
+        // Inicializar estatísticas do assunto se não existir
+        if (!subjectStats[subjectId]) {
+            subjectStats[subjectId] = {
+                text: subjectText,
+                servers: {},
+                total: 0
+            };
+            
+            // Inicializar contadores por servidor para este assunto
+            servers.forEach(srv => {
+                subjectStats[subjectId].servers[srv] = 0;
+            });
+        }
+        
+        // Incrementar contadores
+        subjectStats[subjectId].servers[server]++;
+        subjectStats[subjectId].total++;
+        serverTotals[server]++;
+        grandTotal++;
+    });
+    
+    // Converter para array e ordenar por total (maior para menor)
+    const sortedSubjects = Object.keys(subjectStats)
+        .map(id => ({ 
+            id: parseInt(id), 
+            ...subjectStats[id] 
+        }))
+        .filter(subject => subject.total > 0)
+        .sort((a, b) => b.total - a.total);
+    
+    debugLog('Report data generated:', {
+        subjects: sortedSubjects.length,
+        grandTotal,
+        serverTotals
+    });
+    
+    return {
+        subjects: sortedSubjects,
+        serverTotals,
+        grandTotal,
+        servers
+    };
+}
+
+function displayReport(reportData, startDate, endDate) {
+    const reportContent = document.getElementById('report-content');
+    const reportTitle = document.getElementById('report-title');
+    const reportPeriod = document.getElementById('report-period');
+    const reportTbody = document.getElementById('report-tbody');
+    
+    if (!reportContent || !reportTbody) return;
+    
+    // Configurar título e período
+    if (reportTitle) {
+        reportTitle.textContent = 'Relatório de Produtividade GLUOS';
+    }
+    
+    if (reportPeriod) {
+        if (startDate && endDate) {
+            const formattedStart = formatDateForDisplay(startDate);
+            const formattedEnd = formatDateForDisplay(endDate);
+            reportPeriod.textContent = `${formattedStart} à ${formattedEnd}`;
+        } else if (startDate) {
+            const formattedStart = formatDateForDisplay(startDate);
+            reportPeriod.textContent = `A partir de ${formattedStart}`;
+        } else if (endDate) {
+            const formattedEnd = formatDateForDisplay(endDate);
+            reportPeriod.textContent = `Até ${formattedEnd}`;
+        } else {
+            reportPeriod.textContent = 'Todos os períodos';
+        }
+    }
+    
+    // Limpar tabela
+    reportTbody.innerHTML = '';
+    
+    // Preencher dados dos assuntos
+    reportData.subjects.forEach(subject => {
+        const row = document.createElement('tr');
+        
+        const percentage = reportData.grandTotal > 0 ? ((subject.total / reportData.grandTotal) * 100).toFixed(2) : '0.00';
+        
+        row.innerHTML = `
+            <td>${subject.text}</td>
+            <td class="number-cell">${subject.servers.Eduardo}</td>
+            <td class="number-cell">${subject.servers.Wendel}</td>
+            <td class="number-cell">${subject.servers.Júlia}</td>
+            <td class="number-cell">${subject.servers.Tati}</td>
+            <td class="number-cell">${subject.servers.Sônia}</td>
+            <td class="number-cell">${subject.servers.Rita}</td>
+            <td class="number-cell">${subject.servers.Mara}</td>
+            <td class="number-cell">${subject.servers.Admin}</td>
+            <td class="number-cell" style="font-weight: bold;">${subject.total}</td>
+            <td class="percent-cell">${percentage}%</td>
+        `;
+        
+        reportTbody.appendChild(row);
+    });
+    
+    // Atualizar linha de totais
+    document.getElementById('total-eduardo').textContent = reportData.serverTotals.Eduardo;
+    document.getElementById('total-wendel').textContent = reportData.serverTotals.Wendel;
+    document.getElementById('total-julia').textContent = reportData.serverTotals.Júlia;
+    document.getElementById('total-tati').textContent = reportData.serverTotals.Tati;
+    document.getElementById('total-sonia').textContent = reportData.serverTotals.Sônia;
+    document.getElementById('total-rita').textContent = reportData.serverTotals.Rita;
+    document.getElementById('total-mara').textContent = reportData.serverTotals.Mara;
+    document.getElementById('total-admin').textContent = reportData.serverTotals.Admin;
+    document.getElementById('total-geral').textContent = reportData.grandTotal;
+    
+    // Mostrar relatório
+    reportContent.classList.remove('hidden');
+    
+    debugLog('Report displayed successfully');
+}
+
+function formatDateForDisplay(dateStr) {
+    // Converter yyyy-mm-dd para dd/mm/yyyy
+    const [year, month, day] = dateStr.split('-');
+    return `${day}/${month}/${year}`;
+}
+
+function showReportError(message) {
+    const dateError = document.getElementById('date-error');
+    if (dateError) {
+        dateError.textContent = message;
+        dateError.classList.remove('hidden');
+    }
+}
+
 // ===== PERFIL DO USUÁRIO =====
 function showProfileModal() {
     if (!currentUser) {
@@ -1060,10 +1408,15 @@ function showError(message) {
 function handleLogout() {
     debugLog('Logging out');
     currentUser = null;
+    
     const userInfo = document.getElementById('user-info');
     if (userInfo) {
         userInfo.textContent = 'Bem-vindo!';
     }
+    
+    // Reset da interface
+    setupUserInterface('');
+    
     showScreen('login');
 }
 
@@ -1109,7 +1462,9 @@ function showToast(message, type = 'info') {
     
     // Auto-hide após 3 segundos
     setTimeout(() => {
-        toast.classList.add('hidden');
+        if (toast) {
+            toast.classList.add('hidden');
+        }
     }, 3000);
 }
 
@@ -1194,7 +1549,7 @@ function updateDateTime() {
     }
 }
 
-// ===== POPULAR SELECTS - CORRIGIDO =====
+// ===== POPULAR SELECTS - VERSÃO CORRIGIDA =====
 function populateSubjectSelect() {
     debugLog('Populating subject select - START');
     
@@ -1206,55 +1561,60 @@ function populateSubjectSelect() {
     
     debugLog('Subject select element found, clearing and populating...');
     
-    // Limpar opções existentes
-    select.innerHTML = '';
-    
-    // Adicionar opção padrão
-    const defaultOption = document.createElement('option');
-    defaultOption.value = '';
-    defaultOption.textContent = '-- Selecione o assunto --';
-    select.appendChild(defaultOption);
-    
-    // Adicionar todas as opções de assuntos
-    GLUOS_DATA.assuntos.forEach(assunto => {
-        const option = document.createElement('option');
-        option.value = assunto.id;
-        option.textContent = `${assunto.id} - ${assunto.texto}`;
-        select.appendChild(option);
-    });
-    
-    debugLog(`Subject select populated with ${GLUOS_DATA.assuntos.length} options:`, {
-        totalOptions: select.options.length,
-        firstOptionText: select.options[0]?.textContent,
-        lastOptionText: select.options[select.options.length - 1]?.textContent
-    });
+    // Limpar opções existentes de forma segura
+    try {
+        select.innerHTML = '';
+        
+        // Adicionar opção padrão
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = '-- Selecione o assunto --';
+        select.appendChild(defaultOption);
+        
+        // Adicionar todas as opções de assuntos
+        GLUOS_DATA.assuntos.forEach(assunto => {
+            const option = document.createElement('option');
+            option.value = assunto.id;
+            option.textContent = `${assunto.id} - ${assunto.texto}`;
+            select.appendChild(option);
+        });
+        
+        debugLog(`Subject select populated with ${GLUOS_DATA.assuntos.length} options successfully`);
+        
+    } catch (error) {
+        console.error('Error populating subject select:', error);
+    }
 }
 
 function populateFilterSelects() {
     debugLog('Populating filter selects');
     
-    const serverSelect = document.getElementById('filter-server');
-    if (serverSelect) {
-        serverSelect.innerHTML = '<option value="">Todos</option>';
-        GLUOS_DATA.usuarios.forEach(usuario => {
-            const option = document.createElement('option');
-            option.value = usuario;
-            option.textContent = usuario;
-            serverSelect.appendChild(option);
-        });
-        debugLog('Server filter populated');
-    }
-    
-    const subjectSelect = document.getElementById('filter-subject');
-    if (subjectSelect) {
-        subjectSelect.innerHTML = '<option value="">Todos</option>';
-        GLUOS_DATA.assuntos.forEach(assunto => {
-            const option = document.createElement('option');
-            option.value = assunto.id;
-            option.textContent = `${assunto.id} - ${assunto.texto}`;
-            subjectSelect.appendChild(option);
-        });
-        debugLog('Subject filter populated');
+    try {
+        const serverSelect = document.getElementById('filter-server');
+        if (serverSelect) {
+            serverSelect.innerHTML = '<option value="">Todos</option>';
+            GLUOS_DATA.usuarios.forEach(usuario => {
+                const option = document.createElement('option');
+                option.value = usuario;
+                option.textContent = usuario;
+                serverSelect.appendChild(option);
+            });
+            debugLog('Server filter populated');
+        }
+        
+        const subjectSelect = document.getElementById('filter-subject');
+        if (subjectSelect) {
+            subjectSelect.innerHTML = '<option value="">Todos</option>';
+            GLUOS_DATA.assuntos.forEach(assunto => {
+                const option = document.createElement('option');
+                option.value = assunto.id;
+                option.textContent = `${assunto.id} - ${assunto.texto}`;
+                subjectSelect.appendChild(option);
+            });
+            debugLog('Subject filter populated');
+        }
+    } catch (error) {
+        console.error('Error populating filter selects:', error);
     }
 }
 
@@ -1303,10 +1663,43 @@ window.addEventListener('beforeunload', () => {
     // Cleanup listeners
     if (entriesListener && window.firebaseFunctions) {
         const { ref, off } = window.firebaseFunctions;
-        off(ref(database, 'gluos_entries'), 'value', entriesListener);
+        try {
+            off(ref(database, 'gluos_entries'), 'value', entriesListener);
+        } catch (error) {
+            debugLog('Error cleaning up entries listener:', error);
+        }
     }
     if (passwordsListener && window.firebaseFunctions) {
         const { ref, off } = window.firebaseFunctions;
-        off(ref(database, 'gluos_passwords'), 'value', passwordsListener);
+        try {
+            off(ref(database, 'gluos_passwords'), 'value', passwordsListener);
+        } catch (error) {
+            debugLog('Error cleaning up passwords listener:', error);
+        }
     }
+});
+
+// ===== INICIALIZAÇÃO ADICIONAL =====
+// Garantir que tudo esteja funcionando após carregamento completo
+window.addEventListener('load', function() {
+    debugLog('Window fully loaded - final setup check');
+    
+    // Verificar se elementos críticos existem
+    setTimeout(() => {
+        const loginForm = document.getElementById('login-form');
+        const loginBtn = document.getElementById('login-btn');
+        
+        if (!loginForm || !loginBtn) {
+            console.error('CRITICAL ELEMENTS MISSING AFTER FULL LOAD!');
+        } else {
+            debugLog('All critical elements present after full load');
+        }
+        
+        // Re-setup listeners se necessário
+        if (loginForm && loginBtn && !loginForm.hasAttribute('data-listener-set')) {
+            debugLog('Re-setting up login listeners as backup');
+            setupLoginListeners();
+            loginForm.setAttribute('data-listener-set', 'true');
+        }
+    }, 1000);
 });

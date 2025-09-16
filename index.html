@@ -34,6 +34,7 @@
                                 <option value="Sônia">Sônia</option>
                                 <option value="Rita">Rita</option>
                                 <option value="Mara">Mara</option>
+                                <option value="Admin">Admin</option>
                             </select>
                         </div>
                         
@@ -87,6 +88,10 @@
                     <button id="profile-btn" class="btn btn--profile btn--lg">
                         <span class="profile-icon">👤</span>
                         Perfil
+                    </button>
+                    <button id="reports-btn" class="btn btn--reports btn--lg admin-only hidden">
+                        <span class="reports-icon">📊</span>
+                        Relatórios
                     </button>
                 </div>
             </div>
@@ -261,6 +266,92 @@
                                 </tr>
                             </thead>
                             <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de Relatórios -->
+    <div id="reports-screen" class="screen">
+        <div class="screen-header">
+            <div class="container">
+                <div class="header-content">
+                    <h2>Relatórios de Produtividade</h2>
+                    <button id="back-to-dashboard-reports" class="btn btn--outline">Voltar ao Dashboard</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="container">
+            <div class="reports-container">
+                <!-- Filtros de Data -->
+                <div class="reports-filters-card card">
+                    <div class="card__body">
+                        <h3>Período do Relatório</h3>
+                        <div class="date-filters-row">
+                            <div class="form-group">
+                                <label for="start-date" class="form-label">Data Início:</label>
+                                <input type="date" id="start-date" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="end-date" class="form-label">Data Final:</label>
+                                <input type="date" id="end-date" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <button type="button" id="generate-report" class="btn btn--reports">
+                                    <span id="generate-btn-text">Gerar Relatório</span>
+                                    <span id="generate-loader" class="hidden">Gerando...</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="date-error" class="error-message hidden"></div>
+                    </div>
+                </div>
+                
+                <!-- Área do Relatório -->
+                <div id="report-content" class="report-content hidden">
+                    <div class="report-header">
+                        <h2 id="report-title">Relatório de Produtividade GLUOS</h2>
+                        <p id="report-period" class="report-period"></p>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table id="report-table" class="report-table">
+                            <thead>
+                                <tr>
+                                    <th class="subject-column">Serviço/Assunto</th>
+                                    <th class="server-column">Eduardo</th>
+                                    <th class="server-column">Wendel</th>
+                                    <th class="server-column">Júlia</th>
+                                    <th class="server-column">Tati</th>
+                                    <th class="server-column">Sônia</th>
+                                    <th class="server-column">Rita</th>
+                                    <th class="server-column">Mara</th>
+                                    <th class="server-column">Admin</th>
+                                    <th class="total-column">TOTAL</th>
+                                    <th class="percent-column">%</th>
+                                </tr>
+                            </thead>
+                            <tbody id="report-tbody">
+                                <!-- Dados serão inseridos aqui via JavaScript -->
+                            </tbody>
+                            <tfoot>
+                                <tr class="total-row">
+                                    <th>TOTAL</th>
+                                    <th id="total-eduardo" class="total-cell">0</th>
+                                    <th id="total-wendel" class="total-cell">0</th>
+                                    <th id="total-julia" class="total-cell">0</th>
+                                    <th id="total-tati" class="total-cell">0</th>
+                                    <th id="total-sonia" class="total-cell">0</th>
+                                    <th id="total-rita" class="total-cell">0</th>
+                                    <th id="total-mara" class="total-cell">0</th>
+                                    <th id="total-admin" class="total-cell">0</th>
+                                    <th id="total-geral" class="total-general">0</th>
+                                    <th>100,00%</th>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 </div>
