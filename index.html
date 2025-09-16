@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GLUOS - Sistema de Produtividade</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Tela de Login -->
+    <div id="login-screen" class="screen active">
+        <div class="login-container">
+            <div class="login-card card">
+                <div class="card__body">
+                    <h1 class="login-title">GLUOS</h1>
+                    <p class="login-subtitle">Gerência de Licenciamento de Uso e Ocupação do Solo</p>
+                    <p class="login-description">Sistema de Produtividade</p>
+                    
+                    <form id="login-form">
+                        <div class="form-group">
+                            <label for="user-select" class="form-label">Selecione seu usuário:</label>
+                            <select id="user-select" class="form-control" required>
+                                <option value="">-- Selecione --</option>
+                                <option value="Eduardo">Eduardo</option>
+                                <option value="Wendel">Wendel</option>
+                                <option value="Júlia">Júlia</option>
+                                <option value="Tati">Tati</option>
+                                <option value="Sônia">Sônia</option>
+                                <option value="Rita">Rita</option>
+                                <option value="Mara">Mara</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="password" class="form-label">Senha:</label>
+                            <input type="password" id="password" class="form-control" placeholder="Digite 123" required>
+                        </div>
+                        
+                        <button type="submit" id="login-btn" class="btn btn--primary btn--full-width">Entrar</button>
+                    </form>
+                    
+                    <div id="login-error" class="error-message hidden"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Principal -->
+    <div id="dashboard-screen" class="screen">
+        <div class="dashboard-header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="header-info">
+                        <h2>Sistema GLUOS</h2>
+                        <p id="user-info">Bem-vindo!</p>
+                        <p id="datetime-info">Data e hora</p>
+                    </div>
+                    <button id="logout-btn" class="btn btn--outline">Sair</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="container">
+            <div class="dashboard-content">
+                <h3>Selecione uma opção:</h3>
+                <div class="dashboard-buttons">
+                    <button id="new-entry-btn" class="btn btn--success btn--lg">Nova Entrada</button>
+                    <button id="search-btn" class="btn btn--primary btn--lg">Pesquisar Processos</button>
+                    <button id="database-btn" class="btn btn--secondary btn--lg">Base de Dados Completa</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de Nova Entrada -->
+    <div id="new-entry-screen" class="screen">
+        <div class="screen-header">
+            <div class="container">
+                <div class="header-content">
+                    <h2>Nova Entrada</h2>
+                    <button id="back-to-dashboard-1" class="btn btn--outline">Voltar ao Dashboard</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="container">
+            <div class="form-container">
+                <form id="new-entry-form" class="card">
+                    <div class="card__body">
+                        <div class="form-group">
+                            <label for="process-number" class="form-label">Número do Processo: *</label>
+                            <input type="text" id="process-number" class="form-control" placeholder="Ex: 2024/001" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="ctm" class="form-label">CTM: *</label>
+                            <input type="text" id="ctm" class="form-control" placeholder="Ex: 12345" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="contributor" class="form-label">Contribuinte: *</label>
+                            <input type="text" id="contributor" class="form-control" placeholder="Nome do contribuinte" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="subject-number" class="form-label">Número do Assunto (opcional):</label>
+                            <input type="number" id="subject-number" class="form-control" min="1" max="44" placeholder="Digite o número (1-44)">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="subject-select" class="form-label">Ou selecione o assunto: *</label>
+                            <select id="subject-select" class="form-control" required>
+                                <option value="">-- Selecione o assunto --</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn--success btn--full-width">Salvar Entrada</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de Pesquisa -->
+    <div id="search-screen" class="screen">
+        <div class="screen-header">
+            <div class="container">
+                <div class="header-content">
+                    <h2>Pesquisar Processos</h2>
+                    <button id="back-to-dashboard-2" class="btn btn--outline">Voltar ao Dashboard</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="container">
+            <div class="search-container">
+                <div class="search-form card">
+                    <div class="card__body">
+                        <div class="form-group">
+                            <label for="search-process" class="form-label">Número do Processo:</label>
+                            <input type="text" id="search-process" class="form-control" placeholder="Digite o número do processo">
+                        </div>
+                        <button type="button" id="search-submit" class="btn btn--primary">Pesquisar</button>
+                    </div>
+                </div>
+                
+                <div id="search-results" class="results-container hidden">
+                    <h3>Resultados da Pesquisa</h3>
+                    <div class="table-container">
+                        <table id="search-table" class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Hora</th>
+                                    <th>Servidor</th>
+                                    <th>Assunto</th>
+                                    <th>CTM</th>
+                                    <th>Contribuinte</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela da Base de Dados -->
+    <div id="database-screen" class="screen">
+        <div class="screen-header">
+            <div class="container">
+                <div class="header-content">
+                    <h2>Base de Dados Completa</h2>
+                    <button id="back-to-dashboard-3" class="btn btn--outline">Voltar ao Dashboard</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="container">
+            <div class="database-container">
+                <div class="filters-card card">
+                    <div class="card__body">
+                        <h3>Filtros</h3>
+                        <div class="filters-row">
+                            <div class="form-group">
+                                <label for="filter-server" class="form-label">Servidor:</label>
+                                <select id="filter-server" class="form-control">
+                                    <option value="">Todos</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="filter-date" class="form-label">Data:</label>
+                                <input type="date" id="filter-date" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="filter-subject" class="form-label">Assunto:</label>
+                                <select id="filter-subject" class="form-control">
+                                    <option value="">Todos</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="button" id="apply-filters" class="btn btn--primary">Aplicar Filtros</button>
+                        <button type="button" id="clear-filters" class="btn btn--outline">Limpar Filtros</button>
+                    </div>
+                </div>
+                
+                <div class="database-results">
+                    <div class="results-header">
+                        <h3>Registros</h3>
+                        <span id="total-records" class="records-count">0 registros</span>
+                    </div>
+                    <div class="table-container">
+                        <table id="database-table" class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Hora</th>
+                                    <th>Servidor</th>
+                                    <th>N° Processo</th>
+                                    <th>CTM</th>
+                                    <th>Contribuinte</th>
+                                    <th>Assunto</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação -->
+    <div id="success-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Sucesso!</h3>
+            </div>
+            <div class="modal-body">
+                <p id="success-message">Entrada salva com sucesso!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="close-modal" class="btn btn--primary">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
