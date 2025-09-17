@@ -1,5 +1,5 @@
 // Sistema GLUOS - Gerência de Licenciamento de Uso e Ocupação do Solo
-// Versão integrada com Firebase Realtime Database
+// Versão integrada com Firebase Realtime Database - LOGIN TOTALMENTE CORRIGIDO
 
 // ===== CONFIGURAÇÃO FIREBASE =====
 // INSTRUÇÃO: Substitua os valores abaixo pela sua configuração do Firebase
@@ -19,6 +19,13 @@ const DEBUG_MODE = true;
 function debugLog(message, data = null) {
     if (DEBUG_MODE) {
         console.log(`[GLUOS DEBUG] ${message}`, data || '');
+        
+        // Mostrar debug visual na tela de login
+        const debugElement = document.getElementById('login-debug');
+        if (debugElement && message.includes('LOGIN')) {
+            debugElement.textContent = `${new Date().toLocaleTimeString()}: ${message}\n${JSON.stringify(data, null, 2)}`;
+            debugElement.classList.remove('hidden');
+        }
     }
 }
 
@@ -91,7 +98,6 @@ let isInitialized = false;
 document.addEventListener('DOMContentLoaded', function() {
     debugLog('DOM loaded, starting GLUOS Firebase initialization');
     
-    // Usar setTimeout para garantir que tudo carregue
     setTimeout(() => {
         try {
             initializeSystem();
@@ -99,13 +105,12 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error during initialization:', error);
             updateFirebaseStatus('error', 'Erro na inicialização');
         }
-    }, 100);
+    }, 300);
 });
 
 function initializeSystem() {
     debugLog('Starting system initialization');
     
-    // Verificar se Firebase deve ser inicializado
     checkFirebaseConfiguration();
     
     if (isFirebaseConfigured) {
@@ -115,16 +120,15 @@ function initializeSystem() {
         updateFirebaseStatus('warning', 'Configure Firebase no código');
     }
     
-    // Inicializar aplicação
     initializeApp();
     
-    // Configurar listeners
-    setupEventListeners();
+    setTimeout(() => {
+        setupEventListeners();
+        debugLog('Event listeners configured');
+    }, 100);
     
-    // Carregar dados
     loadData();
     
-    // Inicializar relógio
     updateDateTime();
     setInterval(updateDateTime, 1000);
     
@@ -155,7 +159,6 @@ async function initializeFirebase() {
     updateFirebaseStatus('warning', 'Conectando...');
     
     try {
-        // Usar import dinâmico para evitar erros de módulo
         const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js');
         const { 
             getDatabase, 
@@ -172,7 +175,6 @@ async function initializeFirebase() {
             goOnline
         } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js');
         
-        // Armazenar as funções do Firebase globalmente para uso posterior
         window.firebaseFunctions = {
             getDatabase, ref, set, get, push, onValue, off, remove, update, serverTimestamp, goOffline, goOnline
         };
@@ -180,7 +182,6 @@ async function initializeFirebase() {
         firebaseApp = initializeApp(firebaseConfig);
         database = getDatabase(firebaseApp);
         
-        // Configurar listeners offline/online
         window.addEventListener('online', handleOnline);
         window.addEventListener('offline', handleOffline);
         
@@ -189,7 +190,6 @@ async function initializeFirebase() {
         
         debugLog('Firebase initialized successfully');
         
-        // Aguardar um pouco antes de carregar dados
         setTimeout(() => {
             loadFirebaseData();
             setupRealtimeListeners();
@@ -207,9 +207,13 @@ function initializeApp() {
     debugLog('Starting app initialization');
     
     try {
-        populateSubjectSelect();
-        populateEditSubjectSelect();
-        populateFilterSelects();
+        setTimeout(() => {
+            populateSubjectSelect();
+            populateEditSubjectSelect();
+            populateFilterSelects();
+            debugLog('Selects populated successfully');
+        }, 200);
+        
         showScreen('login');
         debugLog('App initialization completed successfully');
     } catch (error) {
@@ -223,10 +227,8 @@ function updateFirebaseStatus(status, message) {
     const statusText = document.getElementById('firebase-status-text');
     
     if (indicator && statusText) {
-        // Remover classes antigas
         indicator.className = 'status-indicator';
         
-        // Adicionar nova classe
         switch(status) {
             case 'success':
                 indicator.classList.add('status-indicator--success');
@@ -244,7 +246,6 @@ function updateFirebaseStatus(status, message) {
         statusText.textContent = message;
     }
     
-    // Atualizar status de sincronização no dashboard
     const syncIndicator = document.getElementById('sync-indicator');
     const syncText = document.getElementById('sync-status-text');
     
@@ -304,7 +305,6 @@ async function loadFirebaseData() {
         
         const { ref, get } = window.firebaseFunctions;
         
-        // Carregar entradas
         const entriesRef = ref(database, 'gluos_entries');
         const entriesSnapshot = await get(entriesRef);
         
@@ -319,7 +319,6 @@ async function loadFirebaseData() {
             debugLog('No entries found in Firebase');
         }
         
-        // Carregar senhas
         const passwordsRef = ref(database, 'gluos_passwords');
         const passwordsSnapshot = await get(passwordsRef);
         
@@ -331,7 +330,6 @@ async function loadFirebaseData() {
             debugLog('No passwords found in Firebase');
         }
         
-        // Salvar backup local
         saveToLocalStorage();
         savePasswordsToLocalStorage();
         
@@ -339,7 +337,6 @@ async function loadFirebaseData() {
         
     } catch (error) {
         console.error('Error loading Firebase data:', error);
-        // Fallback para dados locais
         loadLocalData();
         updateFirebaseStatus('error', 'Erro ao carregar dados');
     } finally {
@@ -352,7 +349,6 @@ function loadLocalData() {
     debugLog('Loading data from localStorage');
     
     try {
-        // Carregar entradas
         const savedEntries = localStorage.getItem('gluos_entries');
         if (savedEntries) {
             allEntries = JSON.parse(savedEntries);
@@ -362,7 +358,6 @@ function loadLocalData() {
             allEntries = [];
         }
         
-        // Carregar senhas
         const savedPasswords = localStorage.getItem('gluos_user_passwords');
         if (savedPasswords) {
             userPasswords = JSON.parse(savedPasswords);
@@ -394,7 +389,6 @@ function setupRealtimeListeners() {
     try {
         const { ref, onValue } = window.firebaseFunctions;
         
-        // Listener para entradas
         const entriesRef = ref(database, 'gluos_entries');
         entriesListener = onValue(entriesRef, (snapshot) => {
             if (snapshot.exists()) {
@@ -407,17 +401,14 @@ function setupRealtimeListeners() {
                     allEntries = newEntries;
                     debugLog('Entries updated from Firebase realtime:', allEntries.length);
                     
-                    // Atualizar tabelas se estiverem visíveis
                     refreshCurrentView();
                     updateLastSync();
                     
-                    // Salvar local backup
                     saveToLocalStorage();
                 }
             }
         });
         
-        // Listener para senhas
         const passwordsRef = ref(database, 'gluos_passwords');
         passwordsListener = onValue(passwordsRef, (snapshot) => {
             if (snapshot.exists()) {
@@ -426,7 +417,6 @@ function setupRealtimeListeners() {
                     userPasswords = newPasswords;
                     debugLog('Passwords updated from Firebase realtime');
                     
-                    // Salvar local backup
                     savePasswordsToLocalStorage();
                 }
             }
@@ -439,36 +429,90 @@ function setupRealtimeListeners() {
     }
 }
 
-// ===== CONFIGURAR EVENT LISTENERS - SIMPLIFICADO =====
+// ===== CONFIGURAR EVENT LISTENERS =====
 function setupEventListeners() {
-    debugLog('Setting up event listeners');
+    debugLog('Setting up event listeners - INÍCIO');
     
-    // Login
+    setTimeout(() => {
+        try {
+            setupLoginListeners();
+            setupNavigationListeners();
+            setupFormListeners();
+            setupModalListeners();
+            
+            debugLog('Event listeners setup COMPLETED successfully');
+        } catch (error) {
+            console.error('Error setting up event listeners:', error);
+        }
+    }, 50);
+}
+
+// ===== LOGIN LISTENERS - TOTALMENTE CORRIGIDO =====
+function setupLoginListeners() {
+    debugLog('Setting up login listeners - TOTALMENTE CORRIGIDO');
+    
     const loginForm = document.getElementById('login-form');
     const loginBtn = document.getElementById('login-btn');
+    const userSelect = document.getElementById('user-select');
+    const passwordInput = document.getElementById('password');
     
-    if (loginForm) {
-        loginForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            handleLogin();
-        });
-        debugLog('Login form listener attached');
+    if (!loginForm || !loginBtn || !userSelect || !passwordInput) {
+        console.error('CRITICAL: Essential login elements not found!');
+        return;
     }
     
-    if (loginBtn) {
-        loginBtn.addEventListener('click', function(e) {
+    debugLog('All login elements found successfully');
+    
+    // Event listener para o form submit
+    loginForm.addEventListener('submit', function(e) {
+        debugLog('LOGIN FORM SUBMIT TRIGGERED!');
+        e.preventDefault();
+        e.stopPropagation();
+        handleLogin();
+        return false;
+    });
+    
+    // Event listener para o botão
+    loginBtn.addEventListener('click', function(e) {
+        debugLog('LOGIN BUTTON CLICKED!');
+        e.preventDefault();
+        e.stopPropagation();
+        handleLogin();
+        return false;
+    });
+    
+    // Event listener para Enter no campo de senha
+    passwordInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            debugLog('ENTER pressed in password input');
             e.preventDefault();
+            e.stopPropagation();
             handleLogin();
-        });
-        debugLog('Login button listener attached');
-    }
+            return false;
+        }
+    });
     
-    // Navigation
-    setupNavigationListeners();
-    setupFormListeners();
-    setupModalListeners();
+    // Event listener para Enter no select de usuário
+    userSelect.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            debugLog('ENTER pressed in user select');
+            e.preventDefault();
+            e.stopPropagation();
+            handleLogin();
+            return false;
+        }
+    });
     
-    debugLog('All event listeners setup completed');
+    // Debug de captura de valores
+    userSelect.addEventListener('change', function(e) {
+        debugLog('User select changed to:', e.target.value);
+    });
+    
+    passwordInput.addEventListener('input', function(e) {
+        debugLog('Password input changed - length:', e.target.value.length);
+    });
+    
+    debugLog('Login listeners configured successfully');
 }
 
 function setupNavigationListeners() {
@@ -501,13 +545,11 @@ function setupNavigationListeners() {
 }
 
 function setupFormListeners() {
-    // Nova entrada
     const newEntryForm = document.getElementById('new-entry-form');
     if (newEntryForm) {
         newEntryForm.addEventListener('submit', handleNewEntry);
     }
     
-    // Subject number/select sync
     const subjectNumber = document.getElementById('subject-number');
     const subjectSelect = document.getElementById('subject-select');
     
@@ -519,7 +561,6 @@ function setupFormListeners() {
         subjectSelect.addEventListener('change', handleSubjectSelectChange);
     }
     
-    // Pesquisa
     const searchSubmit = document.getElementById('search-submit');
     const searchProcess = document.getElementById('search-process');
     
@@ -536,13 +577,11 @@ function setupFormListeners() {
         });
     }
     
-    // Relatório pessoal
     const generatePersonalReport = document.getElementById('generate-personal-report');
     if (generatePersonalReport) {
         generatePersonalReport.addEventListener('click', handleGeneratePersonalReport);
     }
     
-    // Filtros
     const applyFilters = document.getElementById('apply-filters');
     const clearFilters = document.getElementById('clear-filters');
     
@@ -554,21 +593,19 @@ function setupFormListeners() {
         clearFilters.addEventListener('click', clearDatabaseFilters);
     }
     
-    // Edição
     const saveEditBtn = document.getElementById('save-edit-btn');
+    
     if (saveEditBtn) {
         saveEditBtn.addEventListener('click', handleSaveEdit);
     }
 }
 
 function setupModalListeners() {
-    // Success modal
     const closeModal = document.getElementById('close-modal');
     if (closeModal) {
         closeModal.addEventListener('click', hideModal);
     }
     
-    // Profile modal
     const passwordChangeForm = document.getElementById('password-change-form');
     const cancelProfile = document.getElementById('cancel-profile');
     
@@ -580,13 +617,11 @@ function setupModalListeners() {
         cancelProfile.addEventListener('click', hideProfileModal);
     }
     
-    // Edit modal
     const cancelEditBtn = document.getElementById('cancel-edit-btn');
     if (cancelEditBtn) {
         cancelEditBtn.addEventListener('click', hideEditModal);
     }
     
-    // Delete modal
     const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
     const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
     
@@ -603,19 +638,16 @@ function setupModalListeners() {
 function showScreen(screenName) {
     debugLog(`Changing to screen: ${screenName}`);
     
-    // Esconder todas as telas
     const allScreens = document.querySelectorAll('.screen');
     allScreens.forEach(screen => {
         screen.classList.remove('active');
     });
     
-    // Mostrar tela solicitada
     const targetScreen = document.getElementById(screenName + '-screen');
     if (targetScreen) {
         targetScreen.classList.add('active');
         debugLog(`Screen ${screenName} is now active`);
         
-        // Se for nova entrada, garantir que o select esteja populado
         if (screenName === 'new-entry') {
             setTimeout(() => {
                 populateSubjectSelect();
@@ -627,19 +659,21 @@ function showScreen(screenName) {
     }
 }
 
-// ===== LOGIN - SIMPLIFICADO =====
+// ===== LOGIN - TOTALMENTE CORRIGIDO E ROBUSTO =====
 function handleLogin() {
-    debugLog('=== STARTING LOGIN PROCESS ===');
+    debugLog('=== INÍCIO DO PROCESSO DE LOGIN TOTALMENTE CORRIGIDO ===');
     
     const userSelect = document.getElementById('user-select');
     const passwordInput = document.getElementById('password');
     const loginError = document.getElementById('login-error');
     
     if (!userSelect || !passwordInput) {
-        console.error('Login elements not found');
-        showError('Erro interno: elementos de login não encontrados');
+        console.error('CRITICAL: Login elements not found');
+        alert('ERRO CRÍTICO: Elementos de login não encontrados!');
         return;
     }
+    
+    debugLog('Login elements validated successfully');
     
     // Limpar erro anterior
     if (loginError) {
@@ -647,53 +681,116 @@ function handleLogin() {
         loginError.textContent = '';
     }
     
-    const user = userSelect.value.trim();
-    const password = passwordInput.value.trim();
+    // Mostrar loading
+    setButtonLoading('login-btn', true);
     
-    debugLog('Login attempt:', { user: user, passwordLength: password.length });
+    // Pequeno delay para mostrar o loading e processar
+    setTimeout(() => {
+        performLogin(userSelect, passwordInput, loginError);
+    }, 100);
+}
+
+function performLogin(userSelect, passwordInput, loginError) {
+    const selectedUser = userSelect.value.trim();
+    const typedPassword = passwordInput.value.trim();
     
-    // Validações
-    if (!user) {
-        showLoginError('Por favor, selecione um usuário.');
+    debugLog('LOGIN ATTEMPT - Values captured:', {
+        selectedUser: selectedUser,
+        passwordLength: typedPassword.length,
+        selectElement: !!userSelect,
+        passwordElement: !!passwordInput,
+        selectOptions: userSelect.length
+    });
+    
+    // Validações básicas rigorosas
+    if (!selectedUser || selectedUser === '') {
+        debugLog('LOGIN ERROR: No user selected');
+        showLoginError('Por favor, selecione um usuário na lista.');
+        setButtonLoading('login-btn', false);
         return;
     }
     
-    if (!password) {
+    if (!typedPassword || typedPassword === '') {
+        debugLog('LOGIN ERROR: No password entered');
         showLoginError('Por favor, digite sua senha.');
+        setButtonLoading('login-btn', false);
         return;
     }
     
-    // Verificar senha
-    const expectedPassword = getUserPassword(user);
-    debugLog('Password check:', { entered: password, expected: expectedPassword });
+    // VERIFICAÇÃO DO USUÁRIO NA BASE
+    const isValidUser = GLUOS_DATA.usuarios.includes(selectedUser);
     
-    if (password !== expectedPassword) {
-        showLoginError('Senha incorreta. Tente novamente.');
+    debugLog('LOGIN - User validation:', {
+        selectedUser: selectedUser,
+        isValidUser: isValidUser,
+        availableUsers: GLUOS_DATA.usuarios
+    });
+    
+    if (!isValidUser) {
+        debugLog('LOGIN ERROR: Invalid user selected');
+        showLoginError(`Usuário "${selectedUser}" não é válido.`);
+        setButtonLoading('login-btn', false);
         return;
     }
     
-    // LOGIN BEM-SUCEDIDO!
-    debugLog('=== LOGIN SUCCESSFUL ===', { user: user });
+    // VERIFICAÇÃO DE SENHA
+    const expectedPassword = getUserPassword(selectedUser);
     
-    currentUser = user;
+    debugLog('LOGIN - Password verification:', {
+        user: selectedUser,
+        typedPassword: typedPassword,
+        expectedPassword: expectedPassword,
+        passwordsDatabase: Object.keys(userPasswords),
+        match: typedPassword === expectedPassword
+    });
     
-    // Configurar interface baseado no tipo de usuário
-    configureUserInterface(user);
+    if (typedPassword !== expectedPassword) {
+        debugLog('LOGIN ERROR: Password mismatch');
+        showLoginError(`Senha incorreta para o usuário "${selectedUser}".`);
+        setButtonLoading('login-btn', false);
+        return;
+    }
     
-    // Atualizar interface
+    // ===== LOGIN BEM-SUCEDIDO! =====
+    debugLog('=== LOGIN SUCCESSFUL ===', { 
+        user: selectedUser,
+        loginTime: new Date().toISOString()
+    });
+    
+    currentUser = selectedUser;
+    
+    // Configurar interface baseada no tipo de usuário
+    configureUserInterface(selectedUser);
+    
+    // Atualizar informações do usuário na interface
     const userInfo = document.getElementById('user-info');
     if (userInfo) {
         userInfo.textContent = `Usuário: ${currentUser}`;
     }
     
-    // Limpar formulário
-    if (loginForm) {
-        loginForm.reset();
+    // LIMPAR FORMULÁRIO COMPLETAMENTE
+    userSelect.selectedIndex = 0; // Voltar ao primeiro option (placeholder)
+    passwordInput.value = '';
+    
+    debugLog('LOGIN - Form fields cleared successfully');
+    
+    // Esconder debug
+    const debugElement = document.getElementById('login-debug');
+    if (debugElement) {
+        debugElement.classList.add('hidden');
     }
     
-    // Ir para dashboard
-    showScreen('dashboard');
-    debugLog('Redirected to dashboard successfully');
+    // Remover loading
+    setButtonLoading('login-btn', false);
+    
+    // Redirecionar para dashboard
+    setTimeout(() => {
+        showScreen('dashboard');
+        debugLog('LOGIN - Successfully redirected to dashboard');
+        
+        // Mostrar mensagem de boas-vindas
+        showToast(`Bem-vindo(a), ${currentUser}!`, 'success');
+    }, 200);
 }
 
 function showLoginError(message) {
@@ -702,7 +799,8 @@ function showLoginError(message) {
         loginError.textContent = message;
         loginError.classList.remove('hidden');
     }
-    debugLog('Login error shown:', message);
+    
+    debugLog('LOGIN ERROR DISPLAYED:', message);
 }
 
 // ===== CONFIGURAR INTERFACE DO USUÁRIO =====
@@ -711,19 +809,16 @@ function configureUserInterface(user) {
     const personalReportBtn = document.getElementById('personal-report-btn');
     
     if (user === 'Admin') {
-        // Admin não pode criar novas entradas
         if (newEntryBtn) {
             newEntryBtn.style.display = 'none';
         }
         
-        // Admin não tem relatório pessoal
         if (personalReportBtn) {
             personalReportBtn.classList.add('hidden');
         }
         
         debugLog('Admin interface configured - Nova Entrada disabled');
     } else {
-        // Usuários comuns podem criar entradas e têm relatório pessoal
         if (newEntryBtn) {
             newEntryBtn.style.display = 'inline-flex';
         }
@@ -821,11 +916,9 @@ async function handleNewEntry(e) {
             timestamp: now.getTime()
         };
         
-        // Adicionar localmente primeiro
         allEntries.unshift(entry);
         saveToLocalStorage();
         
-        // Tentar salvar no Firebase se disponível
         if (isFirebaseInitialized && window.firebaseFunctions && isOnline) {
             try {
                 const { ref, push } = window.firebaseFunctions;
@@ -883,10 +976,9 @@ function handleGeneratePersonalReport() {
 }
 
 function generatePersonalReport(startDate, endDate) {
-    // Filtrar entradas do usuário no período
     const start = new Date(startDate);
     const end = new Date(endDate);
-    end.setHours(23, 59, 59, 999); // Final do dia
+    end.setHours(23, 59, 59, 999);
     
     const userEntries = allEntries.filter(entry => {
         if (entry.server !== currentUser) return false;
@@ -895,7 +987,6 @@ function generatePersonalReport(startDate, endDate) {
         return entryDate >= start && entryDate <= end;
     });
     
-    // Contar por assunto
     const subjectCounts = {};
     let totalEntries = 0;
     
@@ -915,10 +1006,8 @@ function generatePersonalReport(startDate, endDate) {
         totalEntries++;
     });
     
-    // Converter para array e ordenar por quantidade (maior para menor)
     const reportData = Object.values(subjectCounts).sort((a, b) => b.count - a.count);
     
-    // Exibir relatório
     displayPersonalReport(reportData, totalEntries, startDate, endDate);
 }
 
@@ -930,7 +1019,6 @@ function displayPersonalReport(data, totalEntries, startDate, endDate) {
     
     if (!resultsContainer || !tableBody) return;
     
-    // Configurar informações do relatório
     if (reportPeriod) {
         const start = new Date(startDate).toLocaleDateString('pt-BR');
         const end = new Date(endDate).toLocaleDateString('pt-BR');
@@ -941,7 +1029,6 @@ function displayPersonalReport(data, totalEntries, startDate, endDate) {
         reportUser.textContent = `Servidor: ${currentUser}`;
     }
     
-    // Limpar tabela
     tableBody.innerHTML = '';
     
     if (totalEntries === 0) {
@@ -953,7 +1040,6 @@ function displayPersonalReport(data, totalEntries, startDate, endDate) {
             </tr>
         `;
     } else {
-        // Adicionar linhas de dados
         data.forEach(item => {
             const percentage = ((item.count / totalEntries) * 100).toFixed(2);
             const row = document.createElement('tr');
@@ -965,7 +1051,6 @@ function displayPersonalReport(data, totalEntries, startDate, endDate) {
             tableBody.appendChild(row);
         });
         
-        // Adicionar linha total
         const totalRow = document.createElement('tr');
         totalRow.className = 'report-total-row';
         totalRow.innerHTML = `
@@ -976,7 +1061,6 @@ function displayPersonalReport(data, totalEntries, startDate, endDate) {
         tableBody.appendChild(totalRow);
     }
     
-    // Mostrar resultados
     resultsContainer.classList.remove('hidden');
     
     debugLog('Personal report generated:', {
@@ -1049,18 +1133,13 @@ function displaySearchResults(results, searchTerm) {
     resultsContainer.classList.remove('hidden');
 }
 
-// ===== BASE DE DADOS - COM BOTÕES RESTAURADOS =====
+// ===== BASE DE DADOS =====
 function loadDatabaseTable(filteredEntries = null) {
-    debugLog('Loading database table with edit/delete buttons');
-    
     const entries = filteredEntries || allEntries;
     const tableBody = document.querySelector('#database-table tbody');
     const totalRecords = document.getElementById('total-records');
     
-    if (!tableBody) {
-        debugLog('Database table body not found');
-        return;
-    }
+    if (!tableBody) return;
     
     tableBody.innerHTML = '';
     
@@ -1082,30 +1161,22 @@ function loadDatabaseTable(filteredEntries = null) {
     entries.forEach(entry => {
         const row = document.createElement('tr');
         
-        // VERIFICAR PERMISSÕES - CRÍTICO PARA OS BOTÕES
-        const canEditDelete = currentUser && 
-                             entry.server === currentUser && 
-                             currentUser !== 'Admin';
+        const canEditDelete = currentUser && entry.server === currentUser && currentUser !== 'Admin';
         
-        debugLog(`Entry ${entry.id}: server="${entry.server}", currentUser="${currentUser}", canEdit=${canEditDelete}`);
-        
-        // CRIAR BOTÕES DE AÇÃO
         let actionsHtml = '';
         if (canEditDelete) {
-            const entryKey = entry.firebaseKey || entry.id;
             actionsHtml = `
                 <div class="action-buttons">
-                    <button type="button" class="btn btn--small btn--edit" onclick="window.editEntry('${entryKey}')">
+                    <button class="btn btn--small btn--edit" onclick="showEditModal('${entry.firebaseKey || entry.id}')">
                         Editar
                     </button>
-                    <button type="button" class="btn btn--small btn--delete" onclick="window.deleteEntry('${entryKey}')">
+                    <button class="btn btn--small btn--delete" onclick="showDeleteModal('${entry.firebaseKey || entry.id}')">
                         Excluir
                     </button>
                 </div>
             `;
-            debugLog(`Buttons created for entry ${entryKey}`);
         } else {
-            actionsHtml = '<span style="color: var(--color-text-secondary); font-size: var(--font-size-xs);">-</span>';
+            actionsHtml = '-';
         }
         
         row.innerHTML = `
@@ -1121,13 +1192,11 @@ function loadDatabaseTable(filteredEntries = null) {
         `;
         tableBody.appendChild(row);
     });
-    
-    debugLog(`Database table loaded with ${entries.length} entries`);
 }
 
-// ===== EDIÇÃO DE ENTRADA - FUNÇÃO GLOBAL =====
-window.editEntry = function(entryId) {
-    debugLog('Edit entry called for:', entryId);
+// ===== EDIÇÃO DE ENTRADA =====
+function showEditModal(entryId) {
+    debugLog('Showing edit modal for entry:', entryId);
     
     const entry = allEntries.find(e => (e.firebaseKey || e.id.toString()) === entryId.toString());
     if (!entry) {
@@ -1135,7 +1204,6 @@ window.editEntry = function(entryId) {
         return;
     }
     
-    // Verificar permissões
     if (!currentUser || entry.server !== currentUser || currentUser === 'Admin') {
         showError('Você não tem permissão para editar esta entrada.');
         return;
@@ -1143,7 +1211,6 @@ window.editEntry = function(entryId) {
     
     currentEditingEntry = entry;
     
-    // Preencher formulário de edição
     document.getElementById('edit-entry-id').value = entryId;
     document.getElementById('edit-process-number').value = entry.processNumber;
     document.getElementById('edit-ctm').value = entry.ctm;
@@ -1151,51 +1218,17 @@ window.editEntry = function(entryId) {
     document.getElementById('edit-subject-select').value = entry.subjectId;
     document.getElementById('edit-observation').value = entry.observation || '';
     
-    // Limpar erro
     const editError = document.getElementById('edit-error');
     if (editError) {
         editError.classList.add('hidden');
         editError.textContent = '';
     }
     
-    // Mostrar modal
     const editModal = document.getElementById('edit-modal');
     if (editModal) {
         editModal.classList.remove('hidden');
-        debugLog('Edit modal shown');
     }
-};
-
-// ===== EXCLUSÃO DE ENTRADA - FUNÇÃO GLOBAL =====
-window.deleteEntry = function(entryId) {
-    debugLog('Delete entry called for:', entryId);
-    
-    const entry = allEntries.find(e => (e.firebaseKey || e.id.toString()) === entryId.toString());
-    if (!entry) {
-        showError('Entrada não encontrada.');
-        return;
-    }
-    
-    // Verificar permissões
-    if (!currentUser || entry.server !== currentUser || currentUser === 'Admin') {
-        showError('Você não tem permissão para excluir esta entrada.');
-        return;
-    }
-    
-    // Preencher informações no modal de confirmação
-    document.getElementById('delete-process-info').textContent = entry.processNumber;
-    document.getElementById('delete-subject-info').textContent = entry.subjectText;
-    
-    // Armazenar ID para exclusão
-    document.getElementById('confirm-delete-btn').setAttribute('data-entry-id', entryId);
-    
-    // Mostrar modal de confirmação
-    const deleteModal = document.getElementById('delete-modal');
-    if (deleteModal) {
-        deleteModal.classList.remove('hidden');
-        debugLog('Delete confirmation modal shown');
-    }
-};
+}
 
 function hideEditModal() {
     const editModal = document.getElementById('edit-modal');
@@ -1236,7 +1269,6 @@ async function handleSaveEdit() {
         
         const entryId = document.getElementById('edit-entry-id').value;
         
-        // Atualizar entrada localmente
         const entryIndex = allEntries.findIndex(e => 
             (e.firebaseKey || e.id.toString()) === entryId.toString()
         );
@@ -1245,7 +1277,6 @@ async function handleSaveEdit() {
             throw new Error('Entrada não encontrada para atualização.');
         }
         
-        // Atualizar dados mantendo metadados originais
         allEntries[entryIndex] = {
             ...allEntries[entryIndex],
             processNumber: processNumber,
@@ -1256,10 +1287,8 @@ async function handleSaveEdit() {
             observation: observation
         };
         
-        // Salvar localmente
         saveToLocalStorage();
         
-        // Tentar atualizar no Firebase se disponível
         if (isFirebaseInitialized && window.firebaseFunctions && isOnline && allEntries[entryIndex].firebaseKey) {
             try {
                 const { ref, update } = window.firebaseFunctions;
@@ -1281,7 +1310,7 @@ async function handleSaveEdit() {
         
         hideEditModal();
         showSuccessModal('Entrada atualizada com sucesso!');
-        loadDatabaseTable(); // Recarregar tabela
+        loadDatabaseTable();
         
         debugLog('Entry updated successfully:', allEntries[entryIndex]);
         
@@ -1294,6 +1323,32 @@ async function handleSaveEdit() {
         }
     } finally {
         setButtonLoading('save-edit-btn', false);
+    }
+}
+
+// ===== EXCLUSÃO DE ENTRADA =====
+function showDeleteModal(entryId) {
+    debugLog('Showing delete modal for entry:', entryId);
+    
+    const entry = allEntries.find(e => (e.firebaseKey || e.id.toString()) === entryId.toString());
+    if (!entry) {
+        showError('Entrada não encontrada.');
+        return;
+    }
+    
+    if (!currentUser || entry.server !== currentUser || currentUser === 'Admin') {
+        showError('Você não tem permissão para excluir esta entrada.');
+        return;
+    }
+    
+    document.getElementById('delete-process-info').textContent = entry.processNumber;
+    document.getElementById('delete-subject-info').textContent = entry.subjectText;
+    
+    document.getElementById('confirm-delete-btn').setAttribute('data-entry-id', entryId);
+    
+    const deleteModal = document.getElementById('delete-modal');
+    if (deleteModal) {
+        deleteModal.classList.remove('hidden');
     }
 }
 
@@ -1316,7 +1371,6 @@ async function handleConfirmDelete() {
     setButtonLoading('confirm-delete-btn', true);
     
     try {
-        // Encontrar entrada
         const entryIndex = allEntries.findIndex(e => 
             (e.firebaseKey || e.id.toString()) === entryId.toString()
         );
@@ -1327,16 +1381,13 @@ async function handleConfirmDelete() {
         
         const entry = allEntries[entryIndex];
         
-        // Verificar permissões novamente
         if (entry.server !== currentUser || currentUser === 'Admin') {
             throw new Error('Você não tem permissão para excluir esta entrada.');
         }
         
-        // Remover localmente
         allEntries.splice(entryIndex, 1);
         saveToLocalStorage();
         
-        // Tentar remover do Firebase se disponível
         if (isFirebaseInitialized && window.firebaseFunctions && isOnline && entry.firebaseKey) {
             try {
                 const { ref, remove } = window.firebaseFunctions;
@@ -1351,7 +1402,7 @@ async function handleConfirmDelete() {
         
         hideDeleteModal();
         showSuccessModal('Entrada excluída com sucesso!');
-        loadDatabaseTable(); // Recarregar tabela
+        loadDatabaseTable();
         
         debugLog('Entry deleted successfully:', { id: entryId });
         
@@ -1515,7 +1566,6 @@ function handleLogout() {
         userInfo.textContent = 'Bem-vindo!';
     }
     
-    // Reset interface
     const newEntryBtn = document.getElementById('new-entry-btn');
     const personalReportBtn = document.getElementById('personal-report-btn');
     
@@ -1556,7 +1606,6 @@ function showLoadingOverlay(show) {
 }
 
 function showToast(message, type = 'info') {
-    // Criar elemento toast se não existir
     let toast = document.getElementById('toast');
     if (!toast) {
         toast = document.createElement('div');
@@ -1565,12 +1614,10 @@ function showToast(message, type = 'info') {
         document.body.appendChild(toast);
     }
     
-    // Configurar toast
     toast.textContent = message;
     toast.className = `toast toast--${type}`;
     toast.classList.remove('hidden');
     
-    // Auto-hide após 3 segundos
     setTimeout(() => {
         toast.classList.add('hidden');
     }, 3000);
@@ -1585,7 +1632,6 @@ function updateLastSync() {
 }
 
 function refreshCurrentView() {
-    // Verificar qual tela está ativa e recarregar dados se necessário
     const currentScreen = document.querySelector('.screen.active');
     if (!currentScreen) return;
     
@@ -1594,7 +1640,6 @@ function refreshCurrentView() {
     if (screenId === 'database-screen') {
         loadDatabaseTable();
     } else if (screenId === 'search-screen') {
-        // Se há resultados de pesquisa, reexecutar a pesquisa
         const searchInput = document.getElementById('search-process');
         if (searchInput && searchInput.value.trim()) {
             handleSearch();
@@ -1609,7 +1654,6 @@ async function syncLocalData() {
         debugLog('Syncing local data to Firebase...');
         showToast('Sincronizando dados...', 'info');
         
-        // Recarregar do Firebase
         await loadFirebaseData();
         
         showToast('Dados sincronizados com sucesso!', 'success');
@@ -1657,9 +1701,9 @@ function updateDateTime() {
     }
 }
 
-// ===== POPULAR SELECTS =====
+// ===== POPULAR SELECTS - CORRIGIDO =====
 function populateSubjectSelect() {
-    debugLog('Populating subject select');
+    debugLog('Populating subject select - START');
     
     const select = document.getElementById('subject-select');
     if (!select) {
@@ -1667,16 +1711,15 @@ function populateSubjectSelect() {
         return;
     }
     
-    // Limpar opções existentes
+    debugLog('Subject select element found, clearing and populating...');
+    
     select.innerHTML = '';
     
-    // Adicionar opção padrão
     const defaultOption = document.createElement('option');
     defaultOption.value = '';
     defaultOption.textContent = '-- Selecione o assunto --';
     select.appendChild(defaultOption);
     
-    // Adicionar todas as opções de assuntos
     GLUOS_DATA.assuntos.forEach(assunto => {
         const option = document.createElement('option');
         option.value = assunto.id;
@@ -1696,16 +1739,13 @@ function populateEditSubjectSelect() {
         return;
     }
     
-    // Limpar opções existentes
     select.innerHTML = '';
     
-    // Adicionar opção padrão
     const defaultOption = document.createElement('option');
     defaultOption.value = '';
     defaultOption.textContent = '-- Selecione o assunto --';
     select.appendChild(defaultOption);
     
-    // Adicionar todas as opções de assuntos
     GLUOS_DATA.assuntos.forEach(assunto => {
         const option = document.createElement('option');
         option.value = assunto.id;
@@ -1784,9 +1824,12 @@ function hideModal() {
     }
 }
 
+// ===== FUNÇÕES GLOBAIS =====
+window.showEditModal = showEditModal;
+window.showDeleteModal = showDeleteModal;
+
 // ===== CLEANUP =====
 window.addEventListener('beforeunload', () => {
-    // Cleanup listeners
     if (entriesListener && window.firebaseFunctions) {
         const { ref, off } = window.firebaseFunctions;
         off(ref(database, 'gluos_entries'), 'value', entriesListener);
@@ -1796,6 +1839,3 @@ window.addEventListener('beforeunload', () => {
         off(ref(database, 'gluos_passwords'), 'value', passwordsListener);
     }
 });
-
-// ===== DEBUG INFO =====
-debugLog('GLUOS JavaScript loaded successfully with FIXED login and edit/delete buttons');

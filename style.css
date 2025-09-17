@@ -820,19 +820,30 @@ select.form-control {
     text-align: left;
 }
 
-.user-select, .password-input {
+.user-input, .password-input {
     width: 100% !important;
     box-sizing: border-box !important;
     pointer-events: auto !important;
     position: relative !important;
     z-index: 10 !important;
+    background-color: var(--color-surface) !important;
+    border: 1px solid var(--color-border) !important;
 }
 
-.user-select {
-    -webkit-appearance: menulist !important;
-    -moz-appearance: menulist !important;
-    appearance: menulist !important;
-    cursor: pointer !important;
+.user-input {
+    cursor: text !important;
+}
+
+.user-input:focus {
+    border-color: var(--color-primary) !important;
+    outline: 2px solid var(--color-primary) !important;
+    outline-offset: 2px !important;
+}
+
+.password-input:focus {
+    border-color: var(--color-primary) !important;
+    outline: 2px solid var(--color-primary) !important;
+    outline-offset: 2px !important;
 }
 
 .login-button {
@@ -840,6 +851,11 @@ select.form-control {
     cursor: pointer !important;
     position: relative !important;
     z-index: 10 !important;
+}
+
+/* Datalist styles */
+datalist {
+    display: none;
 }
 
 /* Dashboard */
@@ -1039,6 +1055,7 @@ select.form-control option {
     margin-top: var(--space-16);
     text-align: center;
     border: 1px solid rgba(var(--color-error-rgb), 0.3);
+    font-weight: var(--font-weight-medium);
 }
 
 /* Relatório Pessoal */
@@ -1453,6 +1470,20 @@ input, select, textarea {
     z-index: 1 !important;
 }
 
+/* Debug info */
+.debug-info {
+    background: var(--color-bg-8);
+    color: var(--color-info);
+    padding: var(--space-8);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    margin-bottom: var(--space-16);
+    font-family: var(--font-family-mono);
+    border: 1px solid rgba(var(--color-info-rgb), 0.3);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
 /* Responsividade */
 @media (max-width: 767px) {
     .header-content {
@@ -1509,6 +1540,10 @@ input, select, textarea {
     
     .date-filters {
         grid-template-columns: 1fr;
+    }
+
+    .login-container {
+        padding: var(--space-16);
     }
 }
 
@@ -1604,17 +1639,6 @@ input, select, textarea {
         transform: translateX(0);
         opacity: 1;
     }
-}
-
-/* Debug info */
-.debug-info {
-    background: var(--color-bg-8);
-    color: var(--color-info);
-    padding: var(--space-8);
-    border-radius: var(--radius-sm);
-    font-size: var(--font-size-xs);
-    margin-top: var(--space-8);
-    font-family: var(--font-family-mono);
 }
 
 /* Print styles */
