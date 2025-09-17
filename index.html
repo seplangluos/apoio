@@ -81,21 +81,21 @@
         <div class="container">
             <div class="dashboard-content">
                 <h3>Selecione uma opção:</h3>
-                <div class="dashboard-buttons" id="dashboard-buttons">
-                    <button id="new-entry-btn" class="btn btn--success btn--lg user-only">Nova Entrada</button>
+                <div class="dashboard-buttons">
+                    <button id="new-entry-btn" class="btn btn--success btn--lg">Nova Entrada</button>
                     <button id="search-btn" class="btn btn--primary btn--lg">Pesquisar Processos</button>
-                    <button id="database-btn" class="btn btn--secondary btn--lg">Base de Dados</button>
+                    <button id="database-btn" class="btn btn--secondary btn--lg">Base de Dados Completa</button>
                     <button id="profile-btn" class="btn btn--profile btn--lg">
                         <span class="profile-icon">👤</span>
                         Perfil
                     </button>
-                    <button id="personal-report-btn" class="btn btn--reports btn--lg user-only">
-                        <span class="reports-icon">📊</span>
+                    <button id="personal-reports-btn" class="btn btn--personal-reports btn--lg user-only hidden">
+                        <span class="personal-reports-icon">📈</span>
                         Relatório Pessoal
                     </button>
-                    <button id="admin-reports-btn" class="btn btn--reports btn--lg admin-only hidden">
+                    <button id="reports-btn" class="btn btn--reports btn--lg admin-only hidden">
                         <span class="reports-icon">📊</span>
-                        Relatórios Admin
+                        Relatórios
                     </button>
                 </div>
             </div>
@@ -213,7 +213,7 @@
         <div class="screen-header">
             <div class="container">
                 <div class="header-content">
-                    <h2>Base de Dados</h2>
+                    <h2>Base de Dados Completa</h2>
                     <button id="back-to-dashboard-3" class="btn btn--outline">Voltar ao Dashboard</button>
                 </div>
             </div>
@@ -267,7 +267,6 @@
                                     <th>Contribuinte</th>
                                     <th>Assunto</th>
                                     <th>Observação</th>
-                                    <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -279,7 +278,7 @@
     </div>
 
     <!-- Tela de Relatório Pessoal -->
-    <div id="personal-report-screen" class="screen">
+    <div id="personal-reports-screen" class="screen">
         <div class="screen-header">
             <div class="container">
                 <div class="header-content">
@@ -290,8 +289,9 @@
         </div>
         
         <div class="container">
-            <div class="reports-container">
-                <div class="reports-filters-card card">
+            <div class="personal-reports-container">
+                <!-- Filtros de Data -->
+                <div class="personal-reports-filters-card card">
                     <div class="card__body">
                         <h3>Período do Relatório</h3>
                         <div class="date-filters-row">
@@ -304,7 +304,7 @@
                                 <input type="date" id="personal-end-date" class="form-control">
                             </div>
                             <div class="form-group">
-                                <button type="button" id="generate-personal-report" class="btn btn--reports">
+                                <button type="button" id="generate-personal-report" class="btn btn--personal-reports">
                                     <span id="generate-personal-btn-text">Gerar Relatório</span>
                                     <span id="generate-personal-loader" class="hidden">Gerando...</span>
                                 </button>
@@ -314,37 +314,56 @@
                     </div>
                 </div>
                 
-                <div id="personal-report-content" class="report-content hidden">
-                    <div class="report-header">
-                        <h2 id="personal-report-title">Meu Relatório de Produtividade</h2>
-                        <p id="personal-report-period" class="report-period"></p>
+                <!-- Área do Relatório Pessoal -->
+                <div id="personal-report-content" class="personal-report-content hidden">
+                    <div class="personal-report-header">
+                        <h2 id="personal-report-title">Relatório Pessoal de Produtividade</h2>
+                        <p id="personal-report-period" class="personal-report-period"></p>
+                        <p id="personal-report-user" class="personal-report-user"></p>
                     </div>
                     
+                    <!-- Tabela Principal de Assuntos -->
                     <div class="table-container">
-                        <table id="personal-report-table" class="data-table">
+                        <table id="personal-report-table" class="personal-report-table">
                             <thead>
                                 <tr>
-                                    <th>Data</th>
-                                    <th>Hora</th>
-                                    <th>N° Processo</th>
-                                    <th>CTM</th>
-                                    <th>Contribuinte</th>
-                                    <th>Assunto</th>
-                                    <th>Observação</th>
+                                    <th class="subject-column">Assunto</th>
+                                    <th class="total-column">Total</th>
+                                    <th class="percent-column">%</th>
                                 </tr>
                             </thead>
                             <tbody id="personal-report-tbody">
+                                <!-- Dados serão inseridos aqui via JavaScript -->
                             </tbody>
                         </table>
                     </div>
                     
-                    <div class="report-summary">
-                        <div class="summary-card card">
-                            <div class="card__body">
-                                <h3>Resumo</h3>
-                                <p><strong>Total de entradas:</strong> <span id="personal-total-entries">0</span></p>
-                                <p><strong>Período:</strong> <span id="personal-summary-period">-</span></p>
-                            </div>
+                    <!-- Tabela de Estatísticas -->
+                    <div class="personal-statistics-container">
+                        <h3>Estatísticas do Período</h3>
+                        <div class="statistics-table-container">
+                            <table id="personal-statistics-table" class="personal-statistics-table">
+                                <thead>
+                                    <tr>
+                                        <th>Estatística</th>
+                                        <th>Valor</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Período</td>
+                                        <td id="stats-period">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Quantidade de Entradas</td>
+                                        <td id="stats-total-entries">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Média Diária</td>
+                                        <td id="stats-daily-average">-</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -352,50 +371,52 @@
         </div>
     </div>
 
-    <!-- Tela de Relatórios Admin -->
-    <div id="admin-reports-screen" class="screen">
+    <!-- Tela de Relatórios Administrativos -->
+    <div id="reports-screen" class="screen">
         <div class="screen-header">
             <div class="container">
                 <div class="header-content">
-                    <h2>Relatórios Administrativos</h2>
-                    <button id="back-to-dashboard-admin" class="btn btn--outline">Voltar ao Dashboard</button>
+                    <h2>Relatórios de Produtividade</h2>
+                    <button id="back-to-dashboard-reports" class="btn btn--outline">Voltar ao Dashboard</button>
                 </div>
             </div>
         </div>
         
         <div class="container">
             <div class="reports-container">
+                <!-- Filtros de Data -->
                 <div class="reports-filters-card card">
                     <div class="card__body">
                         <h3>Período do Relatório</h3>
                         <div class="date-filters-row">
                             <div class="form-group">
-                                <label for="admin-start-date" class="form-label">Data Início:</label>
-                                <input type="date" id="admin-start-date" class="form-control">
+                                <label for="start-date" class="form-label">Data Início:</label>
+                                <input type="date" id="start-date" class="form-control">
                             </div>
                             <div class="form-group">
-                                <label for="admin-end-date" class="form-label">Data Final:</label>
-                                <input type="date" id="admin-end-date" class="form-control">
+                                <label for="end-date" class="form-label">Data Final:</label>
+                                <input type="date" id="end-date" class="form-control">
                             </div>
                             <div class="form-group">
-                                <button type="button" id="generate-admin-report" class="btn btn--reports">
-                                    <span id="generate-admin-btn-text">Gerar Relatório</span>
-                                    <span id="generate-admin-loader" class="hidden">Gerando...</span>
+                                <button type="button" id="generate-report" class="btn btn--reports">
+                                    <span id="generate-btn-text">Gerar Relatório</span>
+                                    <span id="generate-loader" class="hidden">Gerando...</span>
                                 </button>
                             </div>
                         </div>
-                        <div id="admin-date-error" class="error-message hidden"></div>
+                        <div id="date-error" class="error-message hidden"></div>
                     </div>
                 </div>
                 
-                <div id="admin-report-content" class="report-content hidden">
+                <!-- Área do Relatório -->
+                <div id="report-content" class="report-content hidden">
                     <div class="report-header">
-                        <h2 id="admin-report-title">Relatório de Produtividade GLUOS</h2>
-                        <p id="admin-report-period" class="report-period"></p>
+                        <h2 id="report-title">Relatório de Produtividade GLUOS</h2>
+                        <p id="report-period" class="report-period"></p>
                     </div>
                     
                     <div class="table-container">
-                        <table id="admin-report-table" class="report-table">
+                        <table id="report-table" class="report-table">
                             <thead>
                                 <tr>
                                     <th class="subject-column">Serviço/Assunto</th>
@@ -411,20 +432,21 @@
                                     <th class="percent-column">%</th>
                                 </tr>
                             </thead>
-                            <tbody id="admin-report-tbody">
+                            <tbody id="report-tbody">
+                                <!-- Dados serão inseridos aqui via JavaScript -->
                             </tbody>
                             <tfoot>
                                 <tr class="total-row">
                                     <th>TOTAL</th>
-                                    <th id="admin-total-eduardo" class="total-cell">0</th>
-                                    <th id="admin-total-wendel" class="total-cell">0</th>
-                                    <th id="admin-total-julia" class="total-cell">0</th>
-                                    <th id="admin-total-tati" class="total-cell">0</th>
-                                    <th id="admin-total-sonia" class="total-cell">0</th>
-                                    <th id="admin-total-rita" class="total-cell">0</th>
-                                    <th id="admin-total-mara" class="total-cell">0</th>
-                                    <th id="admin-total-admin" class="total-cell">0</th>
-                                    <th id="admin-total-geral" class="total-general">0</th>
+                                    <th id="total-eduardo" class="total-cell">0</th>
+                                    <th id="total-wendel" class="total-cell">0</th>
+                                    <th id="total-julia" class="total-cell">0</th>
+                                    <th id="total-tati" class="total-cell">0</th>
+                                    <th id="total-sonia" class="total-cell">0</th>
+                                    <th id="total-rita" class="total-cell">0</th>
+                                    <th id="total-mara" class="total-cell">0</th>
+                                    <th id="total-admin" class="total-cell">0</th>
+                                    <th id="total-geral" class="total-general">0</th>
                                     <th>100,00%</th>
                                 </tr>
                             </tfoot>
@@ -446,54 +468,6 @@
             </div>
             <div class="modal-footer">
                 <button type="button" id="close-modal" class="btn btn--primary">OK</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Edição -->
-    <div id="edit-modal" class="modal hidden">
-        <div class="modal-content modal-content--large">
-            <div class="modal-header">
-                <h3>Editar Entrada</h3>
-            </div>
-            <div class="modal-body">
-                <form id="edit-entry-form">
-                    <input type="hidden" id="edit-entry-id">
-                    
-                    <div class="form-group">
-                        <label for="edit-process-number" class="form-label">Número do Processo: *</label>
-                        <input type="text" id="edit-process-number" class="form-control" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="edit-ctm" class="form-label">CTM: *</label>
-                        <input type="text" id="edit-ctm" class="form-control" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="edit-contributor" class="form-label">Contribuinte: *</label>
-                        <input type="text" id="edit-contributor" class="form-control" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="edit-subject-select" class="form-label">Assunto: *</label>
-                        <select id="edit-subject-select" class="form-control" required>
-                            <option value="">-- Selecione o assunto --</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="edit-observation" class="form-label">Observação:</label>
-                        <textarea id="edit-observation" class="form-control" rows="4"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" id="save-edit-btn" class="btn btn--success">
-                    <span id="save-edit-text">Salvar Alterações</span>
-                    <span id="save-edit-loader" class="hidden">Salvando...</span>
-                </button>
-                <button type="button" id="cancel-edit-btn" class="btn btn--outline">Cancelar</button>
             </div>
         </div>
     </div>

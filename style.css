@@ -738,7 +738,7 @@ select.form-control {
 }
 
 /* END PERPLEXITY DESIGN SYSTEM */
-/* Estilos específicos da aplicação GLUOS com Firebase - VERSÃO CORRIGIDA */
+/* Estilos específicos da aplicação GLUOS com Firebase */
 
 /* Layout geral */
 .screen {
@@ -907,7 +907,7 @@ select.form-control {
     }
 }
 
-/* Layout para Admin com botões específicos */
+/* Quando admin está logado, ajustar grid */
 .dashboard-buttons.admin-layout {
     grid-template-columns: repeat(2, 1fr);
 }
@@ -919,22 +919,16 @@ select.form-control {
     }
 }
 
-/* Visibilidade de elementos por tipo de usuário */
-.user-only {
-    display: flex;
+/* Quando usuário normal está logado, ajustar grid para 5 botões */
+.dashboard-buttons.user-layout {
+    grid-template-columns: repeat(2, 1fr);
 }
 
-.admin-only {
-    display: none !important;
-}
-
-.admin-only.visible {
-    display: flex !important;
-}
-
-/* Para usuários Admin, ocultar elementos de usuário normal */
-.hide-for-admin .user-only {
-    display: none !important;
+@media (min-width: 768px) {
+    .dashboard-buttons.user-layout {
+        grid-template-columns: repeat(3, 1fr);
+        max-width: 900px;
+    }
 }
 
 /* Botões customizados */
@@ -966,6 +960,23 @@ select.form-control {
     border-color: var(--color-primary);
 }
 
+.btn--personal-reports {
+    background: var(--color-teal-600);
+    color: var(--color-btn-primary-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-8);
+}
+
+.btn--personal-reports:hover {
+    background: var(--color-teal-700);
+}
+
+.btn--personal-reports:active {
+    background: var(--color-teal-800);
+}
+
 .btn--reports {
     background: var(--color-orange-500);
     color: var(--color-btn-primary-text);
@@ -983,38 +994,26 @@ select.form-control {
     background: var(--color-red-500);
 }
 
-.profile-icon, .reports-icon {
+.profile-icon, .reports-icon, .personal-reports-icon {
     font-size: var(--font-size-lg);
 }
 
-/* Botões de ação pequenos */
-.btn--action {
-    padding: var(--space-4) var(--space-8);
-    font-size: var(--font-size-xs);
-    border-radius: var(--radius-sm);
-    margin: 0 var(--space-2);
+/* Admin-only elements */
+.admin-only {
+    display: none !important;
 }
 
-.btn--edit {
-    background: var(--color-bg-6);
-    color: var(--color-text);
-    border: 1px solid var(--color-warning);
+.admin-only.visible {
+    display: flex !important;
 }
 
-.btn--edit:hover {
-    background: var(--color-warning);
-    color: var(--color-btn-primary-text);
+/* User-only elements */
+.user-only {
+    display: none !important;
 }
 
-.btn--delete {
-    background: var(--color-bg-4);
-    color: var(--color-error);
-    border: 1px solid var(--color-error);
-}
-
-.btn--delete:hover {
-    background: var(--color-error);
-    color: var(--color-btn-primary-text);
+.user-only.visible {
+    display: flex !important;
 }
 
 /* Cabeçalhos das telas */
@@ -1187,7 +1186,187 @@ select.form-control option {
     color: var(--color-text-secondary);
 }
 
-/* ESTILOS ESPECÍFICOS PARA RELATÓRIOS */
+/* ESTILOS PARA RELATÓRIO PESSOAL */
+.personal-reports-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.personal-reports-filters-card {
+    margin-bottom: var(--space-32);
+}
+
+.personal-reports-filters-card h3 {
+    margin-bottom: var(--space-16);
+    color: var(--color-text);
+}
+
+.personal-report-content {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-card-border);
+    overflow: hidden;
+}
+
+.personal-report-header {
+    padding: var(--space-24);
+    background: var(--color-bg-2);
+    border-bottom: 1px solid var(--color-card-border-inner);
+    text-align: center;
+}
+
+.personal-report-header h2 {
+    margin: 0 0 var(--space-8) 0;
+    color: var(--color-primary);
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+}
+
+.personal-report-period {
+    margin: 0 0 var(--space-4) 0;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-medium);
+}
+
+.personal-report-user {
+    margin: 0;
+    color: var(--color-primary);
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semibold);
+}
+
+/* Tabela do Relatório Pessoal */
+.personal-report-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--font-size-sm);
+    background: var(--color-surface);
+    margin-bottom: var(--space-32);
+}
+
+.personal-report-table th {
+    background: var(--color-primary);
+    color: var(--color-btn-primary-text);
+    padding: var(--space-12) var(--space-16);
+    text-align: left;
+    font-weight: var(--font-weight-bold);
+    border: 1px solid var(--color-border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.personal-report-table .subject-column {
+    text-align: left;
+    min-width: 400px;
+    width: 60%;
+}
+
+.personal-report-table .total-column,
+.personal-report-table .percent-column {
+    min-width: 80px;
+    width: 20%;
+    text-align: center;
+}
+
+.personal-report-table td {
+    padding: var(--space-12) var(--space-16);
+    border: 1px solid var(--color-card-border-inner);
+    vertical-align: middle;
+}
+
+.personal-report-table td:first-child {
+    text-align: left;
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text);
+}
+
+.personal-report-table td:not(:first-child) {
+    text-align: center;
+    font-family: var(--font-family-mono);
+    font-weight: var(--font-weight-medium);
+}
+
+.personal-report-table tbody tr:nth-child(even) {
+    background: var(--color-bg-1);
+}
+
+.personal-report-table tbody tr:hover {
+    background: var(--color-bg-3);
+}
+
+/* Container de Estatísticas */
+.personal-statistics-container {
+    padding: var(--space-24);
+    background: var(--color-bg-2);
+    border-top: 1px solid var(--color-card-border-inner);
+}
+
+.personal-statistics-container h3 {
+    margin: 0 0 var(--space-16) 0;
+    color: var(--color-text);
+    text-align: center;
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold);
+}
+
+.statistics-table-container {
+    display: flex;
+    justify-content: center;
+}
+
+/* Tabela de Estatísticas */
+.personal-statistics-table {
+    width: auto;
+    max-width: 400px;
+    border-collapse: collapse;
+    font-size: var(--font-size-md);
+    background: var(--color-surface);
+    border-radius: var(--radius-base);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.personal-statistics-table th {
+    background: var(--color-teal-600);
+    color: var(--color-btn-primary-text);
+    padding: var(--space-12) var(--space-16);
+    font-weight: var(--font-weight-bold);
+    border: 1px solid var(--color-border);
+}
+
+.personal-statistics-table th:first-child {
+    text-align: left;
+    width: 60%;
+}
+
+.personal-statistics-table th:last-child {
+    text-align: center;
+    width: 40%;
+}
+
+.personal-statistics-table td {
+    padding: var(--space-12) var(--space-16);
+    border: 1px solid var(--color-card-border-inner);
+    vertical-align: middle;
+}
+
+.personal-statistics-table td:first-child {
+    text-align: left;
+    font-weight: var(--font-weight-medium);
+    background: var(--color-bg-1);
+}
+
+.personal-statistics-table td:last-child {
+    text-align: center;
+    font-family: var(--font-family-mono);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-primary);
+    background: var(--color-surface);
+}
+
+/* ESTILOS ESPECÍFICOS PARA RELATÓRIOS ADMINISTRATIVOS */
 .reports-container {
     max-width: 1400px;
     margin: 0 auto;
@@ -1244,7 +1423,7 @@ select.form-control option {
     font-weight: var(--font-weight-medium);
 }
 
-/* Tabela de Relatório Admin */
+/* Tabela de Relatório Administrativo */
 .report-table {
     width: 100%;
     border-collapse: collapse;
@@ -1322,37 +1501,6 @@ select.form-control option {
     font-size: var(--font-size-md);
 }
 
-/* Resumo do relatório pessoal */
-.report-summary {
-    margin-top: var(--space-24);
-}
-
-.summary-card {
-    max-width: 400px;
-    margin: 0 auto;
-}
-
-.summary-card h3 {
-    margin-bottom: var(--space-16);
-    color: var(--color-primary);
-}
-
-.summary-card p {
-    margin-bottom: var(--space-8);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.summary-card strong {
-    color: var(--color-text);
-}
-
-.summary-card span {
-    color: var(--color-primary);
-    font-weight: var(--font-weight-bold);
-}
-
 /* Tabelas */
 .table-container {
     overflow-x: auto;
@@ -1397,18 +1545,6 @@ select.form-control option {
 
 .data-table tbody tr:nth-child(even):hover {
     background: var(--color-bg-3);
-}
-
-/* Coluna de ações */
-.actions-column {
-    width: 120px;
-    text-align: center;
-    white-space: nowrap;
-}
-
-.actions-cell {
-    text-align: center;
-    white-space: nowrap;
 }
 
 /* Modal */
@@ -1618,19 +1754,22 @@ input, select, textarea {
         font-size: var(--font-size-base);
     }
     
-    .data-table, .report-table {
+    .data-table, .report-table, .personal-report-table {
         font-size: var(--font-size-xs);
     }
     
     .data-table th,
     .data-table td,
     .report-table th,
-    .report-table td {
+    .report-table td,
+    .personal-report-table th,
+    .personal-report-table td {
         padding: var(--space-8) var(--space-4);
         max-width: 120px;
     }
     
-    .report-table .subject-column {
+    .report-table .subject-column,
+    .personal-report-table .subject-column {
         min-width: 200px;
         max-width: 250px;
     }
@@ -1661,9 +1800,12 @@ input, select, textarea {
         grid-template-columns: 1fr;
     }
     
-    .actions-cell .btn--action {
-        display: block;
-        margin: var(--space-2) 0;
+    .personal-statistics-table {
+        font-size: var(--font-size-sm);
+    }
+    
+    .personal-statistics-container {
+        padding: var(--space-16);
     }
 }
 
@@ -1774,77 +1916,51 @@ input, select, textarea {
 
 /* Print styles */
 @media print {
-    .btn, .screen-header, .dashboard-header, .filters-card, .firebase-status, .sync-status, .reports-filters-card {
+    .btn, .screen-header, .dashboard-header, .filters-card, .firebase-status, .sync-status, .reports-filters-card, .personal-reports-filters-card {
         display: none;
     }
     
-    .report-table, .data-table {
+    .report-table, .data-table, .personal-report-table, .personal-statistics-table {
         font-size: 10px;
     }
     
     .report-table th, .report-table td,
-    .data-table th, .data-table td {
+    .data-table th, .data-table td,
+    .personal-report-table th, .personal-report-table td,
+    .personal-statistics-table th, .personal-statistics-table td {
         padding: 4px;
         border: 1px solid #000;
     }
     
-    .report-header {
+    .report-header, .personal-report-header {
         background: none;
         border: none;
         padding: var(--space-16);
     }
     
-    .report-content {
+    .report-content, .personal-report-content {
         border: none;
         box-shadow: none;
     }
 }
 
 /* Estilos específicos para números no relatório */
-.report-table .number-cell {
+.report-table .number-cell,
+.personal-report-table .number-cell {
     font-family: var(--font-family-mono);
     font-weight: var(--font-weight-medium);
 }
 
-.report-table .percent-cell {
+.report-table .percent-cell,
+.personal-report-table .percent-cell {
     font-family: var(--font-family-mono);
     font-weight: var(--font-weight-medium);
     color: var(--color-text-secondary);
 }
 
 /* Hover effects para a tabela de relatório */
-.report-table tbody tr:hover .number-cell {
+.report-table tbody tr:hover .number-cell,
+.personal-report-table tbody tr:hover .number-cell {
     color: var(--color-primary);
     font-weight: var(--font-weight-bold);
-}
-
-/* Debug da data - estilo especial para destacar problemas */
-.date-debug {
-    background: var(--color-bg-8);
-    border: 1px solid var(--color-info);
-    padding: var(--space-8);
-    border-radius: var(--radius-sm);
-    font-family: var(--font-family-mono);
-    font-size: var(--font-size-xs);
-    margin: var(--space-8) 0;
-}
-
-/* Estilos para destacar correções implementadas */
-.fixed-feature {
-    position: relative;
-}
-
-.fixed-feature::after {
-    content: "✓ CORRIGIDO";
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    background: var(--color-success);
-    color: var(--color-btn-primary-text);
-    font-size: 8px;
-    padding: 2px 4px;
-    border-radius: var(--radius-sm);
-    font-weight: var(--font-weight-bold);
-    z-index: 100;
-    pointer-events: none;
 }
