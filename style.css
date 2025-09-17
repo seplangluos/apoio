@@ -738,7 +738,7 @@ select.form-control {
 }
 
 /* END PERPLEXITY DESIGN SYSTEM */
-/* Estilos específicos da aplicação GLUOS com Firebase */
+/* Estilos específicos da aplicação GLUOS com Firebase - VERSÃO CORRIGIDA */
 
 /* Layout geral */
 .screen {
@@ -902,8 +902,39 @@ select.form-control {
 
 @media (min-width: 1024px) {
     .dashboard-buttons {
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(2, 1fr);
+        max-width: 800px;
     }
+}
+
+/* Layout para Admin com botões específicos */
+.dashboard-buttons.admin-layout {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+@media (min-width: 768px) {
+    .dashboard-buttons.admin-layout {
+        grid-template-columns: repeat(3, 1fr);
+        max-width: 900px;
+    }
+}
+
+/* Visibilidade de elementos por tipo de usuário */
+.user-only {
+    display: flex;
+}
+
+.admin-only {
+    display: none !important;
+}
+
+.admin-only.visible {
+    display: flex !important;
+}
+
+/* Para usuários Admin, ocultar elementos de usuário normal */
+.hide-for-admin .user-only {
+    display: none !important;
 }
 
 /* Botões customizados */
@@ -918,26 +949,6 @@ select.form-control {
 
 .btn--success:active {
     background: var(--color-teal-700);
-}
-
-.btn--info {
-    background: var(--color-bg-8);
-    color: var(--color-info);
-    border: 1px solid rgba(var(--color-info-rgb), 0.3);
-}
-
-.btn--info:hover {
-    background: rgba(var(--color-info-rgb), 0.1);
-    border-color: var(--color-info);
-}
-
-.btn--error {
-    background: var(--color-error);
-    color: var(--color-btn-primary-text);
-}
-
-.btn--error:hover {
-    background: rgba(var(--color-error-rgb), 0.8);
 }
 
 .btn--profile {
@@ -955,8 +966,55 @@ select.form-control {
     border-color: var(--color-primary);
 }
 
-.profile-icon {
+.btn--reports {
+    background: var(--color-orange-500);
+    color: var(--color-btn-primary-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-8);
+}
+
+.btn--reports:hover {
+    background: var(--color-orange-400);
+}
+
+.btn--reports:active {
+    background: var(--color-red-500);
+}
+
+.profile-icon, .reports-icon {
     font-size: var(--font-size-lg);
+}
+
+/* Botões de ação pequenos */
+.btn--action {
+    padding: var(--space-4) var(--space-8);
+    font-size: var(--font-size-xs);
+    border-radius: var(--radius-sm);
+    margin: 0 var(--space-2);
+}
+
+.btn--edit {
+    background: var(--color-bg-6);
+    color: var(--color-text);
+    border: 1px solid var(--color-warning);
+}
+
+.btn--edit:hover {
+    background: var(--color-warning);
+    color: var(--color-btn-primary-text);
+}
+
+.btn--delete {
+    background: var(--color-bg-4);
+    color: var(--color-error);
+    border: 1px solid var(--color-error);
+}
+
+.btn--delete:hover {
+    background: var(--color-error);
+    color: var(--color-btn-primary-text);
 }
 
 /* Cabeçalhos das telas */
@@ -1039,65 +1097,6 @@ select.form-control option {
     margin-top: var(--space-16);
     text-align: center;
     border: 1px solid rgba(var(--color-error-rgb), 0.3);
-}
-
-/* Relatório Pessoal */
-.report-container {
-    max-width: 1000px;
-    margin: 0 auto;
-}
-
-.report-form {
-    margin-bottom: var(--space-32);
-}
-
-.date-filters {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--space-16);
-    margin-bottom: var(--space-20);
-}
-
-@media (min-width: 768px) {
-    .date-filters {
-        grid-template-columns: 1fr 1fr;
-    }
-}
-
-.report-results {
-    margin-top: var(--space-32);
-}
-
-.report-period, .report-user {
-    margin-bottom: var(--space-16);
-    padding: var(--space-12);
-    background: var(--color-bg-3);
-    border-radius: var(--radius-base);
-    border: 1px solid var(--color-border);
-    font-weight: var(--font-weight-medium);
-    color: var(--color-text);
-}
-
-.report-table {
-    margin-top: var(--space-20);
-}
-
-.report-table th:nth-child(2),
-.report-table td:nth-child(2) {
-    text-align: center;
-    width: 80px;
-}
-
-.report-table th:nth-child(3),
-.report-table td:nth-child(3) {
-    text-align: center;
-    width: 80px;
-}
-
-.report-total-row {
-    background: var(--color-bg-2) !important;
-    font-weight: var(--font-weight-bold);
-    border-top: 2px solid var(--color-border);
 }
 
 /* Pesquisa */
@@ -1188,9 +1187,176 @@ select.form-control option {
     color: var(--color-text-secondary);
 }
 
+/* ESTILOS ESPECÍFICOS PARA RELATÓRIOS */
+.reports-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.reports-filters-card {
+    margin-bottom: var(--space-32);
+}
+
+.reports-filters-card h3 {
+    margin-bottom: var(--space-16);
+    color: var(--color-text);
+}
+
+.date-filters-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-16);
+    margin-bottom: var(--space-16);
+}
+
+@media (min-width: 768px) {
+    .date-filters-row {
+        grid-template-columns: auto auto auto;
+        align-items: end;
+    }
+}
+
+.report-content {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-card-border);
+    overflow: hidden;
+}
+
+.report-header {
+    padding: var(--space-24);
+    background: var(--color-bg-2);
+    border-bottom: 1px solid var(--color-card-border-inner);
+    text-align: center;
+}
+
+.report-header h2 {
+    margin: 0 0 var(--space-8) 0;
+    color: var(--color-primary);
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+}
+
+.report-period {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-medium);
+}
+
+/* Tabela de Relatório Admin */
+.report-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--font-size-sm);
+    background: var(--color-surface);
+}
+
+.report-table th {
+    background: var(--color-primary);
+    color: var(--color-btn-primary-text);
+    padding: var(--space-12) var(--space-8);
+    text-align: center;
+    font-weight: var(--font-weight-bold);
+    border: 1px solid var(--color-border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.report-table .subject-column {
+    text-align: left;
+    min-width: 300px;
+    max-width: 400px;
+}
+
+.report-table .server-column,
+.report-table .total-column,
+.report-table .percent-column {
+    min-width: 80px;
+    width: 80px;
+    text-align: center;
+}
+
+.report-table td {
+    padding: var(--space-8) var(--space-6);
+    border: 1px solid var(--color-card-border-inner);
+    text-align: center;
+    vertical-align: middle;
+}
+
+.report-table td:first-child {
+    text-align: left;
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text);
+    padding-left: var(--space-12);
+}
+
+.report-table tbody tr:nth-child(even) {
+    background: var(--color-bg-1);
+}
+
+.report-table tbody tr:hover {
+    background: var(--color-bg-3);
+}
+
+/* Linha de totais */
+.total-row th {
+    background: var(--color-teal-700);
+    color: var(--color-btn-primary-text);
+    font-weight: var(--font-weight-bold);
+    padding: var(--space-12) var(--space-8);
+    border: 1px solid var(--color-border);
+}
+
+.total-cell {
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text);
+    background: var(--color-bg-2);
+}
+
+.total-general {
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+    background: var(--color-bg-3);
+    font-size: var(--font-size-md);
+}
+
+/* Resumo do relatório pessoal */
+.report-summary {
+    margin-top: var(--space-24);
+}
+
+.summary-card {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.summary-card h3 {
+    margin-bottom: var(--space-16);
+    color: var(--color-primary);
+}
+
+.summary-card p {
+    margin-bottom: var(--space-8);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.summary-card strong {
+    color: var(--color-text);
+}
+
+.summary-card span {
+    color: var(--color-primary);
+    font-weight: var(--font-weight-bold);
+}
+
 /* Tabelas */
 .table-container {
     overflow-x: auto;
+    max-height: 80vh;
 }
 
 .data-table {
@@ -1207,6 +1373,9 @@ select.form-control option {
     font-weight: var(--font-weight-semibold);
     border-bottom: 1px solid var(--color-border);
     white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 5;
 }
 
 .data-table td {
@@ -1230,37 +1399,16 @@ select.form-control option {
     background: var(--color-bg-3);
 }
 
-/* Botões de ação na tabela */
-.action-buttons {
-    display: flex;
-    gap: var(--space-8);
+/* Coluna de ações */
+.actions-column {
+    width: 120px;
+    text-align: center;
     white-space: nowrap;
 }
 
-.btn--small {
-    padding: var(--space-4) var(--space-8);
-    font-size: var(--font-size-xs);
-    border-radius: var(--radius-sm);
-}
-
-.btn--edit {
-    background: var(--color-warning);
-    color: var(--color-btn-primary-text);
-    border: 1px solid rgba(var(--color-warning-rgb), 0.5);
-}
-
-.btn--edit:hover {
-    background: rgba(var(--color-warning-rgb), 0.8);
-}
-
-.btn--delete {
-    background: var(--color-error);
-    color: var(--color-btn-primary-text);
-    border: 1px solid rgba(var(--color-error-rgb), 0.5);
-}
-
-.btn--delete:hover {
-    background: rgba(var(--color-error-rgb), 0.8);
+.actions-cell {
+    text-align: center;
+    white-space: nowrap;
 }
 
 /* Modal */
@@ -1309,7 +1457,7 @@ select.form-control option {
 }
 
 .modal-body p {
-    margin: 0 0 var(--space-8) 0;
+    margin: 0;
     color: var(--color-text);
 }
 
@@ -1470,14 +1618,21 @@ input, select, textarea {
         font-size: var(--font-size-base);
     }
     
-    .data-table {
+    .data-table, .report-table {
         font-size: var(--font-size-xs);
     }
     
     .data-table th,
-    .data-table td {
+    .data-table td,
+    .report-table th,
+    .report-table td {
         padding: var(--space-8) var(--space-4);
         max-width: 120px;
+    }
+    
+    .report-table .subject-column {
+        min-width: 200px;
+        max-width: 250px;
     }
     
     .modal-content {
@@ -1502,13 +1657,13 @@ input, select, textarea {
         text-align: center;
     }
     
-    .action-buttons {
-        flex-direction: column;
-        gap: var(--space-4);
+    .date-filters-row {
+        grid-template-columns: 1fr;
     }
     
-    .date-filters {
-        grid-template-columns: 1fr;
+    .actions-cell .btn--action {
+        display: block;
+        margin: var(--space-2) 0;
     }
 }
 
@@ -1619,15 +1774,77 @@ input, select, textarea {
 
 /* Print styles */
 @media print {
-    .btn, .screen-header, .dashboard-header, .filters-card, .firebase-status, .sync-status {
+    .btn, .screen-header, .dashboard-header, .filters-card, .firebase-status, .sync-status, .reports-filters-card {
         display: none;
     }
     
-    .data-table {
+    .report-table, .data-table {
         font-size: 10px;
     }
     
+    .report-table th, .report-table td,
     .data-table th, .data-table td {
         padding: 4px;
+        border: 1px solid #000;
     }
+    
+    .report-header {
+        background: none;
+        border: none;
+        padding: var(--space-16);
+    }
+    
+    .report-content {
+        border: none;
+        box-shadow: none;
+    }
+}
+
+/* Estilos específicos para números no relatório */
+.report-table .number-cell {
+    font-family: var(--font-family-mono);
+    font-weight: var(--font-weight-medium);
+}
+
+.report-table .percent-cell {
+    font-family: var(--font-family-mono);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+}
+
+/* Hover effects para a tabela de relatório */
+.report-table tbody tr:hover .number-cell {
+    color: var(--color-primary);
+    font-weight: var(--font-weight-bold);
+}
+
+/* Debug da data - estilo especial para destacar problemas */
+.date-debug {
+    background: var(--color-bg-8);
+    border: 1px solid var(--color-info);
+    padding: var(--space-8);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
+    margin: var(--space-8) 0;
+}
+
+/* Estilos para destacar correções implementadas */
+.fixed-feature {
+    position: relative;
+}
+
+.fixed-feature::after {
+    content: "✓ CORRIGIDO";
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--color-success);
+    color: var(--color-btn-primary-text);
+    font-size: 8px;
+    padding: 2px 4px;
+    border-radius: var(--radius-sm);
+    font-weight: var(--font-weight-bold);
+    z-index: 100;
+    pointer-events: none;
 }
