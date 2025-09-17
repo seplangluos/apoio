@@ -902,32 +902,7 @@ select.form-control {
 
 @media (min-width: 1024px) {
     .dashboard-buttons {
-        grid-template-columns: repeat(2, 1fr);
-        max-width: 800px;
-    }
-}
-
-/* Quando admin está logado, ajustar grid */
-.dashboard-buttons.admin-layout {
-    grid-template-columns: repeat(2, 1fr);
-}
-
-@media (min-width: 768px) {
-    .dashboard-buttons.admin-layout {
-        grid-template-columns: repeat(3, 1fr);
-        max-width: 900px;
-    }
-}
-
-/* Quando usuário normal está logado, ajustar grid para 5 botões */
-.dashboard-buttons.user-layout {
-    grid-template-columns: repeat(2, 1fr);
-}
-
-@media (min-width: 768px) {
-    .dashboard-buttons.user-layout {
-        grid-template-columns: repeat(3, 1fr);
-        max-width: 900px;
+        grid-template-columns: repeat(4, 1fr);
     }
 }
 
@@ -945,6 +920,26 @@ select.form-control {
     background: var(--color-teal-700);
 }
 
+.btn--info {
+    background: var(--color-bg-8);
+    color: var(--color-info);
+    border: 1px solid rgba(var(--color-info-rgb), 0.3);
+}
+
+.btn--info:hover {
+    background: rgba(var(--color-info-rgb), 0.1);
+    border-color: var(--color-info);
+}
+
+.btn--error {
+    background: var(--color-error);
+    color: var(--color-btn-primary-text);
+}
+
+.btn--error:hover {
+    background: rgba(var(--color-error-rgb), 0.8);
+}
+
 .btn--profile {
     background: var(--color-bg-5);
     color: var(--color-text);
@@ -960,60 +955,8 @@ select.form-control {
     border-color: var(--color-primary);
 }
 
-.btn--personal-reports {
-    background: var(--color-teal-600);
-    color: var(--color-btn-primary-text);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-8);
-}
-
-.btn--personal-reports:hover {
-    background: var(--color-teal-700);
-}
-
-.btn--personal-reports:active {
-    background: var(--color-teal-800);
-}
-
-.btn--reports {
-    background: var(--color-orange-500);
-    color: var(--color-btn-primary-text);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-8);
-}
-
-.btn--reports:hover {
-    background: var(--color-orange-400);
-}
-
-.btn--reports:active {
-    background: var(--color-red-500);
-}
-
-.profile-icon, .reports-icon, .personal-reports-icon {
+.profile-icon {
     font-size: var(--font-size-lg);
-}
-
-/* Admin-only elements */
-.admin-only {
-    display: none !important;
-}
-
-.admin-only.visible {
-    display: flex !important;
-}
-
-/* User-only elements */
-.user-only {
-    display: none !important;
-}
-
-.user-only.visible {
-    display: flex !important;
 }
 
 /* Cabeçalhos das telas */
@@ -1096,6 +1039,65 @@ select.form-control option {
     margin-top: var(--space-16);
     text-align: center;
     border: 1px solid rgba(var(--color-error-rgb), 0.3);
+}
+
+/* Relatório Pessoal */
+.report-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.report-form {
+    margin-bottom: var(--space-32);
+}
+
+.date-filters {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-16);
+    margin-bottom: var(--space-20);
+}
+
+@media (min-width: 768px) {
+    .date-filters {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.report-results {
+    margin-top: var(--space-32);
+}
+
+.report-period, .report-user {
+    margin-bottom: var(--space-16);
+    padding: var(--space-12);
+    background: var(--color-bg-3);
+    border-radius: var(--radius-base);
+    border: 1px solid var(--color-border);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text);
+}
+
+.report-table {
+    margin-top: var(--space-20);
+}
+
+.report-table th:nth-child(2),
+.report-table td:nth-child(2) {
+    text-align: center;
+    width: 80px;
+}
+
+.report-table th:nth-child(3),
+.report-table td:nth-child(3) {
+    text-align: center;
+    width: 80px;
+}
+
+.report-total-row {
+    background: var(--color-bg-2) !important;
+    font-weight: var(--font-weight-bold);
+    border-top: 2px solid var(--color-border);
 }
 
 /* Pesquisa */
@@ -1186,325 +1188,9 @@ select.form-control option {
     color: var(--color-text-secondary);
 }
 
-/* ESTILOS PARA RELATÓRIO PESSOAL */
-.personal-reports-container {
-    max-width: 1000px;
-    margin: 0 auto;
-}
-
-.personal-reports-filters-card {
-    margin-bottom: var(--space-32);
-}
-
-.personal-reports-filters-card h3 {
-    margin-bottom: var(--space-16);
-    color: var(--color-text);
-}
-
-.personal-report-content {
-    background: var(--color-surface);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--color-card-border);
-    overflow: hidden;
-}
-
-.personal-report-header {
-    padding: var(--space-24);
-    background: var(--color-bg-2);
-    border-bottom: 1px solid var(--color-card-border-inner);
-    text-align: center;
-}
-
-.personal-report-header h2 {
-    margin: 0 0 var(--space-8) 0;
-    color: var(--color-primary);
-    font-size: var(--font-size-3xl);
-    font-weight: var(--font-weight-bold);
-}
-
-.personal-report-period {
-    margin: 0 0 var(--space-4) 0;
-    color: var(--color-text-secondary);
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-medium);
-}
-
-.personal-report-user {
-    margin: 0;
-    color: var(--color-primary);
-    font-size: var(--font-size-md);
-    font-weight: var(--font-weight-semibold);
-}
-
-/* Tabela do Relatório Pessoal */
-.personal-report-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: var(--font-size-sm);
-    background: var(--color-surface);
-    margin-bottom: var(--space-32);
-}
-
-.personal-report-table th {
-    background: var(--color-primary);
-    color: var(--color-btn-primary-text);
-    padding: var(--space-12) var(--space-16);
-    text-align: left;
-    font-weight: var(--font-weight-bold);
-    border: 1px solid var(--color-border);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-.personal-report-table .subject-column {
-    text-align: left;
-    min-width: 400px;
-    width: 60%;
-}
-
-.personal-report-table .total-column,
-.personal-report-table .percent-column {
-    min-width: 80px;
-    width: 20%;
-    text-align: center;
-}
-
-.personal-report-table td {
-    padding: var(--space-12) var(--space-16);
-    border: 1px solid var(--color-card-border-inner);
-    vertical-align: middle;
-}
-
-.personal-report-table td:first-child {
-    text-align: left;
-    font-weight: var(--font-weight-medium);
-    color: var(--color-text);
-}
-
-.personal-report-table td:not(:first-child) {
-    text-align: center;
-    font-family: var(--font-family-mono);
-    font-weight: var(--font-weight-medium);
-}
-
-.personal-report-table tbody tr:nth-child(even) {
-    background: var(--color-bg-1);
-}
-
-.personal-report-table tbody tr:hover {
-    background: var(--color-bg-3);
-}
-
-/* Container de Estatísticas */
-.personal-statistics-container {
-    padding: var(--space-24);
-    background: var(--color-bg-2);
-    border-top: 1px solid var(--color-card-border-inner);
-}
-
-.personal-statistics-container h3 {
-    margin: 0 0 var(--space-16) 0;
-    color: var(--color-text);
-    text-align: center;
-    font-size: var(--font-size-xl);
-    font-weight: var(--font-weight-semibold);
-}
-
-.statistics-table-container {
-    display: flex;
-    justify-content: center;
-}
-
-/* Tabela de Estatísticas */
-.personal-statistics-table {
-    width: auto;
-    max-width: 400px;
-    border-collapse: collapse;
-    font-size: var(--font-size-md);
-    background: var(--color-surface);
-    border-radius: var(--radius-base);
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
-}
-
-.personal-statistics-table th {
-    background: var(--color-teal-600);
-    color: var(--color-btn-primary-text);
-    padding: var(--space-12) var(--space-16);
-    font-weight: var(--font-weight-bold);
-    border: 1px solid var(--color-border);
-}
-
-.personal-statistics-table th:first-child {
-    text-align: left;
-    width: 60%;
-}
-
-.personal-statistics-table th:last-child {
-    text-align: center;
-    width: 40%;
-}
-
-.personal-statistics-table td {
-    padding: var(--space-12) var(--space-16);
-    border: 1px solid var(--color-card-border-inner);
-    vertical-align: middle;
-}
-
-.personal-statistics-table td:first-child {
-    text-align: left;
-    font-weight: var(--font-weight-medium);
-    background: var(--color-bg-1);
-}
-
-.personal-statistics-table td:last-child {
-    text-align: center;
-    font-family: var(--font-family-mono);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-primary);
-    background: var(--color-surface);
-}
-
-/* ESTILOS ESPECÍFICOS PARA RELATÓRIOS ADMINISTRATIVOS */
-.reports-container {
-    max-width: 1400px;
-    margin: 0 auto;
-}
-
-.reports-filters-card {
-    margin-bottom: var(--space-32);
-}
-
-.reports-filters-card h3 {
-    margin-bottom: var(--space-16);
-    color: var(--color-text);
-}
-
-.date-filters-row {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--space-16);
-    margin-bottom: var(--space-16);
-}
-
-@media (min-width: 768px) {
-    .date-filters-row {
-        grid-template-columns: auto auto auto;
-        align-items: end;
-    }
-}
-
-.report-content {
-    background: var(--color-surface);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--color-card-border);
-    overflow: hidden;
-}
-
-.report-header {
-    padding: var(--space-24);
-    background: var(--color-bg-2);
-    border-bottom: 1px solid var(--color-card-border-inner);
-    text-align: center;
-}
-
-.report-header h2 {
-    margin: 0 0 var(--space-8) 0;
-    color: var(--color-primary);
-    font-size: var(--font-size-3xl);
-    font-weight: var(--font-weight-bold);
-}
-
-.report-period {
-    margin: 0;
-    color: var(--color-text-secondary);
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-medium);
-}
-
-/* Tabela de Relatório Administrativo */
-.report-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: var(--font-size-sm);
-    background: var(--color-surface);
-}
-
-.report-table th {
-    background: var(--color-primary);
-    color: var(--color-btn-primary-text);
-    padding: var(--space-12) var(--space-8);
-    text-align: center;
-    font-weight: var(--font-weight-bold);
-    border: 1px solid var(--color-border);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-.report-table .subject-column {
-    text-align: left;
-    min-width: 300px;
-    max-width: 400px;
-}
-
-.report-table .server-column,
-.report-table .total-column,
-.report-table .percent-column {
-    min-width: 80px;
-    width: 80px;
-    text-align: center;
-}
-
-.report-table td {
-    padding: var(--space-8) var(--space-6);
-    border: 1px solid var(--color-card-border-inner);
-    text-align: center;
-    vertical-align: middle;
-}
-
-.report-table td:first-child {
-    text-align: left;
-    font-weight: var(--font-weight-medium);
-    color: var(--color-text);
-    padding-left: var(--space-12);
-}
-
-.report-table tbody tr:nth-child(even) {
-    background: var(--color-bg-1);
-}
-
-.report-table tbody tr:hover {
-    background: var(--color-bg-3);
-}
-
-/* Linha de totais */
-.total-row th {
-    background: var(--color-teal-700);
-    color: var(--color-btn-primary-text);
-    font-weight: var(--font-weight-bold);
-    padding: var(--space-12) var(--space-8);
-    border: 1px solid var(--color-border);
-}
-
-.total-cell {
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text);
-    background: var(--color-bg-2);
-}
-
-.total-general {
-    font-weight: var(--font-weight-bold);
-    color: var(--color-primary);
-    background: var(--color-bg-3);
-    font-size: var(--font-size-md);
-}
-
 /* Tabelas */
 .table-container {
     overflow-x: auto;
-    max-height: 80vh;
 }
 
 .data-table {
@@ -1521,9 +1207,6 @@ select.form-control option {
     font-weight: var(--font-weight-semibold);
     border-bottom: 1px solid var(--color-border);
     white-space: nowrap;
-    position: sticky;
-    top: 0;
-    z-index: 5;
 }
 
 .data-table td {
@@ -1545,6 +1228,39 @@ select.form-control option {
 
 .data-table tbody tr:nth-child(even):hover {
     background: var(--color-bg-3);
+}
+
+/* Botões de ação na tabela */
+.action-buttons {
+    display: flex;
+    gap: var(--space-8);
+    white-space: nowrap;
+}
+
+.btn--small {
+    padding: var(--space-4) var(--space-8);
+    font-size: var(--font-size-xs);
+    border-radius: var(--radius-sm);
+}
+
+.btn--edit {
+    background: var(--color-warning);
+    color: var(--color-btn-primary-text);
+    border: 1px solid rgba(var(--color-warning-rgb), 0.5);
+}
+
+.btn--edit:hover {
+    background: rgba(var(--color-warning-rgb), 0.8);
+}
+
+.btn--delete {
+    background: var(--color-error);
+    color: var(--color-btn-primary-text);
+    border: 1px solid rgba(var(--color-error-rgb), 0.5);
+}
+
+.btn--delete:hover {
+    background: rgba(var(--color-error-rgb), 0.8);
 }
 
 /* Modal */
@@ -1593,7 +1309,7 @@ select.form-control option {
 }
 
 .modal-body p {
-    margin: 0;
+    margin: 0 0 var(--space-8) 0;
     color: var(--color-text);
 }
 
@@ -1754,24 +1470,14 @@ input, select, textarea {
         font-size: var(--font-size-base);
     }
     
-    .data-table, .report-table, .personal-report-table {
+    .data-table {
         font-size: var(--font-size-xs);
     }
     
     .data-table th,
-    .data-table td,
-    .report-table th,
-    .report-table td,
-    .personal-report-table th,
-    .personal-report-table td {
+    .data-table td {
         padding: var(--space-8) var(--space-4);
         max-width: 120px;
-    }
-    
-    .report-table .subject-column,
-    .personal-report-table .subject-column {
-        min-width: 200px;
-        max-width: 250px;
     }
     
     .modal-content {
@@ -1796,16 +1502,13 @@ input, select, textarea {
         text-align: center;
     }
     
-    .date-filters-row {
+    .action-buttons {
+        flex-direction: column;
+        gap: var(--space-4);
+    }
+    
+    .date-filters {
         grid-template-columns: 1fr;
-    }
-    
-    .personal-statistics-table {
-        font-size: var(--font-size-sm);
-    }
-    
-    .personal-statistics-container {
-        padding: var(--space-16);
     }
 }
 
@@ -1916,51 +1619,15 @@ input, select, textarea {
 
 /* Print styles */
 @media print {
-    .btn, .screen-header, .dashboard-header, .filters-card, .firebase-status, .sync-status, .reports-filters-card, .personal-reports-filters-card {
+    .btn, .screen-header, .dashboard-header, .filters-card, .firebase-status, .sync-status {
         display: none;
     }
     
-    .report-table, .data-table, .personal-report-table, .personal-statistics-table {
+    .data-table {
         font-size: 10px;
     }
     
-    .report-table th, .report-table td,
-    .data-table th, .data-table td,
-    .personal-report-table th, .personal-report-table td,
-    .personal-statistics-table th, .personal-statistics-table td {
+    .data-table th, .data-table td {
         padding: 4px;
-        border: 1px solid #000;
     }
-    
-    .report-header, .personal-report-header {
-        background: none;
-        border: none;
-        padding: var(--space-16);
-    }
-    
-    .report-content, .personal-report-content {
-        border: none;
-        box-shadow: none;
-    }
-}
-
-/* Estilos específicos para números no relatório */
-.report-table .number-cell,
-.personal-report-table .number-cell {
-    font-family: var(--font-family-mono);
-    font-weight: var(--font-weight-medium);
-}
-
-.report-table .percent-cell,
-.personal-report-table .percent-cell {
-    font-family: var(--font-family-mono);
-    font-weight: var(--font-weight-medium);
-    color: var(--color-text-secondary);
-}
-
-/* Hover effects para a tabela de relatório */
-.report-table tbody tr:hover .number-cell,
-.personal-report-table tbody tr:hover .number-cell {
-    color: var(--color-primary);
-    font-weight: var(--font-weight-bold);
 }
