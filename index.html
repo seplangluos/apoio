@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GLUOS - Sistema de Produtividade (Firebase)</title>
+    <title>GLUOS - Sistema de Produtividade</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,12 +14,12 @@
                 <div class="card__body">
                     <h1 class="login-title">GLUOS</h1>
                     <p class="login-subtitle">Gerência de Licenciamento de Uso e Ocupação do Solo</p>
-                    <p class="login-description">Sistema de Produtividade com Firebase</p>
+                    <p class="login-description">Sistema de Produtividade</p>
                     
                     <!-- Status de Conexão Firebase -->
                     <div id="firebase-status" class="firebase-status">
                         <span id="firebase-indicator" class="status-indicator status-indicator--warning"></span>
-                        <span id="firebase-status-text">Conectando ao Firebase...</span>
+                        <span id="firebase-status-text">Inicializando Firebase...</span>
                     </div>
                     
                     <form id="login-form" class="login-form">
@@ -52,7 +52,7 @@
                     <div id="login-error" class="error-message hidden"></div>
                     
                     <div class="firebase-config-notice">
-                        <small>💡 Para usar este sistema, configure suas credenciais Firebase no código JavaScript.</small>
+                        <small>💡 Configure suas credenciais Firebase no arquivo app.js</small>
                     </div>
                 </div>
             </div>
@@ -70,7 +70,7 @@
                         <p id="datetime-info">Data e hora</p>
                         <div class="sync-status">
                             <span id="sync-indicator" class="status-indicator status-indicator--success"></span>
-                            <span id="sync-status-text">Sincronizado</span>
+                            <span id="sync-status-text">Firebase</span>
                         </div>
                     </div>
                     <button id="logout-btn" class="btn btn--outline">Sair</button>
@@ -82,21 +82,8 @@
             <div class="dashboard-content">
                 <h3>Selecione uma opção:</h3>
                 <div class="dashboard-buttons">
-                    <!-- Botão Nova Entrada (oculto para Admin) -->
                     <button id="new-entry-btn" class="btn btn--success btn--lg">Nova Entrada</button>
-                    
-                    <!-- Botão Relatório Pessoal (oculto para Admin) -->
-                    <button id="personal-report-btn" class="btn btn--info btn--lg">
-                        <span class="report-icon">📊</span>
-                        Relatório Pessoal
-                    </button>
-                    
-                    <!-- Botão Relatórios Admin (apenas para Admin) -->
-                    <button id="admin-report-btn" class="btn btn--admin btn--lg" style="display: none;">
-                        <span class="admin-icon">📈</span>
-                        Relatórios Admin
-                    </button>
-                    
+                    <button id="personal-report-btn" class="btn btn--info btn--lg hidden">Relatório Pessoal</button>
                     <button id="search-btn" class="btn btn--primary btn--lg">Pesquisar Processos</button>
                     <button id="database-btn" class="btn btn--secondary btn--lg">Base de Dados Completa</button>
                     <button id="profile-btn" class="btn btn--profile btn--lg">
@@ -139,12 +126,7 @@
                         </div>
                         
                         <div class="form-group">
-                            <label for="subject-number" class="form-label">Número do Assunto (opcional):</label>
-                            <input type="number" id="subject-number" class="form-control" min="1" max="44" placeholder="Digite o número (1-44)">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="subject-select" class="form-label">Ou selecione o assunto: *</label>
+                            <label for="subject-select" class="form-label">Assunto: *</label>
                             <select id="subject-select" class="form-control" required>
                                 <option value="">-- Selecione o assunto --</option>
                             </select>
@@ -165,29 +147,29 @@
         </div>
     </div>
 
-    <!-- Tela do Relatório Pessoal -->
+    <!-- Tela de Relatório Pessoal -->
     <div id="personal-report-screen" class="screen">
         <div class="screen-header">
             <div class="container">
                 <div class="header-content">
                     <h2>Relatório Pessoal</h2>
-                    <button id="back-to-dashboard-report" class="btn btn--outline">Voltar ao Dashboard</button>
+                    <button id="back-to-dashboard-4" class="btn btn--outline">Voltar ao Dashboard</button>
                 </div>
             </div>
         </div>
         
         <div class="container">
-            <div class="personal-report-container">
-                <div class="report-filters-card card">
+            <div class="report-container">
+                <div class="report-form card">
                     <div class="card__body">
-                        <h3>Filtros de Período</h3>
-                        <div class="report-filters-row">
+                        <h3>Gerar Relatório Pessoal</h3>
+                        <div class="date-filters">
                             <div class="form-group">
-                                <label for="report-date-start" class="form-label">Data Início: *</label>
+                                <label for="report-date-start" class="form-label">Data Inicial: *</label>
                                 <input type="date" id="report-date-start" class="form-control" required>
                             </div>
                             <div class="form-group">
-                                <label for="report-date-end" class="form-label">Data Fim: *</label>
+                                <label for="report-date-end" class="form-label">Data Final: *</label>
                                 <input type="date" id="report-date-end" class="form-control" required>
                             </div>
                         </div>
@@ -199,34 +181,14 @@
                 </div>
                 
                 <div id="personal-report-results" class="report-results hidden">
-                    <div class="report-info-card card">
+                    <div class="card">
                         <div class="card__body">
-                            <div class="report-header-info">
-                                <h3>Relatório Pessoal de Produtividade</h3>
-                                <div class="report-meta">
-                                    <p><strong>Usuário:</strong> <span id="report-user-name"></span></p>
-                                    <p><strong>Período:</strong> <span id="report-period"></span></p>
-                                    <p><strong>Total de Entradas:</strong> <span id="report-total-entries"></span></p>
-                                </div>
-                                
-                                <!-- Debug Information -->
-                                <div id="report-debug-info" class="debug-info hidden">
-                                    <h4>Informações de Debug:</h4>
-                                    <p>Total de entradas no Firebase: <span id="debug-total-firebase"></span></p>
-                                    <p>Entradas filtradas por usuário: <span id="debug-filtered-user"></span></p>
-                                    <p>Entradas filtradas por data: <span id="debug-filtered-date"></span></p>
-                                </div>
-                                
-                                <button type="button" id="toggle-debug" class="btn btn--outline btn--sm">Toggle Debug</button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="report-table-card card">
-                        <div class="card__body">
-                            <h4>Detalhamento por Assunto</h4>
+                            <h3>Relatório de Produtividade Pessoal</h3>
+                            <div id="report-period" class="report-period"></div>
+                            <div id="report-user" class="report-user"></div>
+                            
                             <div class="table-container">
-                                <table id="personal-report-table" class="data-table">
+                                <table id="personal-report-table" class="data-table report-table">
                                     <thead>
                                         <tr>
                                             <th>Assunto</th>
@@ -235,87 +197,6 @@
                                         </tr>
                                     </thead>
                                     <tbody></tbody>
-                                    <tfoot>
-                                        <tr class="report-total-row">
-                                            <td><strong>TOTAL GERAL</strong></td>
-                                            <td><strong id="report-grand-total">0</strong></td>
-                                            <td><strong>100%</strong></td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tela de Relatórios Admin -->
-    <div id="admin-report-screen" class="screen">
-        <div class="screen-header">
-            <div class="container">
-                <div class="header-content">
-                    <h2>Relatórios Administrativos</h2>
-                    <button id="back-to-dashboard-admin" class="btn btn--outline">Voltar ao Dashboard</button>
-                </div>
-            </div>
-        </div>
-        
-        <div class="container">
-            <div class="admin-report-container">
-                <div class="admin-filters-card card">
-                    <div class="card__body">
-                        <h3>Filtros de Período</h3>
-                        <div class="admin-filters-row">
-                            <div class="form-group">
-                                <label for="admin-date-start" class="form-label">Data Início: *</label>
-                                <input type="date" id="admin-date-start" class="form-control" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="admin-date-end" class="form-label">Data Fim: *</label>
-                                <input type="date" id="admin-date-end" class="form-control" required>
-                            </div>
-                        </div>
-                        <button type="button" id="generate-admin-report" class="btn btn--primary">
-                            <span id="admin-report-btn-text">Gerar Relatório</span>
-                            <span id="admin-report-loader" class="hidden">Gerando...</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <div id="admin-report-results" class="admin-report-results hidden">
-                    <div class="admin-report-info-card card">
-                        <div class="card__body">
-                            <div class="admin-report-header-info">
-                                <h3>Relatório Administrativo de Produtividade</h3>
-                                <div class="admin-report-meta">
-                                    <p><strong>Período:</strong> <span id="admin-report-period"></span></p>
-                                    <p><strong>Total de Entradas:</strong> <span id="admin-report-total-entries"></span></p>
-                                    <p><strong>Relatório gerado por:</strong> <span id="admin-report-user"></span></p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="admin-table-card card">
-                        <div class="card__body">
-                            <h4>Produtividade por Usuário e Assunto</h4>
-                            <div class="table-container">
-                                <table id="admin-report-table" class="admin-data-table">
-                                    <thead>
-                                        <tr id="admin-table-header">
-                                            <!-- Cabeçalho será preenchido dinamicamente -->
-                                        </tr>
-                                    </thead>
-                                    <tbody id="admin-table-body">
-                                        <!-- Corpo será preenchido dinamicamente -->
-                                    </tbody>
-                                    <tfoot>
-                                        <tr id="admin-table-footer" class="admin-total-row">
-                                            <!-- Rodapé será preenchido dinamicamente -->
-                                        </tr>
-                                    </tfoot>
                                 </table>
                             </div>
                         </div>
@@ -418,7 +299,7 @@
                         <h3>Registros</h3>
                         <span id="total-records" class="records-count">0 registros</span>
                         <div class="sync-info">
-                            <span id="last-sync" class="last-sync">Última sincronização: --</span>
+                            <span id="last-sync" class="last-sync">Sincronizado com Firebase</span>
                         </div>
                     </div>
                     <div class="table-container">
@@ -433,6 +314,7 @@
                                     <th>Contribuinte</th>
                                     <th>Assunto</th>
                                     <th>Observação</th>
+                                    <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -443,17 +325,89 @@
         </div>
     </div>
 
-    <!-- Modal de Confirmação -->
+    <!-- Modal de Sucesso -->
     <div id="success-modal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Sucesso!</h3>
             </div>
             <div class="modal-body">
-                <p id="success-message">Entrada salva com sucesso!</p>
+                <p id="success-message">Operação realizada com sucesso!</p>
             </div>
             <div class="modal-footer">
                 <button type="button" id="close-modal" class="btn btn--primary">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Edição -->
+    <div id="edit-modal" class="modal hidden">
+        <div class="modal-content modal-content--large">
+            <div class="modal-header">
+                <h3>Editar Entrada</h3>
+            </div>
+            <div class="modal-body">
+                <form id="edit-entry-form">
+                    <input type="hidden" id="edit-entry-id">
+                    
+                    <div class="form-group">
+                        <label for="edit-process-number" class="form-label">Número do Processo: *</label>
+                        <input type="text" id="edit-process-number" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-ctm" class="form-label">CTM: *</label>
+                        <input type="text" id="edit-ctm" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-contributor" class="form-label">Contribuinte: *</label>
+                        <input type="text" id="edit-contributor" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-subject-select" class="form-label">Assunto: *</label>
+                        <select id="edit-subject-select" class="form-control" required>
+                            <option value="">-- Selecione o assunto --</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-observation" class="form-label">Observação:</label>
+                        <textarea id="edit-observation" class="form-control" rows="4"></textarea>
+                    </div>
+                    
+                    <div id="edit-error" class="error-message hidden"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="save-edit-btn" class="btn btn--success">
+                    <span id="save-edit-text">Salvar Alterações</span>
+                    <span id="save-edit-loader" class="hidden">Salvando...</span>
+                </button>
+                <button type="button" id="cancel-edit-btn" class="btn btn--outline">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Exclusão -->
+    <div id="delete-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Confirmar Exclusão</h3>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir esta entrada?</p>
+                <p><strong>Processo:</strong> <span id="delete-process-info"></span></p>
+                <p><strong>Assunto:</strong> <span id="delete-subject-info"></span></p>
+                <p class="text-error"><strong>Esta ação não pode ser desfeita!</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="confirm-delete-btn" class="btn btn--error">
+                    <span id="delete-btn-text">Confirmar Exclusão</span>
+                    <span id="delete-loader" class="hidden">Excluindo...</span>
+                </button>
+                <button type="button" id="cancel-delete-btn" class="btn btn--outline">Cancelar</button>
             </div>
         </div>
     </div>
@@ -506,6 +460,9 @@
             <p>Carregando dados do Firebase...</p>
         </div>
     </div>
+
+    <!-- Notificação Toast -->
+    <div id="toast" class="toast hidden"></div>
 
     <!-- Firebase v9+ SDK -->
     <script type="module" src="app.js"></script>
