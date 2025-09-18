@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GLUOS - Sistema de Produtividade</title>
+    <title>GLUOS - Sistema de Produtividade (Firebase)</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,19 +14,22 @@
                 <div class="card__body">
                     <h1 class="login-title">GLUOS</h1>
                     <p class="login-subtitle">Gerência de Licenciamento de Uso e Ocupação do Solo</p>
-                    <p class="login-description">Sistema de Produtividade</p>
+                    <p class="login-description">Sistema de Produtividade com Firebase</p>
                     
                     <!-- Status de Conexão Firebase -->
                     <div id="firebase-status" class="firebase-status">
                         <span id="firebase-indicator" class="status-indicator status-indicator--warning"></span>
-                        <span id="firebase-status-text">Inicializando Firebase...</span>
+                        <span id="firebase-status-text">Conectando ao Firebase...</span>
                     </div>
+                    
+                    <!-- Debug de Login -->
+                    <div id="login-debug" class="debug-info hidden"></div>
                     
                     <form id="login-form" class="login-form">
                         <div class="form-group">
                             <label for="user-select" class="form-label">Selecione seu usuário:</label>
                             <select id="user-select" name="user-select" class="form-control user-select" required>
-                                <option value="">-- Selecione --</option>
+                                <option value="">-- Selecione seu usuário --</option>
                                 <option value="Eduardo">Eduardo</option>
                                 <option value="Wendel">Wendel</option>
                                 <option value="Júlia">Júlia</option>
@@ -52,7 +55,7 @@
                     <div id="login-error" class="error-message hidden"></div>
                     
                     <div class="firebase-config-notice">
-                        <small>💡 Configure suas credenciais Firebase no arquivo app.js</small>
+                        <small>💡 Para usar este sistema, configure suas credenciais Firebase no código JavaScript.</small>
                     </div>
                 </div>
             </div>
@@ -70,7 +73,7 @@
                         <p id="datetime-info">Data e hora</p>
                         <div class="sync-status">
                             <span id="sync-indicator" class="status-indicator status-indicator--success"></span>
-                            <span id="sync-status-text">Firebase</span>
+                            <span id="sync-status-text">Sincronizado</span>
                         </div>
                     </div>
                     <button id="logout-btn" class="btn btn--outline">Sair</button>
@@ -126,7 +129,12 @@
                         </div>
                         
                         <div class="form-group">
-                            <label for="subject-select" class="form-label">Assunto: *</label>
+                            <label for="subject-number" class="form-label">Número do Assunto (opcional):</label>
+                            <input type="number" id="subject-number" class="form-control" min="1" max="44" placeholder="Digite o número (1-44)">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="subject-select" class="form-label">Ou selecione o assunto: *</label>
                             <select id="subject-select" class="form-control" required>
                                 <option value="">-- Selecione o assunto --</option>
                             </select>
@@ -299,7 +307,7 @@
                         <h3>Registros</h3>
                         <span id="total-records" class="records-count">0 registros</span>
                         <div class="sync-info">
-                            <span id="last-sync" class="last-sync">Sincronizado com Firebase</span>
+                            <span id="last-sync" class="last-sync">Última sincronização: --</span>
                         </div>
                     </div>
                     <div class="table-container">
@@ -325,14 +333,14 @@
         </div>
     </div>
 
-    <!-- Modal de Sucesso -->
+    <!-- Modal de Confirmação -->
     <div id="success-modal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Sucesso!</h3>
             </div>
             <div class="modal-body">
-                <p id="success-message">Operação realizada com sucesso!</p>
+                <p id="success-message">Entrada salva com sucesso!</p>
             </div>
             <div class="modal-footer">
                 <button type="button" id="close-modal" class="btn btn--primary">OK</button>
@@ -349,7 +357,6 @@
             <div class="modal-body">
                 <form id="edit-entry-form">
                     <input type="hidden" id="edit-entry-id">
-                    
                     <div class="form-group">
                         <label for="edit-process-number" class="form-label">Número do Processo: *</label>
                         <input type="text" id="edit-process-number" class="form-control" required>
@@ -460,9 +467,6 @@
             <p>Carregando dados do Firebase...</p>
         </div>
     </div>
-
-    <!-- Notificação Toast -->
-    <div id="toast" class="toast hidden"></div>
 
     <!-- Firebase v9+ SDK -->
     <script type="module" src="app.js"></script>
