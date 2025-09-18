@@ -1,36 +1,31 @@
 // Sistema GLUOS - Gerência de Licenciamento de Uso e Ocupação do Solo
-// Versão CORRIGIDA - Problema de conectividade Firebase RESOLVIDO
+// Integração completa com Firebase - Versão Corrigida
 
-// ===== CONFIGURAÇÃO FIREBASE =====
-// INSTRUÇÃO: Substitua os valores abaixo pela sua configuração do Firebase
+// Importações do Firebase v9+
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+import { getDatabase, ref, push, set, get, update, remove, onValue } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js';
+
+// Configuração do Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyDUUXFPi2qbowPjx63YBYQWyZNXKfxz7u0",
-  authDomain: "gluos-apoio.firebaseapp.com",
-  databaseURL: "https://gluos-apoio-default-rtdb.firebaseio.com",
-  projectId: "gluos-apoio",
-  storageBucket: "gluos-apoio.firebasestorage.app",
-  messagingSenderId: "200346424322",
-  appId: "1:200346424322:web:d359faf0c8582c58c0031b"
+    apiKey: "AIzaSyDUUXFPi2qbowPjx63YBYQWyZNXKfxz7u0",
+    authDomain: "gluos-apoio.firebaseapp.com",
+    databaseURL: "https://gluos-apoio-default-rtdb.firebaseio.com",
+    projectId: "gluos-apoio",
+    storageBucket: "gluos-apoio.firebasestorage.app",
+    messagingSenderId: "200346424322",
+    appId: "1:200346424322:web:d359faf0c8582c58c0031b"
 };
 
-// ===== CONFIGURAÇÃO DE DEBUG =====
-const DEBUG_MODE = true;
-const FIREBASE_CONNECTION_TIMEOUT = 3000; // 3 segundos timeout - REDUZIDO
-
-function debugLog(message, data = null) {
-    if (DEBUG_MODE) {
-        console.log(`[GLUOS DEBUG] ${message}`, data || '');
-        
-        // Mostrar debug visual na tela de login
-        const debugElement = document.getElementById('login-debug');
-        if (debugElement && message.includes('LOGIN')) {
-            debugElement.textContent = `${new Date().toLocaleTimeString()}: ${message}\n${JSON.stringify(data, null, 2)}`;
-            debugElement.classList.remove('hidden');
-        }
-    }
+// Inicializar Firebase
+let app, database;
+try {
+    app = initializeApp(firebaseConfig);
+    database = getDatabase(app);
+} catch (error) {
+    console.error('Erro ao inicializar Firebase:', error);
 }
 
-// ===== DADOS DA APLICAÇÃO =====
+// Dados da aplicação
 const GLUOS_DATA = {
     usuarios: ["Eduardo", "Wendel", "Júlia", "Tati", "Sônia", "Rita", "Mara", "Admin"],
     assuntos: [
@@ -39,10 +34,10 @@ const GLUOS_DATA = {
         {id: 3, texto: "Arquivamento de Processos"},
         {id: 4, texto: "Solicitação de Desarquivamento"},
         {id: 5, texto: "Atendimento ao Contribuinte"},
-        {id: 6, texto: "Agendamento de Contribuinte"},
+        {id: 6, texto: "Pós Atendimento Balcão"},
         {id: 7, texto: "Atendimento ao Telefone"},
-        {id: 8, texto: "Apoio aos Arquitetos/Engenheiros"},
-        {id: 9, texto: "Envio de E-mail para o Arquitetos/Enginheiros"},
+        {id: 8, texto: "Apoio aos Arquitetos/Enginheiros"},
+        {id: 9, texto: "Envio de E-mail para o Arquitetos/Engenheiros"},
         {id: 10, texto: "Solicitação de Desarquivamento de Processo"},
         {id: 11, texto: "Lançamento Habite-se no E&L e na Receita Federal"},
         {id: 12, texto: "Lançamento de Alvará no E&L e na Receita Federal"},
@@ -55,7 +50,7 @@ const GLUOS_DATA = {
         {id: 19, texto: "Prorrogação de Processo Alvará de Funcionamento"},
         {id: 20, texto: "Indeferimento de Processo Alvará de Funcionamento"},
         {id: 21, texto: "Lançamento do Número dos Processos Finalizados"},
-        {id: 22, texto: "Protocolo de informação Básica"},
+        {id: 22, texto: "Notificação de Alvará de Funcionamento"},
         {id: 23, texto: "Lançamento de Processos Novos"},
         {id: 24, texto: "Recebimento de Processo"},
         {id: 25, texto: "Rastreamento de Processo"},
@@ -70,694 +65,291 @@ const GLUOS_DATA = {
         {id: 34, texto: "Digitação de Notificações"},
         {id: 35, texto: "Confecção de Planilha de Vistoria Semanal"},
         {id: 36, texto: "Localização de Processo Físico e no Sistema"},
-        {id: 37, texto: "Encaminhamento de Processo para Análise de Indeferimento"},
+        {id: 37, texto: "Encaminhamento de Processo para Análise"},
         {id: 38, texto: "Estudo de Viabilidade Urbanística"},
         {id: 39, texto: "Envio de e-mail para Contadores"},
         {id: 40, texto: "Análise de Matrícula para Sala Mineira"},
         {id: 41, texto: "Indeferimento de Processo"},
         {id: 42, texto: "Requisição de Veículo"},
         {id: 43, texto: "Encaminhamento de Processo a Outros Setores"},
-        {id: 44, texto: "Montagem de Processo Novo"}
+        {id: 44, texto: "Montagem de Processo Novo"},
+        {id: 45, texto: "Encaminhamento para indeferimento"},
+        {id: 46, texto: "Protocolo de informação Básica"},
+        {id: 47, texto: "Agendamento para contribuinte"}
     ]
 };
 
-// ===== ESTADO DA APLICAÇÃO =====
-let firebaseApp = null;
-let database = null;
-let isFirebaseInitialized = false;
-let isFirebaseConfigured = false;
-let isOnline = true;
+// Estado global
 let currentUser = null;
 let allEntries = [];
-let userPasswords = {};
-let entriesListener = null;
-let passwordsListener = null;
-let currentEditingEntry = null;
-let isInitialized = false;
-let connectionTimeout = null;
+let processCounter = 1;
+let selectedSubjectForMultiple = null;
+let currentReportType = null;
+let firebaseConnected = false;
 
-// ===== INICIALIZAÇÃO PRINCIPAL =====
+// Inicialização
 document.addEventListener('DOMContentLoaded', function() {
-    debugLog('DOM loaded, starting GLUOS system with FIXED connectivity');
+    console.log('Sistema GLUOS iniciando...');
     
-    // Iniciar sistema imediatamente
-    initializeSystem();
-});
-
-function initializeSystem() {
-    debugLog('Starting FIXED system initialization');
+    // Forçar recriação do select com JavaScript para garantir funcionalidade
+    fixUserSelect();
     
-    // 1. Inicializar aplicação básica PRIMEIRO
-    initializeApp();
-    
-    // 2. Mostrar status inicial
-    updateFirebaseStatus('warning', 'Verificando configuração...');
-    
-    // 3. Verificar configuração Firebase
-    checkFirebaseConfiguration();
-    
-    // 4. Se Firebase configurado, tentar conectar com timeout
-    if (isFirebaseConfigured) {
-        debugLog('Firebase configured - starting connection with timeout');
-        updateFirebaseStatus('warning', 'Conectando ao Firebase...');
-        
-        // Inicializar Firebase com timeout
-        initializeFirebaseWithTimeout().then(success => {
-            if (success) {
-                debugLog('Firebase initialized successfully');
-                updateFirebaseStatus('success', 'Conectado ao Firebase');
-                
-                // Carregar dados do Firebase
-                setTimeout(() => {
-                    loadFirebaseData();
-                    setupRealtimeListeners();
-                }, 300);
-            } else {
-                debugLog('Firebase initialization failed - using local mode');
-                updateFirebaseStatus('info', 'Modo Local (Firebase não conectou)');
-                loadLocalData();
-            }
-        }).catch(error => {
-            debugLog('Firebase initialization error:', error);
-            updateFirebaseStatus('error', 'Erro Firebase - Modo Local');
-            loadLocalData();
-        });
-    } else {
-        debugLog('Firebase not configured - using localStorage mode');
-        updateFirebaseStatus('info', 'Modo Local (Configure Firebase)');
-        loadLocalData();
-    }
-    
-    // 5. Setup dos event listeners
-    setTimeout(() => {
-        setupEventListeners();
-        debugLog('Event listeners configured');
-    }, 100);
-    
-    // 6. Inicializar relógio
+    initializeFirebase();
+    setupEventListeners();
+    populateSelectOptions();
+    showScreen('login');
     updateDateTime();
     setInterval(updateDateTime, 1000);
     
-    // 7. Garantir que overlay seja removido
-    setTimeout(() => {
-        showLoadingOverlay(false);
-        isInitialized = true;
-        debugLog('GLUOS system fully initialized with FIXED connectivity');
-    }, 500);
+    console.log('Sistema inicializado com sucesso!');
+});
+
+// Corrigir o select de usuário
+function fixUserSelect() {
+    const userSelect = document.getElementById('user-select');
+    if (userSelect) {
+        // Forçar z-index e pointer events
+        userSelect.style.zIndex = '1000';
+        userSelect.style.pointerEvents = 'auto';
+        userSelect.style.position = 'relative';
+        
+        // Adicionar event listeners diretos
+        userSelect.addEventListener('change', function() {
+            console.log('Usuário selecionado:', this.value);
+        });
+        
+        userSelect.addEventListener('click', function() {
+            console.log('Select clicado');
+            this.focus();
+        });
+        
+        // Garantir que está funcional
+        userSelect.removeAttribute('disabled');
+        userSelect.setAttribute('tabindex', '0');
+        
+        console.log('Select de usuário corrigido');
+    }
 }
 
-// ===== VERIFICAR CONFIGURAÇÃO FIREBASE =====
-function checkFirebaseConfiguration() {
-    isFirebaseConfigured = firebaseConfig.apiKey !== "YOUR_API_KEY_HERE" && 
-                          firebaseConfig.databaseURL !== "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com/";
-    
-    debugLog('Firebase configuration check:', { 
-        configured: isFirebaseConfigured,
-        apiKey: firebaseConfig.apiKey.substring(0, 10) + '...'
-    });
-    
-    return isFirebaseConfigured;
-}
-
-// ===== INICIALIZAÇÃO FIREBASE COM TIMEOUT - VERSÃO CORRIGIDA =====
-async function initializeFirebaseWithTimeout() {
-    return new Promise(async (resolve) => {
-        debugLog('Starting Firebase initialization with 3s timeout...');
-        
-        let isResolved = false;
-        
-        // Set timeout para fallback
-        const timeout = setTimeout(() => {
-            if (!isResolved) {
-                debugLog('Firebase initialization TIMEOUT (3s) - falling back to local mode');
-                isResolved = true;
-                resolve(false);
-            }
-        }, FIREBASE_CONNECTION_TIMEOUT);
-        
-        try {
-            // Importar módulos Firebase
-            debugLog('Importing Firebase modules...');
-            const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js');
-            const { 
-                getDatabase, 
-                ref, 
-                set, 
-                get, 
-                push, 
-                onValue, 
-                off,
-                remove,
-                update,
-                serverTimestamp,
-                goOffline,
-                goOnline
-            } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js');
-            
-            if (isResolved) return;
-            
-            // Armazenar funções globalmente
-            window.firebaseFunctions = {
-                getDatabase, ref, set, get, push, onValue, off, remove, update, serverTimestamp, goOffline, goOnline
-            };
-            
-            debugLog('Initializing Firebase app...');
-            
-            // Inicializar Firebase
-            firebaseApp = initializeApp(firebaseConfig);
-            database = getDatabase(firebaseApp);
-            
-            if (isResolved) return;
-            
-            debugLog('Testing Firebase connection...');
-            
-            // Testar conectividade com timeout adicional
-            const testPromise = Promise.race([
-                get(ref(database, '.info/serverTimeOffset')),
-                new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('Connection test timeout')), 2000)
-                )
-            ]);
-            
-            await testPromise;
-            
-            if (!isResolved) {
-                debugLog('Firebase connection test successful');
-                
-                // Configurar listeners de rede
-                window.addEventListener('online', handleOnline);
-                window.addEventListener('offline', handleOffline);
-                
-                // Sucesso - limpar timeout e resolver
-                clearTimeout(timeout);
-                isFirebaseInitialized = true;
-                isResolved = true;
-                resolve(true);
-            }
-            
-        } catch (error) {
-            debugLog('Firebase initialization error:', error.message);
-            console.error('Firebase initialization error:', error);
-            
-            if (!isResolved) {
-                // Erro - limpar timeout e resolver como false
-                clearTimeout(timeout);
-                isFirebaseInitialized = false;
-                isResolved = true;
-                resolve(false);
-            }
-        }
-    });
-}
-
-// ===== INICIALIZAÇÃO DA APLICAÇÃO =====
-function initializeApp() {
-    debugLog('Starting app initialization');
-    
+// Inicialização do Firebase
+async function initializeFirebase() {
     try {
-        // Popular selects imediatamente
-        populateSubjectSelect();
-        populateEditSubjectSelect();
-        populateFilterSelects();
+        updateFirebaseStatus('warning', 'Conectando ao Firebase...');
         
-        // Garantir que a tela de login seja mostrada
-        showScreen('login');
+        if (!database) {
+            updateFirebaseStatus('error', 'Firebase não inicializado');
+            console.error('Database não inicializado');
+            return;
+        }
         
-        debugLog('App initialization completed successfully');
+        // Verificar conexão com Firebase
+        const testRef = ref(database, '.info/connected');
+        onValue(testRef, (snapshot) => {
+            firebaseConnected = snapshot.val() === true;
+            if (firebaseConnected) {
+                updateFirebaseStatus('success', 'Conectado ao Firebase');
+                console.log('Firebase conectado com sucesso');
+                loadAllEntries();
+                initializePasswords();
+            } else {
+                updateFirebaseStatus('error', 'Desconectado do Firebase');
+                console.log('Firebase desconectado');
+            }
+        });
+        
     } catch (error) {
-        console.error('Error in initializeApp:', error);
+        console.error('Erro ao conectar Firebase:', error);
+        updateFirebaseStatus('error', 'Erro de conexão');
+        firebaseConnected = false;
     }
 }
 
-// ===== STATUS DO FIREBASE - VERSÃO CORRIGIDA =====
-function updateFirebaseStatus(status, message) {
-    debugLog(`Updating Firebase status: ${status} - ${message}`);
-    
-    const indicator = document.getElementById('firebase-indicator');
-    const statusText = document.getElementById('firebase-status-text');
-    
-    if (indicator && statusText) {
-        indicator.className = 'status-indicator';
-        
-        switch(status) {
-            case 'success':
-                indicator.classList.add('status-indicator--success');
-                break;
-            case 'error':
-                indicator.classList.add('status-indicator--error');
-                break;
-            case 'warning':
-                indicator.classList.add('status-indicator--warning');
-                break;
-            default:
-                indicator.classList.add('status-indicator--info');
-        }
-        
-        statusText.textContent = message;
-        debugLog(`Status updated to: ${message}`);
-    } else {
-        debugLog('Firebase status elements not found!');
-    }
-    
-    // Atualizar status de sincronização
-    const syncIndicator = document.getElementById('sync-indicator');
-    const syncText = document.getElementById('sync-status-text');
-    
-    if (syncIndicator && syncText) {
-        syncIndicator.className = 'status-indicator';
-        
-        if (isFirebaseInitialized && isOnline) {
-            syncIndicator.classList.add('status-indicator--success');
-            syncText.textContent = 'Sincronizado';
-        } else if (!isOnline) {
-            syncIndicator.classList.add('status-indicator--warning');
-            syncText.textContent = 'Offline';
-        } else {
-            syncIndicator.classList.add('status-indicator--info');
-            syncText.textContent = 'Modo Local';
-        }
-    }
-}
-
-// ===== GERENCIAMENTO ONLINE/OFFLINE =====
-function handleOnline() {
-    debugLog('Connection restored - going online');
-    isOnline = true;
-    updateFirebaseStatus('success', 'Conectado');
-    
-    if (isFirebaseInitialized && window.firebaseFunctions) {
-        window.firebaseFunctions.goOnline(database);
-        syncLocalData();
-    }
-    
-    showToast('Conexão restaurada! Sincronizando dados...', 'success');
-}
-
-function handleOffline() {
-    debugLog('Connection lost - going offline');
-    isOnline = false;
-    updateFirebaseStatus('warning', 'Offline');
-    
-    if (isFirebaseInitialized && window.firebaseFunctions) {
-        window.firebaseFunctions.goOffline(database);
-    }
-    
-    showToast('Sem conexão. Dados salvos localmente.', 'warning');
-}
-
-// ===== CARREGAMENTO DE DADOS =====
-async function loadFirebaseData() {
-    if (!isFirebaseInitialized || !window.firebaseFunctions) {
-        debugLog('Firebase not initialized - loading local data');
-        loadLocalData();
-        return;
-    }
+// Inicializar senhas padrão
+async function initializePasswords() {
+    if (!firebaseConnected) return;
     
     try {
-        debugLog('Loading data from Firebase...');
-        showLoadingOverlay(true);
-        
-        const { ref, get } = window.firebaseFunctions;
-        
-        // Carregar entries
-        const entriesRef = ref(database, 'gluos_entries');
-        const entriesSnapshot = await get(entriesRef);
-        
-        if (entriesSnapshot.exists()) {
-            const entriesData = entriesSnapshot.val();
-            allEntries = Object.keys(entriesData)
-                .map(key => ({ ...entriesData[key], firebaseKey: key }))
-                .sort((a, b) => b.timestamp - a.timestamp);
-            debugLog('Entries loaded from Firebase:', allEntries.length);
-        } else {
-            allEntries = [];
-            debugLog('No entries found in Firebase');
-        }
-        
-        // Carregar senhas
         const passwordsRef = ref(database, 'gluos_passwords');
-        const passwordsSnapshot = await get(passwordsRef);
+        const snapshot = await get(passwordsRef);
         
-        if (passwordsSnapshot.exists()) {
-            userPasswords = passwordsSnapshot.val();
-            debugLog('Passwords loaded from Firebase:', Object.keys(userPasswords));
-        } else {
-            userPasswords = {};
-            debugLog('No passwords found in Firebase');
+        if (!snapshot.exists()) {
+            console.log('Inicializando senhas padrão...');
+            const defaultPasswords = {};
+            GLUOS_DATA.usuarios.forEach(user => {
+                defaultPasswords[user] = '123';
+            });
+            await set(passwordsRef, defaultPasswords);
+            console.log('Senhas padrão inicializadas');
         }
-        
-        // Salvar localmente como backup
-        saveToLocalStorage();
-        savePasswordsToLocalStorage();
-        
-        updateLastSync();
-        
     } catch (error) {
-        console.error('Error loading Firebase data:', error);
-        debugLog('Firebase load failed, using local data');
-        loadLocalData();
-        updateFirebaseStatus('error', 'Erro ao carregar dados - usando backup local');
-    } finally {
-        showLoadingOverlay(false);
+        console.error('Erro ao inicializar senhas:', error);
     }
 }
 
-// ===== CARREGAMENTO LOCAL =====
-function loadLocalData() {
-    debugLog('Loading data from localStorage');
+// Carregar todas as entradas
+async function loadAllEntries() {
+    if (!firebaseConnected) return;
     
     try {
-        const savedEntries = localStorage.getItem('gluos_entries');
-        if (savedEntries) {
-            allEntries = JSON.parse(savedEntries);
-            allEntries.sort((a, b) => b.timestamp - a.timestamp);
-            debugLog('Entries loaded from localStorage:', allEntries.length);
-        } else {
-            allEntries = [];
-        }
-        
-        const savedPasswords = localStorage.getItem('gluos_user_passwords');
-        if (savedPasswords) {
-            userPasswords = JSON.parse(savedPasswords);
-            debugLog('Passwords loaded from localStorage:', Object.keys(userPasswords));
-        } else {
-            userPasswords = {};
-        }
-        
+        const entriesRef = ref(database, 'gluos_entries');
+        onValue(entriesRef, (snapshot) => {
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                allEntries = Object.keys(data).map(key => ({
+                    id: key,
+                    ...data[key]
+                }));
+                // Ordenar por timestamp (mais recente primeiro)
+                allEntries.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                console.log(`Carregadas ${allEntries.length} entradas`);
+            } else {
+                allEntries = [];
+                console.log('Nenhuma entrada encontrada');
+            }
+            updateRecordCount();
+        });
     } catch (error) {
-        console.error('Error loading local data:', error);
+        console.error('Erro ao carregar entradas:', error);
         allEntries = [];
-        userPasswords = {};
     }
 }
 
-// ===== LISTENERS EM TEMPO REAL =====
-function setupRealtimeListeners() {
-    if (!isFirebaseInitialized || !window.firebaseFunctions) return;
-    
-    try {
-        const { ref, onValue } = window.firebaseFunctions;
-        
-        // Listener para entries
-        const entriesRef = ref(database, 'gluos_entries');
-        entriesListener = onValue(entriesRef, (snapshot) => {
-            if (snapshot.exists()) {
-                const entriesData = snapshot.val();
-                const newEntries = Object.keys(entriesData)
-                    .map(key => ({ ...entriesData[key], firebaseKey: key }))
-                    .sort((a, b) => b.timestamp - a.timestamp);
-                
-                if (newEntries.length !== allEntries.length) {
-                    allEntries = newEntries;
-                    debugLog('Entries updated from Firebase realtime:', allEntries.length);
-                    
-                    refreshCurrentView();
-                    updateLastSync();
-                    
-                    saveToLocalStorage();
-                }
-            }
-        });
-        
-        // Listener para senhas
-        const passwordsRef = ref(database, 'gluos_passwords');
-        passwordsListener = onValue(passwordsRef, (snapshot) => {
-            if (snapshot.exists()) {
-                const newPasswords = snapshot.val();
-                if (JSON.stringify(newPasswords) !== JSON.stringify(userPasswords)) {
-                    userPasswords = newPasswords;
-                    debugLog('Passwords updated from Firebase realtime');
-                    
-                    savePasswordsToLocalStorage();
-                }
-            }
-        });
-        
-        debugLog('Realtime listeners setup completed');
-        
-    } catch (error) {
-        console.error('Error setting up realtime listeners:', error);
-    }
-}
-
-// ===== CONFIGURAR EVENT LISTENERS =====
+// Configurar event listeners
 function setupEventListeners() {
-    debugLog('Setting up event listeners');
-    
-    try {
-        setupLoginListeners();
-        setupNavigationListeners();
-        setupFormListeners();
-        setupModalListeners();
-        
-        debugLog('Event listeners setup COMPLETED successfully');
-    } catch (error) {
-        console.error('Error setting up event listeners:', error);
-    }
-}
-
-// ===== LOGIN LISTENERS =====
-function setupLoginListeners() {
-    debugLog('Setting up login listeners');
-    
+    // Login - múltiplas abordagens para garantir funcionamento
     const loginForm = document.getElementById('login-form');
     const loginBtn = document.getElementById('login-btn');
     const userSelect = document.getElementById('user-select');
     const passwordInput = document.getElementById('password');
     
-    if (!loginForm || !loginBtn || !userSelect || !passwordInput) {
-        console.error('CRITICAL: Essential login elements not found!');
-        return;
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLogin);
+        console.log('Event listener do form de login adicionado');
     }
     
-    debugLog('All login elements found successfully');
-    
-    // Garantir que o select funcione - CORREÇÃO CRÍTICA
-    userSelect.style.pointerEvents = 'auto';
-    userSelect.style.zIndex = '1000';
-    userSelect.disabled = false;
-    userSelect.tabIndex = 0;
-    
-    debugLog('User select configured for interaction');
-    
-    // Form submit
-    loginForm.addEventListener('submit', function(e) {
-        debugLog('LOGIN FORM SUBMIT TRIGGERED!');
-        e.preventDefault();
-        e.stopPropagation();
-        handleLogin();
-        return false;
-    });
-    
-    // Button click
-    loginBtn.addEventListener('click', function(e) {
-        debugLog('LOGIN BUTTON CLICKED!');
-        e.preventDefault();
-        e.stopPropagation();
-        handleLogin();
-        return false;
-    });
-    
-    // Enter no campo de senha
-    passwordInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            debugLog('ENTER pressed in password input');
+    if (loginBtn) {
+        loginBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            e.stopPropagation();
-            handleLogin();
-            return false;
-        }
-    });
-    
-    // Enter no select de usuário
-    userSelect.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            debugLog('ENTER pressed in user select');
-            e.preventDefault();
-            e.stopPropagation();
-            handleLogin();
-            return false;
-        }
-    });
-    
-    // Debug para o select
-    userSelect.addEventListener('change', function(e) {
-        debugLog('User select changed to:', e.target.value);
-    });
-    
-    userSelect.addEventListener('click', function(e) {
-        debugLog('User select clicked');
-    });
-    
-    passwordInput.addEventListener('input', function(e) {
-        debugLog('Password input changed - length:', e.target.value.length);
-    });
-    
-    debugLog('Login listeners configured successfully');
-}
-
-// ===== NAVIGATION LISTENERS =====
-function setupNavigationListeners() {
-    const navigationButtons = [
-        { id: 'logout-btn', action: handleLogout },
-        { 
-            id: 'new-entry-btn', 
-            action: () => {
-                showScreen('new-entry');
-                setTimeout(populateSubjectSelect, 100);
-            }
-        },
-        { id: 'personal-report-btn', action: () => showScreen('personal-report') },
-        { id: 'search-btn', action: () => showScreen('search') },
-        { id: 'database-btn', action: () => { showScreen('database'); loadDatabaseTable(); } },
-        { id: 'profile-btn', action: showProfileModal },
-        { id: 'back-to-dashboard-1', action: () => showScreen('dashboard') },
-        { id: 'back-to-dashboard-2', action: () => showScreen('dashboard') },
-        { id: 'back-to-dashboard-3', action: () => showScreen('dashboard') },
-        { id: 'back-to-dashboard-4', action: () => showScreen('dashboard') }
-    ];
-    
-    navigationButtons.forEach(btn => {
-        const element = document.getElementById(btn.id);
-        if (element) {
-            element.addEventListener('click', btn.action);
-            debugLog(`Navigation button ${btn.id} configured`);
-        }
-    });
-}
-
-// ===== FORM LISTENERS =====
-function setupFormListeners() {
-    const newEntryForm = document.getElementById('new-entry-form');
-    if (newEntryForm) {
-        newEntryForm.addEventListener('submit', handleNewEntry);
+            handleLogin(e);
+        });
+        console.log('Event listener do botão de login adicionado');
     }
     
-    const subjectNumber = document.getElementById('subject-number');
-    const subjectSelect = document.getElementById('subject-select');
-    
-    if (subjectNumber) {
-        subjectNumber.addEventListener('input', handleSubjectNumberChange);
-    }
-    
-    if (subjectSelect) {
-        subjectSelect.addEventListener('change', handleSubjectSelectChange);
-    }
-    
-    const searchSubmit = document.getElementById('search-submit');
-    const searchProcess = document.getElementById('search-process');
-    
-    if (searchSubmit) {
-        searchSubmit.addEventListener('click', handleSearch);
-    }
-    
-    if (searchProcess) {
-        searchProcess.addEventListener('keypress', function(e) {
+    // Enter nos campos
+    if (passwordInput) {
+        passwordInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                handleSearch();
+                handleLogin(e);
             }
         });
     }
     
-    const generatePersonalReport = document.getElementById('generate-personal-report');
-    if (generatePersonalReport) {
-        generatePersonalReport.addEventListener('click', handleGeneratePersonalReport);
+    if (userSelect) {
+        userSelect.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && this.value) {
+                passwordInput?.focus();
+            }
+        });
     }
     
-    const applyFilters = document.getElementById('apply-filters');
-    const clearFilters = document.getElementById('clear-filters');
+    // Navegação principal
+    setupMainNavigation();
     
-    if (applyFilters) {
-        applyFilters.addEventListener('click', applyDatabaseFilters);
-    }
+    // Nova entrada
+    setupNewEntry();
     
-    if (clearFilters) {
-        clearFilters.addEventListener('click', clearDatabaseFilters);
-    }
+    // Múltiplas entradas
+    setupMultipleEntries();
     
-    const saveEditBtn = document.getElementById('save-edit-btn');
+    // Pesquisa
+    setupSearch();
     
-    if (saveEditBtn) {
-        saveEditBtn.addEventListener('click', handleSaveEdit);
-    }
+    // Base de dados
+    setupDatabase();
+    
+    // Relatórios
+    setupReports();
+    
+    // Perfil
+    setupProfile();
+    
+    // Modais
+    setupModals();
+    
+    console.log('Todos os event listeners configurados');
 }
 
-// ===== MODAL LISTENERS =====
-function setupModalListeners() {
-    const closeModal = document.getElementById('close-modal');
-    if (closeModal) {
-        closeModal.addEventListener('click', hideModal);
+// Configurar navegação principal
+function setupMainNavigation() {
+    // Logout
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', handleLogout);
     }
     
-    const passwordChangeForm = document.getElementById('password-change-form');
-    const cancelProfile = document.getElementById('cancel-profile');
+    // Botões do dashboard
+    const navButtons = [
+        { id: 'new-entry-btn', screen: 'new-entry' },
+        { id: 'multiple-entries-btn', screen: 'multiple-entries' },
+        { id: 'search-btn', screen: 'search' },
+        { id: 'database-btn', screen: 'database', callback: loadDatabaseTable },
+        { id: 'profile-btn', callback: showProfileModal },
+        { id: 'report-btn', screen: 'report' }
+    ];
     
-    if (passwordChangeForm) {
-        passwordChangeForm.addEventListener('submit', handlePasswordChange);
-    }
-    
-    if (cancelProfile) {
-        cancelProfile.addEventListener('click', hideProfileModal);
-    }
-    
-    const cancelEditBtn = document.getElementById('cancel-edit-btn');
-    if (cancelEditBtn) {
-        cancelEditBtn.addEventListener('click', hideEditModal);
-    }
-    
-    const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
-    const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
-    
-    if (confirmDeleteBtn) {
-        confirmDeleteBtn.addEventListener('click', handleConfirmDelete);
-    }
-    
-    if (cancelDeleteBtn) {
-        cancelDeleteBtn.addEventListener('click', hideDeleteModal);
-    }
-}
-
-// ===== GERENCIAMENTO DE TELAS =====
-function showScreen(screenName) {
-    debugLog(`Changing to screen: ${screenName}`);
-    
-    const allScreens = document.querySelectorAll('.screen');
-    allScreens.forEach(screen => {
-        screen.classList.remove('active');
+    navButtons.forEach(btn => {
+        const element = document.getElementById(btn.id);
+        if (element) {
+            element.addEventListener('click', function() {
+                console.log(`Botão ${btn.id} clicado`);
+                if (btn.screen) {
+                    showScreen(btn.screen);
+                }
+                if (btn.callback) {
+                    btn.callback();
+                }
+            });
+        }
     });
     
-    const targetScreen = document.getElementById(screenName + '-screen');
-    if (targetScreen) {
-        targetScreen.classList.add('active');
-        debugLog(`Screen ${screenName} is now active`);
-        
-        if (screenName === 'new-entry') {
-            setTimeout(() => {
-                populateSubjectSelect();
-                debugLog('Subject select repopulated for new-entry screen');
-            }, 50);
+    // Botões de voltar
+    const backButtons = [
+        'back-to-dashboard-1',
+        'back-to-dashboard-2',
+        'back-to-dashboard-3',
+        'back-to-dashboard-4',
+        'back-to-dashboard-5'
+    ];
+    
+    backButtons.forEach(btnId => {
+        const btn = document.getElementById(btnId);
+        if (btn) {
+            btn.addEventListener('click', () => showScreen('dashboard'));
         }
-    } else {
-        console.error(`Screen not found: ${screenName}-screen`);
-    }
+    });
 }
 
-// ===== LOGIN - VERSÃO CORRIGIDA =====
-function handleLogin() {
-    debugLog('=== INÍCIO DO PROCESSO DE LOGIN ===');
+// Login
+async function handleLogin(e) {
+    e.preventDefault();
+    console.log('=== PROCESSANDO LOGIN ===');
     
     const userSelect = document.getElementById('user-select');
     const passwordInput = document.getElementById('password');
     const loginError = document.getElementById('login-error');
+    const loginBtn = document.getElementById('login-btn');
     
     if (!userSelect || !passwordInput) {
-        console.error('CRITICAL: Login elements not found');
-        alert('ERRO CRÍTICO: Elementos de login não encontrados!');
+        console.error('Elementos de login não encontrados');
+        alert('Erro interno: elementos de login não encontrados');
         return;
     }
     
-    debugLog('Login elements validated successfully');
+    const user = userSelect.value?.trim();
+    const password = passwordInput.value?.trim();
+    
+    console.log('Dados do login:', { user, password, userLength: user?.length, passwordLength: password?.length });
     
     // Limpar erro anterior
     if (loginError) {
@@ -765,414 +357,474 @@ function handleLogin() {
         loginError.textContent = '';
     }
     
-    // Mostrar loading
-    setButtonLoading('login-btn', true);
-    
-    // Pequeno delay para mostrar o loading
-    setTimeout(() => {
-        performLogin(userSelect, passwordInput, loginError);
-    }, 100);
-}
-
-function performLogin(userSelect, passwordInput, loginError) {
-    const selectedUser = userSelect.value.trim();
-    const typedPassword = passwordInput.value.trim();
-    
-    debugLog('LOGIN ATTEMPT - Values captured:', {
-        selectedUser: selectedUser,
-        passwordLength: typedPassword.length,
-        selectIndex: userSelect.selectedIndex,
-        selectOptions: userSelect.options.length
-    });
-    
-    // Validações básicas
-    if (!selectedUser || selectedUser === '') {
-        debugLog('LOGIN ERROR: No user selected');
-        showLoginError('Por favor, selecione um usuário na lista.');
-        setButtonLoading('login-btn', false);
+    // Validação
+    if (!user) {
+        showLoginError('Por favor, selecione um usuário.');
         return;
     }
     
-    if (!typedPassword || typedPassword === '') {
-        debugLog('LOGIN ERROR: No password entered');
+    if (!password) {
         showLoginError('Por favor, digite sua senha.');
-        setButtonLoading('login-btn', false);
         return;
     }
     
-    // Verificar usuário válido
-    const isValidUser = GLUOS_DATA.usuarios.includes(selectedUser);
+    // Loading state
+    setButtonLoading(loginBtn, true);
     
-    debugLog('LOGIN - User validation:', {
-        selectedUser: selectedUser,
-        isValidUser: isValidUser
-    });
-    
-    if (!isValidUser) {
-        debugLog('LOGIN ERROR: Invalid user selected');
-        showLoginError(`Usuário "${selectedUser}" não é válido.`);
-        setButtonLoading('login-btn', false);
-        return;
-    }
-    
-    // Verificar senha
-    const expectedPassword = getUserPassword(selectedUser);
-    
-    debugLog('LOGIN - Password verification:', {
-        user: selectedUser,
-        match: typedPassword === expectedPassword
-    });
-    
-    if (typedPassword !== expectedPassword) {
-        debugLog('LOGIN ERROR: Password mismatch');
-        showLoginError(`Senha incorreta para o usuário "${selectedUser}".`);
-        setButtonLoading('login-btn', false);
-        return;
-    }
-    
-    // ===== LOGIN BEM-SUCEDIDO! =====
-    debugLog('=== LOGIN SUCCESSFUL ===', { 
-        user: selectedUser
-    });
-    
-    currentUser = selectedUser;
-    
-    // Configurar interface
-    configureUserInterface(selectedUser);
-    
-    // Atualizar informações do usuário
-    const userInfo = document.getElementById('user-info');
-    if (userInfo) {
-        userInfo.textContent = `Usuário: ${currentUser}`;
-    }
-    
-    // Limpar formulário
-    userSelect.selectedIndex = 0;
-    passwordInput.value = '';
-    
-    // Esconder debug
-    const debugElement = document.getElementById('login-debug');
-    if (debugElement) {
-        debugElement.classList.add('hidden');
-    }
-    
-    // Remover loading
-    setButtonLoading('login-btn', false);
-    
-    // Redirecionar para dashboard
-    setTimeout(() => {
-        showScreen('dashboard');
-        debugLog('LOGIN - Successfully redirected to dashboard');
+    try {
+        let storedPassword = '123'; // Fallback
         
-        // Mostrar mensagem de boas-vindas
-        showToast(`Bem-vindo(a), ${currentUser}!`, 'success');
-    }, 200);
+        // Se Firebase estiver conectado, verificar senha
+        if (firebaseConnected && database) {
+            try {
+                const passwordRef = ref(database, `gluos_passwords/${user}`);
+                const snapshot = await get(passwordRef);
+                
+                if (snapshot.exists()) {
+                    storedPassword = snapshot.val();
+                }
+            } catch (error) {
+                console.warn('Erro ao verificar senha no Firebase, usando padrão:', error);
+            }
+        }
+        
+        if (password !== storedPassword) {
+            showLoginError('Senha incorreta.');
+            return;
+        }
+        
+        // Login bem-sucedido
+        console.log('=== LOGIN BEM-SUCEDIDO ===', { usuario: user });
+        currentUser = user;
+        updateUserInfo();
+        
+        // Limpar formulário
+        userSelect.value = '';
+        passwordInput.value = '';
+        
+        // Ir para dashboard
+        showScreen('dashboard');
+        
+    } catch (error) {
+        console.error('Erro no login:', error);
+        showLoginError('Erro ao verificar credenciais. Tente novamente.');
+    } finally {
+        setButtonLoading(loginBtn, false);
+    }
 }
 
 function showLoginError(message) {
+    console.log('Erro de login:', message);
     const loginError = document.getElementById('login-error');
     if (loginError) {
         loginError.textContent = message;
         loginError.classList.remove('hidden');
-    }
-    
-    debugLog('LOGIN ERROR DISPLAYED:', message);
-}
-
-// ===== CONFIGURAR INTERFACE DO USUÁRIO =====
-function configureUserInterface(user) {
-    const newEntryBtn = document.getElementById('new-entry-btn');
-    const personalReportBtn = document.getElementById('personal-report-btn');
-    
-    if (user === 'Admin') {
-        if (newEntryBtn) {
-            newEntryBtn.style.display = 'none';
-        }
-        
-        if (personalReportBtn) {
-            personalReportBtn.classList.add('hidden');
-        }
-        
-        debugLog('Admin interface configured - Nova Entrada disabled');
     } else {
-        if (newEntryBtn) {
-            newEntryBtn.style.display = 'inline-flex';
-        }
-        
-        if (personalReportBtn) {
-            personalReportBtn.classList.remove('hidden');
-        }
-        
-        debugLog('Regular user interface configured - all features enabled');
+        alert(message);
     }
 }
 
-// ===== GERENCIAMENTO DE SENHAS =====
-function getUserPassword(username) {
-    const customPassword = userPasswords[username];
-    const finalPassword = customPassword || '123';
-    debugLog(`Getting password for ${username}:`, { 
-        hasCustom: !!customPassword, 
-        using: finalPassword 
-    });
-    return finalPassword;
+function handleLogout() {
+    currentUser = null;
+    updateUserInfo();
+    showScreen('login');
+    console.log('Logout realizado');
 }
 
-async function setUserPassword(username, password) {
-    debugLog(`Setting new password for ${username}`);
-    userPasswords[username] = password;
+// Nova entrada
+function setupNewEntry() {
+    const form = document.getElementById('new-entry-form');
+    const subjectNumber = document.getElementById('subject-number');
+    const subjectSelect = document.getElementById('subject-select');
     
-    try {
-        if (isFirebaseInitialized && window.firebaseFunctions) {
-            const { ref, set } = window.firebaseFunctions;
-            const passwordRef = ref(database, `gluos_passwords/${username}`);
-            await set(passwordRef, password);
-            debugLog('Password updated successfully in Firebase');
-        } else {
-            debugLog('Password saved locally only (Firebase not available)');
-        }
-        
-        savePasswordsToLocalStorage();
-        
-    } catch (error) {
-        console.error('Error updating password:', error);
-        savePasswordsToLocalStorage();
-    }
-}
-
-// ===== NOVA ENTRADA =====
-async function handleNewEntry(e) {
-    e.preventDefault();
-    debugLog('Creating new entry');
-    
-    if (!currentUser) {
-        showError('Você precisa estar logado para criar uma nova entrada.');
-        return;
+    if (form) {
+        form.addEventListener('submit', handleNewEntry);
     }
     
-    if (currentUser === 'Admin') {
-        showError('Admin não pode criar novas entradas.');
-        return;
-    }
-    
-    const processNumber = document.getElementById('process-number').value.trim();
-    const ctm = document.getElementById('ctm').value.trim();
-    const contributor = document.getElementById('contributor').value.trim();
-    const subjectId = document.getElementById('subject-select').value;
-    const observation = document.getElementById('observation').value.trim();
-    
-    if (!processNumber || !ctm || !contributor || !subjectId) {
-        showError('Por favor, preencha todos os campos obrigatórios.');
-        return;
-    }
-    
-    setButtonLoading('save-entry-btn', true);
-    
-    try {
-        const subject = GLUOS_DATA.assuntos.find(a => a.id == subjectId);
-        if (!subject) {
-            showError('Assunto selecionado não encontrado.');
-            setButtonLoading('save-entry-btn', false);
-            return;
-        }
-        
-        const now = new Date();
-        
-        const entry = {
-            id: Date.now(),
-            date: now.toLocaleDateString('pt-BR'),
-            time: now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            server: currentUser,
-            processNumber: processNumber,
-            ctm: ctm,
-            contributor: contributor,
-            subjectId: parseInt(subjectId),
-            subjectText: subject.texto,
-            observation: observation || '',
-            timestamp: now.getTime()
-        };
-        
-        allEntries.unshift(entry);
-        saveToLocalStorage();
-        
-        if (isFirebaseInitialized && window.firebaseFunctions && isOnline) {
-            try {
-                const { ref, push } = window.firebaseFunctions;
-                const entriesRef = ref(database, 'gluos_entries');
-                await push(entriesRef, entry);
-                debugLog('Entry saved to Firebase successfully');
-            } catch (firebaseError) {
-                console.error('Firebase save failed, but entry saved locally:', firebaseError);
-                showToast('Entrada salva localmente (Firebase indisponível)', 'warning');
+    // Auto-preencher assunto pelo número
+    if (subjectNumber && subjectSelect) {
+        subjectNumber.addEventListener('input', function() {
+            const num = parseInt(this.value);
+            if (num >= 1 && num <= 47) {
+                const assunto = GLUOS_DATA.assuntos.find(a => a.id === num);
+                if (assunto) {
+                    subjectSelect.value = assunto.id;
+                }
             }
-        }
-        
-        showSuccessModal('Entrada salva com sucesso!');
-        document.getElementById('new-entry-form').reset();
-        
-        debugLog('New entry saved:', entry);
-        
-    } catch (error) {
-        console.error('Error saving entry:', error);
-        showToast('Erro ao salvar entrada. Tente novamente.', 'error');
-    } finally {
-        setButtonLoading('save-entry-btn', false);
-    }
-}
-
-// ===== RELATÓRIO PESSOAL =====
-function handleGeneratePersonalReport() {
-    if (!currentUser || currentUser === 'Admin') {
-        showError('Esta funcionalidade não está disponível para este usuário.');
-        return;
-    }
-    
-    const startDate = document.getElementById('report-date-start').value;
-    const endDate = document.getElementById('report-date-end').value;
-    
-    if (!startDate || !endDate) {
-        showError('Por favor, selecione as datas inicial e final.');
-        return;
-    }
-    
-    if (new Date(startDate) > new Date(endDate)) {
-        showError('A data inicial não pode ser posterior à data final.');
-        return;
-    }
-    
-    setButtonLoading('generate-personal-report', true);
-    
-    setTimeout(() => {
-        try {
-            generatePersonalReport(startDate, endDate);
-        } finally {
-            setButtonLoading('generate-personal-report', false);
-        }
-    }, 300);
-}
-
-function generatePersonalReport(startDate, endDate) {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    end.setHours(23, 59, 59, 999);
-    
-    const userEntries = allEntries.filter(entry => {
-        if (entry.server !== currentUser) return false;
-        
-        const entryDate = new Date(entry.timestamp);
-        return entryDate >= start && entryDate <= end;
-    });
-    
-    const subjectCounts = {};
-    let totalEntries = 0;
-    
-    userEntries.forEach(entry => {
-        const subjectId = entry.subjectId;
-        const subjectText = entry.subjectText;
-        
-        if (!subjectCounts[subjectId]) {
-            subjectCounts[subjectId] = {
-                id: subjectId,
-                text: subjectText,
-                count: 0
-            };
-        }
-        
-        subjectCounts[subjectId].count++;
-        totalEntries++;
-    });
-    
-    const reportData = Object.values(subjectCounts).sort((a, b) => b.count - a.count);
-    
-    displayPersonalReport(reportData, totalEntries, startDate, endDate);
-}
-
-function displayPersonalReport(data, totalEntries, startDate, endDate) {
-    const resultsContainer = document.getElementById('personal-report-results');
-    const tableBody = document.querySelector('#personal-report-table tbody');
-    const reportPeriod = document.getElementById('report-period');
-    const reportUser = document.getElementById('report-user');
-    
-    if (!resultsContainer || !tableBody) return;
-    
-    if (reportPeriod) {
-        const start = new Date(startDate).toLocaleDateString('pt-BR');
-        const end = new Date(endDate).toLocaleDateString('pt-BR');
-        reportPeriod.textContent = `Período: ${start} a ${end}`;
-    }
-    
-    if (reportUser) {
-        reportUser.textContent = `Servidor: ${currentUser}`;
-    }
-    
-    tableBody.innerHTML = '';
-    
-    if (totalEntries === 0) {
-        tableBody.innerHTML = `
-            <tr>
-                <td colspan="3" class="text-center">
-                    Nenhum registro encontrado para o período selecionado.
-                </td>
-            </tr>
-        `;
-    } else {
-        data.forEach(item => {
-            const percentage = ((item.count / totalEntries) * 100).toFixed(2);
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${item.text}</td>
-                <td style="text-align: center;">${item.count}</td>
-                <td style="text-align: center;">${percentage}%</td>
-            `;
-            tableBody.appendChild(row);
         });
         
-        const totalRow = document.createElement('tr');
-        totalRow.className = 'report-total-row';
-        totalRow.innerHTML = `
-            <td><strong>TOTAL GERAL</strong></td>
-            <td style="text-align: center;"><strong>${totalEntries}</strong></td>
-            <td style="text-align: center;"><strong>100,00%</strong></td>
-        `;
-        tableBody.appendChild(totalRow);
+        // Sincronizar select com número
+        subjectSelect.addEventListener('change', function() {
+            if (this.value) {
+                subjectNumber.value = this.value;
+            }
+        });
     }
-    
-    resultsContainer.classList.remove('hidden');
-    
-    debugLog('Personal report generated:', {
-        user: currentUser,
-        period: `${startDate} to ${endDate}`,
-        totalEntries: totalEntries,
-        subjects: data.length
-    });
 }
 
-// ===== PESQUISA =====
-function handleSearch() {
-    const processNumber = document.getElementById('search-process').value.trim();
+async function handleNewEntry(e) {
+    e.preventDefault();
+    console.log('Processando nova entrada...');
     
-    if (!processNumber) {
-        showError('Por favor, digite um número de processo para pesquisar.');
+    const form = e.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    
+    // Coletar dados do formulário
+    const subjectId = parseInt(document.getElementById('subject-select').value);
+    const processNumber = document.getElementById('process-number').value.trim();
+    
+    if (!subjectId) {
+        alert('Por favor, selecione um assunto.');
         return;
     }
     
-    setButtonLoading('search-submit', true);
+    if (!processNumber) {
+        alert('Por favor, informe o número do processo.');
+        return;
+    }
     
-    setTimeout(() => {
-        try {
-            const results = allEntries.filter(entry => 
-                entry.processNumber.toLowerCase().includes(processNumber.toLowerCase())
-            );
-            
-            displaySearchResults(results, processNumber);
-            
-        } finally {
-            setButtonLoading('search-submit', false);
+    const assunto = GLUOS_DATA.assuntos.find(a => a.id === subjectId);
+    const now = new Date();
+    
+    const entry = {
+        subjectId: subjectId,
+        subjectText: assunto ? assunto.texto : '',
+        processNumber: processNumber,
+        contributor: document.getElementById('contributor').value.trim(),
+        ctm: document.getElementById('ctm').value.trim(),
+        observation: document.getElementById('observation').value.trim(),
+        habiteNumber: document.getElementById('habite-number').value.trim(),
+        alvaraSituation: document.getElementById('alvara-situation').value.trim(),
+        server: currentUser,
+        date: now.toLocaleDateString('pt-BR'),
+        time: now.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+        timestamp: now.getTime()
+    };
+    
+    setButtonLoading(submitBtn, true);
+    
+    try {
+        // Salvar no Firebase se conectado
+        if (firebaseConnected && database) {
+            const entriesRef = ref(database, 'gluos_entries');
+            await push(entriesRef, entry);
+            console.log('Entrada salva no Firebase:', entry);
+        } else {
+            // Salvar localmente se Firebase não estiver disponível
+            entry.id = 'local_' + Date.now();
+            allEntries.unshift(entry);
+            console.log('Entrada salva localmente:', entry);
         }
-    }, 300);
+        
+        // Limpar formulário
+        form.reset();
+        document.getElementById('subject-number').value = '';
+        
+        // Mostrar sucesso
+        showSuccessModal('Entrada salva com sucesso!');
+        
+    } catch (error) {
+        console.error('Erro ao salvar entrada:', error);
+        alert('Erro ao salvar entrada. Tente novamente.');
+    } finally {
+        setButtonLoading(submitBtn, false);
+    }
 }
 
-function displaySearchResults(results, searchTerm) {
+// Múltiplas entradas
+function setupMultipleEntries() {
+    const setSubjectBtn = document.getElementById('set-subject-btn');
+    const addProcessBtn = document.getElementById('add-process-btn');
+    const saveAllBtn = document.getElementById('save-all-btn');
+    const multiSubjectNumber = document.getElementById('multi-subject-number');
+    const multiSubjectSelect = document.getElementById('multi-subject-select');
+    
+    if (setSubjectBtn) {
+        setSubjectBtn.addEventListener('click', handleSetSubject);
+    }
+    
+    if (addProcessBtn) {
+        addProcessBtn.addEventListener('click', addProcessForm);
+    }
+    
+    if (saveAllBtn) {
+        saveAllBtn.addEventListener('click', handleSaveAllEntries);
+    }
+    
+    // Auto-preencher assunto pelo número
+    if (multiSubjectNumber && multiSubjectSelect) {
+        multiSubjectNumber.addEventListener('input', function() {
+            const num = parseInt(this.value);
+            if (num >= 1 && num <= 47) {
+                const assunto = GLUOS_DATA.assuntos.find(a => a.id === num);
+                if (assunto) {
+                    multiSubjectSelect.value = assunto.id;
+                }
+            }
+        });
+        
+        // Sincronizar select com número
+        multiSubjectSelect.addEventListener('change', function() {
+            if (this.value) {
+                multiSubjectNumber.value = this.value;
+            }
+        });
+    }
+}
+
+function handleSetSubject() {
+    const subjectId = parseInt(document.getElementById('multi-subject-select').value);
+    
+    if (!subjectId) {
+        alert('Por favor, selecione um assunto.');
+        return;
+    }
+    
+    const assunto = GLUOS_DATA.assuntos.find(a => a.id === subjectId);
+    selectedSubjectForMultiple = assunto;
+    
+    // Mostrar seção de formulários
+    const container = document.getElementById('multiple-forms-container');
+    const subjectText = document.getElementById('selected-subject-text');
+    
+    if (container && subjectText && assunto) {
+        subjectText.textContent = assunto.texto;
+        container.classList.remove('hidden');
+        
+        // Limpar formulários anteriores e adicionar o primeiro
+        document.getElementById('processes-container').innerHTML = '';
+        processCounter = 1;
+        addProcessForm();
+    }
+}
+
+function addProcessForm() {
+    if (!selectedSubjectForMultiple) return;
+    
+    const container = document.getElementById('processes-container');
+    if (!container) return;
+    
+    const formHtml = `
+        <div class="process-form card" data-process="${processCounter}">
+            <div class="card__body">
+                <div class="process-form-header">
+                    <h4>Processo ${processCounter}</h4>
+                    <button type="button" class="remove-process-btn" onclick="removeProcessForm(${processCounter})">Remover</button>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Nº Processo/Protocolo: *</label>
+                    <input type="text" class="form-control process-number" placeholder="informe número do processo ou protocolo, ou digite 0" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Contribuinte:</label>
+                    <input type="text" class="form-control process-contributor" placeholder="Nome do contribuinte">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">CTM:</label>
+                    <input type="text" class="form-control process-ctm" placeholder="CTM">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Observação:</label>
+                    <textarea class="form-control process-observation" rows="3" placeholder="Observações"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Número do Habite-se/Alvará:</label>
+                    <input type="text" class="form-control process-habite" placeholder="Número do Habite-se/Alvará">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Situação do Alvará de Funcionamento:</label>
+                    <select class="form-control process-alvara">
+                        <option value="">-- Selecione --</option>
+                        <option value="Deferido">Deferido</option>
+                        <option value="Indeferido">Indeferido</option>
+                        <option value="Em Análise">Em Análise</option>
+                        <option value="Pendente">Pendente</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', formHtml);
+    processCounter++;
+}
+
+window.removeProcessForm = function(processId) {
+    const form = document.querySelector(`[data-process="${processId}"]`);
+    if (form) {
+        form.remove();
+    }
+};
+
+async function handleSaveAllEntries() {
+    if (!selectedSubjectForMultiple) {
+        alert('Nenhum assunto selecionado.');
+        return;
+    }
+    
+    const processForms = document.querySelectorAll('.process-form');
+    if (processForms.length === 0) {
+        alert('Nenhum processo adicionado.');
+        return;
+    }
+    
+    const saveAllBtn = document.getElementById('save-all-btn');
+    setButtonLoading(saveAllBtn, true);
+    
+    const entries = [];
+    const now = new Date();
+    const date = now.toLocaleDateString('pt-BR');
+    const time = now.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+    const timestamp = now.getTime();
+    
+    // Coletar dados de todos os formulários
+    processForms.forEach(form => {
+        const processNumber = form.querySelector('.process-number').value.trim();
+        
+        if (processNumber) { // Só salvar se tiver número do processo
+            const entry = {
+                subjectId: selectedSubjectForMultiple.id,
+                subjectText: selectedSubjectForMultiple.texto,
+                processNumber: processNumber,
+                contributor: form.querySelector('.process-contributor').value.trim(),
+                ctm: form.querySelector('.process-ctm').value.trim(),
+                observation: form.querySelector('.process-observation').value.trim(),
+                habiteNumber: form.querySelector('.process-habite').value.trim(),
+                alvaraSituation: form.querySelector('.process-alvara').value.trim(),
+                server: currentUser,
+                date: date,
+                time: time,
+                timestamp: timestamp
+            };
+            entries.push(entry);
+        }
+    });
+    
+    if (entries.length === 0) {
+        alert('Por favor, preencha pelo menos um número de processo.');
+        setButtonLoading(saveAllBtn, false);
+        return;
+    }
+    
+    try {
+        // Salvar entradas
+        if (firebaseConnected && database) {
+            const entriesRef = ref(database, 'gluos_entries');
+            const promises = entries.map(entry => push(entriesRef, entry));
+            await Promise.all(promises);
+            console.log(`${entries.length} entradas salvas no Firebase`);
+        } else {
+            // Salvar localmente
+            entries.forEach((entry, index) => {
+                entry.id = 'local_' + (Date.now() + index);
+                allEntries.unshift(entry);
+            });
+            console.log(`${entries.length} entradas salvas localmente`);
+        }
+        
+        // Limpar tudo
+        selectedSubjectForMultiple = null;
+        document.getElementById('multiple-forms-container').classList.add('hidden');
+        document.getElementById('multi-subject-number').value = '';
+        document.getElementById('multi-subject-select').value = '';
+        document.getElementById('processes-container').innerHTML = '';
+        processCounter = 1;
+        
+        showSuccessModal(`${entries.length} entrada(s) salva(s) com sucesso!`);
+        
+    } catch (error) {
+        console.error('Erro ao salvar entradas:', error);
+        alert('Erro ao salvar entradas. Tente novamente.');
+    } finally {
+        setButtonLoading(saveAllBtn, false);
+    }
+}
+
+// Pesquisa
+function setupSearch() {
+    // Abas de pesquisa
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const tabName = this.dataset.tab;
+            switchSearchTab(tabName);
+        });
+    });
+    
+    // Botão de pesquisar
+    const searchBtn = document.getElementById('search-submit');
+    if (searchBtn) {
+        searchBtn.addEventListener('click', handleSearch);
+    }
+}
+
+function switchSearchTab(tabName) {
+    // Atualizar botões
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`[data-tab="${tabName}"]`)?.classList.add('active');
+    
+    // Atualizar abas
+    document.querySelectorAll('.search-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.getElementById(tabName + '-search')?.classList.add('active');
+}
+
+async function handleSearch() {
+    const activeTab = document.querySelector('.search-tab.active');
+    if (!activeTab) return;
+    
+    const searchBtn = document.getElementById('search-submit');
+    setButtonLoading(searchBtn, true);
+    
+    let filteredEntries = [];
+    
+    try {
+        if (activeTab.id === 'process-search') {
+            const processNumber = document.getElementById('search-process').value.trim();
+            if (!processNumber) {
+                alert('Digite o número do processo.');
+                return;
+            }
+            filteredEntries = allEntries.filter(entry => 
+                entry.processNumber && entry.processNumber.toLowerCase().includes(processNumber.toLowerCase())
+            );
+        } else if (activeTab.id === 'date-search') {
+            const searchDate = document.getElementById('search-date').value;
+            if (!searchDate) {
+                alert('Selecione uma data.');
+                return;
+            }
+            const targetDate = new Date(searchDate + 'T00:00:00').toLocaleDateString('pt-BR');
+            filteredEntries = allEntries.filter(entry => entry.date === targetDate);
+        } else if (activeTab.id === 'server-search') {
+            const serverName = document.getElementById('search-server').value;
+            if (!serverName) {
+                alert('Selecione um servidor.');
+                return;
+            }
+            filteredEntries = allEntries.filter(entry => entry.server === serverName);
+        }
+        
+        displaySearchResults(filteredEntries);
+        
+    } catch (error) {
+        console.error('Erro na pesquisa:', error);
+        alert('Erro ao pesquisar. Tente novamente.');
+    } finally {
+        setButtonLoading(searchBtn, false);
+    }
+}
+
+function displaySearchResults(entries) {
     const resultsContainer = document.getElementById('search-results');
     const tableBody = document.querySelector('#search-table tbody');
     
@@ -1180,335 +832,113 @@ function displaySearchResults(results, searchTerm) {
     
     tableBody.innerHTML = '';
     
-    if (results.length === 0) {
-        resultsContainer.classList.remove('hidden');
+    if (entries.length === 0) {
         tableBody.innerHTML = `
             <tr>
-                <td colspan="7" class="text-center">
-                    Nenhum resultado encontrado para o processo "${searchTerm}".
-                </td>
+                <td colspan="8" class="text-center">Nenhum resultado encontrado.</td>
             </tr>
         `;
-        return;
+    } else {
+        entries.forEach(entry => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${entry.date || '-'}</td>
+                <td>${entry.time || '-'}</td>
+                <td>${entry.server || '-'}</td>
+                <td>${entry.processNumber || '-'}</td>
+                <td title="${entry.subjectText || '-'}">${truncateText(entry.subjectText || '-', 30)}</td>
+                <td>${entry.contributor || '-'}</td>
+                <td>${entry.ctm || '-'}</td>
+                <td title="${entry.observation || '-'}">${truncateText(entry.observation || '-', 40)}</td>
+            `;
+            tableBody.appendChild(row);
+        });
     }
-    
-    results.forEach(entry => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${entry.date}</td>
-            <td>${entry.time}</td>
-            <td>${entry.server}</td>
-            <td>${entry.subjectText}</td>
-            <td>${entry.ctm}</td>
-            <td>${entry.contributor}</td>
-            <td>${entry.observation || '-'}</td>
-        `;
-        tableBody.appendChild(row);
-    });
     
     resultsContainer.classList.remove('hidden');
 }
 
-// ===== BASE DE DADOS =====
-function loadDatabaseTable(filteredEntries = null) {
-    const entries = filteredEntries || allEntries;
+// Base de dados
+function setupDatabase() {
+    const applyBtn = document.getElementById('apply-filters');
+    const clearBtn = document.getElementById('clear-filters');
+    
+    if (applyBtn) {
+        applyBtn.addEventListener('click', applyDatabaseFilters);
+    }
+    
+    if (clearBtn) {
+        clearBtn.addEventListener('click', clearDatabaseFilters);
+    }
+}
+
+function loadDatabaseTable(entries = null) {
     const tableBody = document.querySelector('#database-table tbody');
     const totalRecords = document.getElementById('total-records');
     
     if (!tableBody) return;
     
+    const entriesToShow = entries || allEntries;
+    
     tableBody.innerHTML = '';
     
     if (totalRecords) {
-        totalRecords.textContent = `${entries.length} registro(s)`;
+        totalRecords.textContent = `${entriesToShow.length} registro(s)`;
     }
     
-    if (entries.length === 0) {
+    if (entriesToShow.length === 0) {
         tableBody.innerHTML = `
             <tr>
-                <td colspan="9" class="text-center">
-                    Nenhum registro encontrado.
-                </td>
+                <td colspan="9" class="text-center">Nenhum registro encontrado.</td>
             </tr>
         `;
         return;
     }
     
-    entries.forEach(entry => {
+    entriesToShow.forEach(entry => {
         const row = document.createElement('tr');
         
-        const canEditDelete = currentUser && entry.server === currentUser && currentUser !== 'Admin';
-        
-        let actionsHtml = '';
-        if (canEditDelete) {
-            actionsHtml = `
-                <div class="action-buttons">
-                    <button class="btn btn--small btn--edit" onclick="showEditModal('${entry.firebaseKey || entry.id}')">
-                        Editar
-                    </button>
-                    <button class="btn btn--small btn--delete" onclick="showDeleteModal('${entry.firebaseKey || entry.id}')">
-                        Excluir
-                    </button>
-                </div>
-            `;
-        } else {
-            actionsHtml = '-';
-        }
+        const canEdit = entry.server === currentUser;
+        const actionsHtml = canEdit ? `
+            <div class="action-buttons">
+                <button class="btn--edit" onclick="editEntry('${entry.id}')">Editar</button>
+                <button class="btn--delete" onclick="deleteEntry('${entry.id}')">Excluir</button>
+            </div>
+        ` : '-';
         
         row.innerHTML = `
-            <td>${entry.date}</td>
-            <td>${entry.time}</td>
-            <td>${entry.server}</td>
-            <td>${entry.processNumber}</td>
-            <td>${entry.ctm}</td>
-            <td>${entry.contributor}</td>
-            <td>${entry.subjectText}</td>
-            <td>${entry.observation || '-'}</td>
+            <td>${entry.date || '-'}</td>
+            <td>${entry.time || '-'}</td>
+            <td>${entry.server || '-'}</td>
+            <td>${entry.processNumber || '-'}</td>
+            <td title="${entry.subjectText || '-'}">${truncateText(entry.subjectText || '-', 30)}</td>
+            <td>${entry.contributor || '-'}</td>
+            <td>${entry.ctm || '-'}</td>
+            <td title="${entry.observation || '-'}">${truncateText(entry.observation || '-', 40)}</td>
             <td>${actionsHtml}</td>
         `;
         tableBody.appendChild(row);
     });
 }
 
-// ===== EDIÇÃO DE ENTRADA =====
-function showEditModal(entryId) {
-    debugLog('Showing edit modal for entry:', entryId);
-    
-    const entry = allEntries.find(e => (e.firebaseKey || e.id.toString()) === entryId.toString());
-    if (!entry) {
-        showError('Entrada não encontrada.');
-        return;
-    }
-    
-    if (!currentUser || entry.server !== currentUser || currentUser === 'Admin') {
-        showError('Você não tem permissão para editar esta entrada.');
-        return;
-    }
-    
-    currentEditingEntry = entry;
-    
-    document.getElementById('edit-entry-id').value = entryId;
-    document.getElementById('edit-process-number').value = entry.processNumber;
-    document.getElementById('edit-ctm').value = entry.ctm;
-    document.getElementById('edit-contributor').value = entry.contributor;
-    document.getElementById('edit-subject-select').value = entry.subjectId;
-    document.getElementById('edit-observation').value = entry.observation || '';
-    
-    const editError = document.getElementById('edit-error');
-    if (editError) {
-        editError.classList.add('hidden');
-        editError.textContent = '';
-    }
-    
-    const editModal = document.getElementById('edit-modal');
-    if (editModal) {
-        editModal.classList.remove('hidden');
-    }
-}
-
-function hideEditModal() {
-    const editModal = document.getElementById('edit-modal');
-    if (editModal) {
-        editModal.classList.add('hidden');
-    }
-    currentEditingEntry = null;
-}
-
-async function handleSaveEdit() {
-    if (!currentEditingEntry) {
-        showError('Nenhuma entrada sendo editada.');
-        return;
-    }
-    
-    const processNumber = document.getElementById('edit-process-number').value.trim();
-    const ctm = document.getElementById('edit-ctm').value.trim();
-    const contributor = document.getElementById('edit-contributor').value.trim();
-    const subjectId = document.getElementById('edit-subject-select').value;
-    const observation = document.getElementById('edit-observation').value.trim();
-    
-    if (!processNumber || !ctm || !contributor || !subjectId) {
-        const editError = document.getElementById('edit-error');
-        if (editError) {
-            editError.textContent = 'Por favor, preencha todos os campos obrigatórios.';
-            editError.classList.remove('hidden');
-        }
-        return;
-    }
-    
-    setButtonLoading('save-edit-btn', true);
-    
-    try {
-        const subject = GLUOS_DATA.assuntos.find(a => a.id == subjectId);
-        if (!subject) {
-            throw new Error('Assunto selecionado não encontrado.');
-        }
-        
-        const entryId = document.getElementById('edit-entry-id').value;
-        
-        const entryIndex = allEntries.findIndex(e => 
-            (e.firebaseKey || e.id.toString()) === entryId.toString()
-        );
-        
-        if (entryIndex === -1) {
-            throw new Error('Entrada não encontrada para atualização.');
-        }
-        
-        allEntries[entryIndex] = {
-            ...allEntries[entryIndex],
-            processNumber: processNumber,
-            ctm: ctm,
-            contributor: contributor,
-            subjectId: parseInt(subjectId),
-            subjectText: subject.texto,
-            observation: observation
-        };
-        
-        saveToLocalStorage();
-        
-        if (isFirebaseInitialized && window.firebaseFunctions && isOnline && allEntries[entryIndex].firebaseKey) {
-            try {
-                const { ref, update } = window.firebaseFunctions;
-                const entryRef = ref(database, `gluos_entries/${allEntries[entryIndex].firebaseKey}`);
-                await update(entryRef, {
-                    processNumber: processNumber,
-                    ctm: ctm,
-                    contributor: contributor,
-                    subjectId: parseInt(subjectId),
-                    subjectText: subject.texto,
-                    observation: observation
-                });
-                debugLog('Entry updated in Firebase successfully');
-            } catch (firebaseError) {
-                console.error('Firebase update failed:', firebaseError);
-                showToast('Entrada atualizada localmente (Firebase indisponível)', 'warning');
-            }
-        }
-        
-        hideEditModal();
-        showSuccessModal('Entrada atualizada com sucesso!');
-        loadDatabaseTable();
-        
-        debugLog('Entry updated successfully:', allEntries[entryIndex]);
-        
-    } catch (error) {
-        console.error('Error updating entry:', error);
-        const editError = document.getElementById('edit-error');
-        if (editError) {
-            editError.textContent = error.message || 'Erro ao atualizar entrada.';
-            editError.classList.remove('hidden');
-        }
-    } finally {
-        setButtonLoading('save-edit-btn', false);
-    }
-}
-
-// ===== EXCLUSÃO DE ENTRADA =====
-function showDeleteModal(entryId) {
-    debugLog('Showing delete modal for entry:', entryId);
-    
-    const entry = allEntries.find(e => (e.firebaseKey || e.id.toString()) === entryId.toString());
-    if (!entry) {
-        showError('Entrada não encontrada.');
-        return;
-    }
-    
-    if (!currentUser || entry.server !== currentUser || currentUser === 'Admin') {
-        showError('Você não tem permissão para excluir esta entrada.');
-        return;
-    }
-    
-    document.getElementById('delete-process-info').textContent = entry.processNumber;
-    document.getElementById('delete-subject-info').textContent = entry.subjectText;
-    
-    document.getElementById('confirm-delete-btn').setAttribute('data-entry-id', entryId);
-    
-    const deleteModal = document.getElementById('delete-modal');
-    if (deleteModal) {
-        deleteModal.classList.remove('hidden');
-    }
-}
-
-function hideDeleteModal() {
-    const deleteModal = document.getElementById('delete-modal');
-    if (deleteModal) {
-        deleteModal.classList.add('hidden');
-    }
-}
-
-async function handleConfirmDelete() {
-    const deleteBtn = document.getElementById('confirm-delete-btn');
-    const entryId = deleteBtn.getAttribute('data-entry-id');
-    
-    if (!entryId) {
-        showError('ID da entrada não encontrado.');
-        return;
-    }
-    
-    setButtonLoading('confirm-delete-btn', true);
-    
-    try {
-        const entryIndex = allEntries.findIndex(e => 
-            (e.firebaseKey || e.id.toString()) === entryId.toString()
-        );
-        
-        if (entryIndex === -1) {
-            throw new Error('Entrada não encontrada.');
-        }
-        
-        const entry = allEntries[entryIndex];
-        
-        if (entry.server !== currentUser || currentUser === 'Admin') {
-            throw new Error('Você não tem permissão para excluir esta entrada.');
-        }
-        
-        allEntries.splice(entryIndex, 1);
-        saveToLocalStorage();
-        
-        if (isFirebaseInitialized && window.firebaseFunctions && isOnline && entry.firebaseKey) {
-            try {
-                const { ref, remove } = window.firebaseFunctions;
-                const entryRef = ref(database, `gluos_entries/${entry.firebaseKey}`);
-                await remove(entryRef);
-                debugLog('Entry deleted from Firebase successfully');
-            } catch (firebaseError) {
-                console.error('Firebase delete failed:', firebaseError);
-                showToast('Entrada excluída localmente (Firebase indisponível)', 'warning');
-            }
-        }
-        
-        hideDeleteModal();
-        showSuccessModal('Entrada excluída com sucesso!');
-        loadDatabaseTable();
-        
-        debugLog('Entry deleted successfully:', { id: entryId });
-        
-    } catch (error) {
-        console.error('Error deleting entry:', error);
-        showError(error.message || 'Erro ao excluir entrada.');
-    } finally {
-        setButtonLoading('confirm-delete-btn', false);
-    }
-}
-
-// ===== FILTROS =====
 function applyDatabaseFilters() {
     const serverFilter = document.getElementById('filter-server').value;
-    const dateFilter = document.getElementById('filter-date').value;
     const subjectFilter = document.getElementById('filter-subject').value;
+    const dateFilter = document.getElementById('filter-date').value;
     
-    let filteredEntries = allEntries;
+    let filteredEntries = [...allEntries];
     
     if (serverFilter) {
         filteredEntries = filteredEntries.filter(entry => entry.server === serverFilter);
     }
     
-    if (dateFilter) {
-        const filterDate = new Date(dateFilter).toLocaleDateString('pt-BR');
-        filteredEntries = filteredEntries.filter(entry => entry.date === filterDate);
-    }
-    
     if (subjectFilter) {
         filteredEntries = filteredEntries.filter(entry => entry.subjectId === parseInt(subjectFilter));
+    }
+    
+    if (dateFilter) {
+        const targetDate = new Date(dateFilter + 'T00:00:00').toLocaleDateString('pt-BR');
+        filteredEntries = filteredEntries.filter(entry => entry.date === targetDate);
     }
     
     loadDatabaseTable(filteredEntries);
@@ -1516,149 +946,781 @@ function applyDatabaseFilters() {
 
 function clearDatabaseFilters() {
     document.getElementById('filter-server').value = '';
-    document.getElementById('filter-date').value = '';
     document.getElementById('filter-subject').value = '';
+    document.getElementById('filter-date').value = '';
     loadDatabaseTable();
 }
 
-// ===== PERFIL DO USUÁRIO =====
-function showProfileModal() {
-    if (!currentUser) {
-        showError('Você precisa estar logado para acessar o perfil.');
+// Funções globais para editar/excluir
+window.editEntry = function(entryId) {
+    const entry = allEntries.find(e => e.id === entryId);
+    if (!entry) {
+        alert('Entrada não encontrada.');
         return;
     }
     
-    const profileModal = document.getElementById('profile-modal');
-    const profileUsername = document.getElementById('profile-username');
-    const passwordError = document.getElementById('password-error');
-    
-    if (profileUsername) {
-        profileUsername.textContent = currentUser;
+    if (entry.server !== currentUser) {
+        alert('Você só pode editar suas próprias entradas.');
+        return;
     }
     
-    if (passwordError) {
-        passwordError.classList.add('hidden');
-        passwordError.textContent = '';
+    showEditModal(entry);
+};
+
+window.deleteEntry = async function(entryId) {
+    const entry = allEntries.find(e => e.id === entryId);
+    if (!entry) {
+        alert('Entrada não encontrada.');
+        return;
     }
     
-    const form = document.getElementById('password-change-form');
-    if (form) {
-        form.reset();
+    if (entry.server !== currentUser) {
+        alert('Você só pode excluir suas próprias entradas.');
+        return;
     }
     
-    if (profileModal) {
-        profileModal.classList.remove('hidden');
+    if (!confirm('Tem certeza que deseja excluir esta entrada?')) {
+        return;
+    }
+    
+    try {
+        if (firebaseConnected && database && !entryId.startsWith('local_')) {
+            const entryRef = ref(database, `gluos_entries/${entryId}`);
+            await remove(entryRef);
+            console.log('Entrada excluída do Firebase:', entryId);
+        } else {
+            // Remover localmente
+            allEntries = allEntries.filter(e => e.id !== entryId);
+            updateRecordCount();
+            console.log('Entrada excluída localmente:', entryId);
+        }
+        
+        showSuccessModal('Entrada excluída com sucesso!');
+        
+    } catch (error) {
+        console.error('Erro ao excluir entrada:', error);
+        alert('Erro ao excluir entrada. Tente novamente.');
+    }
+};
+
+// Relatórios
+function setupReports() {
+    const personalBtn = document.getElementById('personal-report-btn');
+    const completeBtn = document.getElementById('complete-report-btn');
+    const generateBtn = document.getElementById('generate-report-btn');
+    
+    if (personalBtn) {
+        personalBtn.addEventListener('click', () => {
+            currentReportType = 'personal';
+            showReportForm('Relatório Pessoal');
+        });
+    }
+    
+    if (completeBtn) {
+        completeBtn.addEventListener('click', () => {
+            currentReportType = 'complete';
+            showReportForm('Relatório Completo');
+        });
+    }
+    
+    if (generateBtn) {
+        generateBtn.addEventListener('click', handleGenerateReport);
     }
 }
 
-function hideProfileModal() {
-    const profileModal = document.getElementById('profile-modal');
-    if (profileModal) {
-        profileModal.classList.add('hidden');
+function showReportForm(title) {
+    const form = document.getElementById('report-form');
+    const formTitle = document.getElementById('report-form-title');
+    
+    if (form && formTitle) {
+        formTitle.textContent = title;
+        form.classList.remove('hidden');
+        
+        // Definir datas padrão (mês atual)
+        const today = new Date();
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        
+        const startInput = document.getElementById('report-start-date');
+        const endInput = document.getElementById('report-end-date');
+        
+        if (startInput) startInput.value = firstDay.toISOString().split('T')[0];
+        if (endInput) endInput.value = today.toISOString().split('T')[0];
     }
+}
+
+async function handleGenerateReport() {
+    const startDate = document.getElementById('report-start-date').value;
+    const endDate = document.getElementById('report-end-date').value;
+    
+    if (!startDate || !endDate) {
+        alert('Selecione as datas inicial e final.');
+        return;
+    }
+    
+    if (new Date(startDate) > new Date(endDate)) {
+        alert('A data inicial não pode ser maior que a data final.');
+        return;
+    }
+    
+    const generateBtn = document.getElementById('generate-report-btn');
+    setButtonLoading(generateBtn, true);
+    
+    try {
+        if (currentReportType === 'personal') {
+            generatePersonalReport(startDate, endDate);
+        } else if (currentReportType === 'complete') {
+            generateCompleteReport(startDate, endDate);
+        }
+    } catch (error) {
+        console.error('Erro ao gerar relatório:', error);
+        alert('Erro ao gerar relatório. Tente novamente.');
+    } finally {
+        setButtonLoading(generateBtn, false);
+    }
+}
+
+function generatePersonalReport(startDate, endDate) {
+    // Filtrar entradas do usuário atual no período
+    const startTimestamp = new Date(startDate + 'T00:00:00').getTime();
+    const endTimestamp = new Date(endDate + 'T23:59:59').getTime();
+    
+    const userEntries = allEntries.filter(entry => {
+        return entry.server === currentUser &&
+               entry.timestamp >= startTimestamp &&
+               entry.timestamp <= endTimestamp;
+    });
+    
+    // Contar por assunto
+    const subjectCount = {};
+    userEntries.forEach(entry => {
+        if (!subjectCount[entry.subjectId]) {
+            subjectCount[entry.subjectId] = {
+                id: entry.subjectId,
+                text: entry.subjectText,
+                count: 0
+            };
+        }
+        subjectCount[entry.subjectId].count++;
+    });
+    
+    const totalEntries = userEntries.length;
+    const reportData = Object.values(subjectCount).map(subject => ({
+        ...subject,
+        percentage: totalEntries > 0 ? ((subject.count / totalEntries) * 100).toFixed(1) : '0.0'
+    }));
+    
+    reportData.sort((a, b) => b.count - a.count);
+    
+    displayPersonalReport(reportData, totalEntries, startDate, endDate);
+}
+
+function displayPersonalReport(reportData, totalEntries, startDate, endDate) {
+    // Atualizar cabeçalho
+    const reportTitle = document.getElementById('report-title');
+    const reportMeta = document.getElementById('report-meta');
+    
+    if (reportTitle) {
+        reportTitle.textContent = 'Relatório Pessoal de Produtividade';
+    }
+    
+    if (reportMeta) {
+        reportMeta.innerHTML = `
+            <p><strong>Usuário:</strong> ${currentUser}</p>
+            <p><strong>Período:</strong> ${formatDateBR(startDate)} a ${formatDateBR(endDate)}</p>
+            <p><strong>Total de Entradas:</strong> ${totalEntries}</p>
+        `;
+    }
+    
+    // Criar tabela
+    const tableHead = document.getElementById('report-table-head');
+    const tableBody = document.getElementById('report-table-body');
+    const tableFoot = document.getElementById('report-table-foot');
+    
+    if (tableHead) {
+        tableHead.innerHTML = `
+            <tr>
+                <th>Assunto</th>
+                <th>Total</th>
+                <th>%</th>
+            </tr>
+        `;
+    }
+    
+    if (tableBody) {
+        tableBody.innerHTML = '';
+        
+        if (reportData.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="3" class="text-center">Nenhum registro encontrado no período.</td>
+                </tr>
+            `;
+        } else {
+            reportData.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.text}</td>
+                    <td>${item.count}</td>
+                    <td>${item.percentage}%</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+    }
+    
+    if (tableFoot) {
+        tableFoot.innerHTML = `
+            <tr>
+                <th><strong>TOTAL GERAL</strong></th>
+                <th><strong>${totalEntries}</strong></th>
+                <th><strong>100%</strong></th>
+            </tr>
+        `;
+    }
+    
+    // Calcular estatísticas adicionais
+    const summary = document.getElementById('summary-content');
+    if (summary && totalEntries > 0) {
+        const startTimestamp = new Date(startDate + 'T00:00:00').getTime();
+        const endTimestamp = new Date(endDate + 'T23:59:59').getTime();
+        
+        // Calcular dias com atividade
+        const dates = [...new Set(allEntries
+            .filter(entry => entry.server === currentUser &&
+                           entry.timestamp >= startTimestamp &&
+                           entry.timestamp <= endTimestamp)
+            .map(entry => entry.date))];
+        
+        const activeDays = dates.length;
+        const avgPerDay = activeDays > 0 ? (totalEntries / activeDays).toFixed(1) : '0.0';
+        
+        summary.innerHTML = `
+            <p><strong>Dias com atividade:</strong> ${activeDays}</p>
+            <p><strong>Média diária:</strong> ${avgPerDay} entradas/dia</p>
+        `;
+        
+        document.getElementById('report-summary').classList.remove('hidden');
+    } else {
+        document.getElementById('report-summary').classList.add('hidden');
+    }
+    
+    // Mostrar resultados
+    document.getElementById('report-results').classList.remove('hidden');
+}
+
+function generateCompleteReport(startDate, endDate) {
+    // Filtrar entradas no período
+    const startTimestamp = new Date(startDate + 'T00:00:00').getTime();
+    const endTimestamp = new Date(endDate + 'T23:59:59').getTime();
+    
+    const periodEntries = allEntries.filter(entry => {
+        return entry.timestamp >= startTimestamp && entry.timestamp <= endTimestamp;
+    });
+    
+    // Criar matriz: [assunto][usuário] = quantidade
+    const reportMatrix = {};
+    const userTotals = {};
+    const subjectTotals = {};
+    let grandTotal = 0;
+    
+    // Inicializar totais
+    GLUOS_DATA.usuarios.forEach(user => {
+        userTotals[user] = 0;
+    });
+    
+    // Inicializar matriz com todos os assuntos
+    GLUOS_DATA.assuntos.forEach(subject => {
+        reportMatrix[subject.id] = {
+            id: subject.id,
+            text: subject.texto,
+            users: {}
+        };
+        subjectTotals[subject.id] = 0;
+        
+        GLUOS_DATA.usuarios.forEach(user => {
+            reportMatrix[subject.id].users[user] = 0;
+        });
+    });
+    
+    // Processar entradas
+    periodEntries.forEach(entry => {
+        const subjectId = entry.subjectId;
+        const user = entry.server;
+        
+        if (reportMatrix[subjectId] && GLUOS_DATA.usuarios.includes(user)) {
+            reportMatrix[subjectId].users[user]++;
+            subjectTotals[subjectId]++;
+            userTotals[user]++;
+            grandTotal++;
+        }
+    });
+    
+    // Filtrar apenas assuntos com atividade
+    const reportData = Object.values(reportMatrix)
+        .filter(subject => subjectTotals[subject.id] > 0)
+        .map(subject => ({
+            ...subject,
+            total: subjectTotals[subject.id],
+            percentage: grandTotal > 0 ? ((subjectTotals[subject.id] / grandTotal) * 100).toFixed(1) : '0.0'
+        }));
+    
+    reportData.sort((a, b) => b.total - a.total);
+    
+    displayCompleteReport(reportData, userTotals, grandTotal, startDate, endDate);
+}
+
+function displayCompleteReport(reportData, userTotals, grandTotal, startDate, endDate) {
+    // Atualizar cabeçalho
+    const reportTitle = document.getElementById('report-title');
+    const reportMeta = document.getElementById('report-meta');
+    
+    if (reportTitle) {
+        reportTitle.textContent = 'Relatório Completo de Produtividade';
+    }
+    
+    if (reportMeta) {
+        reportMeta.innerHTML = `
+            <p><strong>Período:</strong> ${formatDateBR(startDate)} a ${formatDateBR(endDate)}</p>
+            <p><strong>Total de Entradas:</strong> ${grandTotal}</p>
+            <p><strong>Relatório gerado por:</strong> ${currentUser}</p>
+        `;
+    }
+    
+    // Criar cabeçalho da tabela
+    const tableHead = document.getElementById('report-table-head');
+    if (tableHead) {
+        let headerHtml = '<tr><th style="text-align: left; min-width: 300px;">Assunto</th>';
+        
+        GLUOS_DATA.usuarios.forEach(user => {
+            headerHtml += `<th style="text-align: center; min-width: 80px;">${user}</th>`;
+        });
+        
+        headerHtml += '<th style="text-align: center; min-width: 80px;">TOTAL</th><th style="text-align: center; min-width: 60px;">%</th></tr>';
+        
+        tableHead.innerHTML = headerHtml;
+    }
+    
+    // Preencher corpo da tabela
+    const tableBody = document.getElementById('report-table-body');
+    if (tableBody) {
+        tableBody.innerHTML = '';
+        
+        if (reportData.length === 0) {
+            const colspan = GLUOS_DATA.usuarios.length + 3;
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="${colspan}" class="text-center">Nenhum registro encontrado no período.</td>
+                </tr>
+            `;
+        } else {
+            reportData.forEach(subject => {
+                const row = document.createElement('tr');
+                
+                let rowHtml = `<td style="text-align: left; max-width: 300px; word-wrap: break-word;">${subject.text}</td>`;
+                
+                GLUOS_DATA.usuarios.forEach(user => {
+                    const count = subject.users[user] || 0;
+                    rowHtml += `<td style="text-align: center; ${count > 0 ? 'font-weight: bold;' : ''}">${count}</td>`;
+                });
+                
+                rowHtml += `<td style="text-align: center; font-weight: bold;">${subject.total}</td>`;
+                rowHtml += `<td style="text-align: center;">${subject.percentage}%</td>`;
+                
+                row.innerHTML = rowHtml;
+                tableBody.appendChild(row);
+            });
+        }
+    }
+    
+    // Rodapé da tabela (totais)
+    const tableFoot = document.getElementById('report-table-foot');
+    if (tableFoot) {
+        let footerHtml = '<tr style="background: var(--color-bg-6); font-weight: bold;"><th style="text-align: left;">TOTAL GERAL</th>';
+        
+        GLUOS_DATA.usuarios.forEach(user => {
+            footerHtml += `<th style="text-align: center;">${userTotals[user]}</th>`;
+        });
+        
+        footerHtml += `<th style="text-align: center;">${grandTotal}</th>`;
+        footerHtml += '<th style="text-align: center;">100%</th></tr>';
+        
+        tableFoot.innerHTML = footerHtml;
+    }
+    
+    // Aplicar classe específica para relatório administrativo
+    const reportTable = document.getElementById('report-table');
+    if (reportTable) {
+        reportTable.classList.add('admin-report-table');
+    }
+    
+    // Mostrar resultados
+    document.getElementById('report-results').classList.remove('hidden');
+    document.getElementById('report-summary').classList.add('hidden');
+}
+
+// Perfil
+function setupProfile() {
+    const passwordForm = document.getElementById('password-change-form');
+    if (passwordForm) {
+        passwordForm.addEventListener('submit', handlePasswordChange);
+    }
+}
+
+function showProfileModal() {
+    const modal = document.getElementById('profile-modal');
+    const username = document.getElementById('profile-username');
+    
+    if (username) username.textContent = currentUser || 'Usuário';
+    if (modal) modal.classList.remove('hidden');
 }
 
 async function handlePasswordChange(e) {
     e.preventDefault();
-    debugLog('Changing user password');
     
-    const currentPasswordInput = document.getElementById('current-password');
-    const newPasswordInput = document.getElementById('new-password');
-    const confirmPasswordInput = document.getElementById('confirm-password');
-    const passwordError = document.getElementById('password-error');
+    const currentPassword = document.getElementById('current-password').value;
+    const newPassword = document.getElementById('new-password').value;
+    const confirmPassword = document.getElementById('confirm-password').value;
+    const errorDiv = document.getElementById('password-error');
+    const submitBtn = e.target.querySelector('button[type="submit"]');
     
-    if (!currentPasswordInput || !newPasswordInput || !confirmPasswordInput) {
-        console.error('Password change elements not found');
+    // Limpar erro anterior
+    if (errorDiv) errorDiv.classList.add('hidden');
+    
+    // Validação
+    if (newPassword !== confirmPassword) {
+        showPasswordError('As senhas não coincidem.');
         return;
     }
     
-    setButtonLoading('password-change-form', true);
-    
-    const currentPassword = currentPasswordInput.value.trim();
-    const newPassword = newPasswordInput.value.trim();
-    const confirmPassword = confirmPasswordInput.value.trim();
-    
-    if (passwordError) {
-        passwordError.classList.add('hidden');
-        passwordError.textContent = '';
+    if (newPassword.length < 3) {
+        showPasswordError('A nova senha deve ter pelo menos 3 caracteres.');
+        return;
     }
     
+    setButtonLoading(submitBtn, true);
+    
     try {
-        const userCurrentPassword = getUserPassword(currentUser);
-        if (currentPassword !== userCurrentPassword) {
+        let storedPassword = '123'; // Fallback
+        
+        // Verificar senha atual
+        if (firebaseConnected && database) {
+            const passwordRef = ref(database, `gluos_passwords/${currentUser}`);
+            const snapshot = await get(passwordRef);
+            
+            if (snapshot.exists()) {
+                storedPassword = snapshot.val();
+            }
+        }
+        
+        if (currentPassword !== storedPassword) {
             showPasswordError('Senha atual incorreta.');
             return;
         }
         
-        if (newPassword.length < 3) {
-            showPasswordError('A nova senha deve ter pelo menos 3 caracteres.');
-            return;
+        // Atualizar senha
+        if (firebaseConnected && database) {
+            const passwordRef = ref(database, `gluos_passwords/${currentUser}`);
+            await set(passwordRef, newPassword);
         }
         
-        if (newPassword !== confirmPassword) {
-            showPasswordError('A nova senha e a confirmação não coincidem.');
-            return;
-        }
+        // Limpar formulário
+        e.target.reset();
         
-        if (newPassword === currentPassword) {
-            showPasswordError('A nova senha deve ser diferente da senha atual.');
-            return;
-        }
-        
-        await setUserPassword(currentUser, newPassword);
+        // Fechar modal
         hideProfileModal();
+        
         showSuccessModal('Senha alterada com sucesso!');
         
-        debugLog('Password changed successfully for:', currentUser);
+        console.log('Senha alterada para:', currentUser);
         
     } catch (error) {
-        console.error('Error changing password:', error);
+        console.error('Erro ao alterar senha:', error);
         showPasswordError('Erro ao alterar senha. Tente novamente.');
     } finally {
-        setButtonLoading('password-change-form', false);
+        setButtonLoading(submitBtn, false);
     }
 }
 
 function showPasswordError(message) {
-    const passwordError = document.getElementById('password-error');
-    if (passwordError) {
-        passwordError.textContent = message;
-        passwordError.classList.remove('hidden');
+    const errorDiv = document.getElementById('password-error');
+    if (errorDiv) {
+        errorDiv.textContent = message;
+        errorDiv.classList.remove('hidden');
     }
 }
 
-function showError(message) {
-    debugLog('Showing error:', message);
-    showToast(message, 'error');
+function hideProfileModal() {
+    const modal = document.getElementById('profile-modal');
+    if (modal) modal.classList.add('hidden');
+    
+    // Limpar formulário
+    const form = document.getElementById('password-change-form');
+    if (form) form.reset();
+    
+    const errorDiv = document.getElementById('password-error');
+    if (errorDiv) errorDiv.classList.add('hidden');
 }
 
-function handleLogout() {
-    debugLog('Logging out');
-    currentUser = null;
-    currentEditingEntry = null;
+// Modais
+function setupModals() {
+    // Fechar modais
+    const closeModalBtn = document.getElementById('close-modal');
+    const cancelProfileBtn = document.getElementById('cancel-profile');
+    const cancelEditBtn = document.getElementById('cancel-edit');
     
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', hideSuccessModal);
+    }
+    
+    if (cancelProfileBtn) {
+        cancelProfileBtn.addEventListener('click', hideProfileModal);
+    }
+    
+    if (cancelEditBtn) {
+        cancelEditBtn.addEventListener('click', hideEditModal);
+    }
+    
+    // Fechar ao clicar fora
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.add('hidden');
+            }
+        });
+    });
+    
+    // Form de edição
+    const editForm = document.getElementById('edit-entry-form');
+    if (editForm) {
+        editForm.addEventListener('submit', handleEditEntry);
+    }
+}
+
+function showSuccessModal(message) {
+    const modal = document.getElementById('success-modal');
+    const messageEl = document.getElementById('success-message');
+    
+    if (messageEl) messageEl.textContent = message;
+    if (modal) modal.classList.remove('hidden');
+}
+
+function hideSuccessModal() {
+    const modal = document.getElementById('success-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
+function showEditModal(entry) {
+    const modal = document.getElementById('edit-modal');
+    
+    // Preencher campos
+    document.getElementById('edit-entry-id').value = entry.id;
+    document.getElementById('edit-subject-select').value = entry.subjectId;
+    document.getElementById('edit-process-number').value = entry.processNumber || '';
+    document.getElementById('edit-contributor').value = entry.contributor || '';
+    document.getElementById('edit-ctm').value = entry.ctm || '';
+    document.getElementById('edit-observation').value = entry.observation || '';
+    document.getElementById('edit-habite-number').value = entry.habiteNumber || '';
+    document.getElementById('edit-alvara-situation').value = entry.alvaraSituation || '';
+    
+    if (modal) modal.classList.remove('hidden');
+}
+
+function hideEditModal() {
+    const modal = document.getElementById('edit-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
+async function handleEditEntry(e) {
+    e.preventDefault();
+    
+    const entryId = document.getElementById('edit-entry-id').value;
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    
+    const subjectId = parseInt(document.getElementById('edit-subject-select').value);
+    const updatedEntry = {
+        subjectId: subjectId,
+        subjectText: GLUOS_DATA.assuntos.find(a => a.id === subjectId)?.texto || '',
+        processNumber: document.getElementById('edit-process-number').value.trim(),
+        contributor: document.getElementById('edit-contributor').value.trim(),
+        ctm: document.getElementById('edit-ctm').value.trim(),
+        observation: document.getElementById('edit-observation').value.trim(),
+        habiteNumber: document.getElementById('edit-habite-number').value.trim(),
+        alvaraSituation: document.getElementById('edit-alvara-situation').value.trim()
+    };
+    
+    // Validação
+    if (!updatedEntry.subjectId || !updatedEntry.processNumber) {
+        alert('Por favor, preencha o assunto e o número do processo.');
+        return;
+    }
+    
+    setButtonLoading(submitBtn, true);
+    
+    try {
+        if (firebaseConnected && database && !entryId.startsWith('local_')) {
+            const entryRef = ref(database, `gluos_entries/${entryId}`);
+            await update(entryRef, updatedEntry);
+            console.log('Entrada atualizada no Firebase:', entryId);
+        } else {
+            // Atualizar localmente
+            const entryIndex = allEntries.findIndex(e => e.id === entryId);
+            if (entryIndex !== -1) {
+                allEntries[entryIndex] = { ...allEntries[entryIndex], ...updatedEntry };
+                console.log('Entrada atualizada localmente:', entryId);
+            }
+        }
+        
+        hideEditModal();
+        showSuccessModal('Entrada atualizada com sucesso!');
+        
+    } catch (error) {
+        console.error('Erro ao atualizar entrada:', error);
+        alert('Erro ao atualizar entrada. Tente novamente.');
+    } finally {
+        setButtonLoading(submitBtn, false);
+    }
+}
+
+// Utilitários
+function populateSelectOptions() {
+    // Assuntos
+    const subjectSelects = [
+        'subject-select',
+        'multi-subject-select',
+        'edit-subject-select',
+        'filter-subject'
+    ];
+    
+    subjectSelects.forEach(selectId => {
+        const select = document.getElementById(selectId);
+        if (select) {
+            // Limpar opções existentes (exceto a primeira)
+            while (select.children.length > 1) {
+                select.removeChild(select.lastChild);
+            }
+            
+            // Adicionar assuntos
+            GLUOS_DATA.assuntos.forEach(assunto => {
+                const option = document.createElement('option');
+                option.value = assunto.id;
+                option.textContent = `${assunto.id} - ${assunto.texto}`;
+                select.appendChild(option);
+            });
+        }
+    });
+    
+    // Servidores
+    const serverSelects = [
+        'search-server',
+        'filter-server'
+    ];
+    
+    serverSelects.forEach(selectId => {
+        const select = document.getElementById(selectId);
+        if (select) {
+            // Limpar opções existentes (exceto a primeira)
+            while (select.children.length > 1) {
+                select.removeChild(select.lastChild);
+            }
+            
+            // Adicionar usuários
+            GLUOS_DATA.usuarios.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user;
+                option.textContent = user;
+                select.appendChild(option);
+            });
+        }
+    });
+}
+
+function showScreen(screenName) {
+    console.log(`Mudando para tela: ${screenName}`);
+    
+    // Ocultar todas as telas
+    document.querySelectorAll('.screen').forEach(screen => {
+        screen.classList.remove('active');
+    });
+    
+    // Mostrar tela alvo
+    const targetScreen = document.getElementById(screenName + '-screen');
+    if (targetScreen) {
+        targetScreen.classList.add('active');
+        
+        // Esconder formulário de relatório ao voltar para tela de relatórios
+        if (screenName === 'report') {
+            const reportForm = document.getElementById('report-form');
+            const reportResults = document.getElementById('report-results');
+            
+            if (reportForm) reportForm.classList.add('hidden');
+            if (reportResults) reportResults.classList.add('hidden');
+            
+            currentReportType = null;
+        }
+    } else {
+        console.error('Tela não encontrada:', screenName + '-screen');
+    }
+}
+
+function updateUserInfo() {
     const userInfo = document.getElementById('user-info');
     if (userInfo) {
-        userInfo.textContent = 'Bem-vindo!';
+        userInfo.textContent = currentUser ? `Usuário: ${currentUser}` : 'Bem-vindo!';
     }
-    
-    const newEntryBtn = document.getElementById('new-entry-btn');
-    const personalReportBtn = document.getElementById('personal-report-btn');
-    
-    if (newEntryBtn) {
-        newEntryBtn.style.display = 'inline-flex';
-    }
-    
-    if (personalReportBtn) {
-        personalReportBtn.classList.add('hidden');
-    }
-    
-    showScreen('login');
 }
 
-// ===== UTILITÁRIOS =====
-function setButtonLoading(buttonId, loading) {
-    const button = document.getElementById(buttonId);
+function updateDateTime() {
+    const now = new Date();
+    const dateTimeString = now.toLocaleString('pt-BR', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    
+    const datetimeInfo = document.getElementById('datetime-info');
+    if (datetimeInfo) {
+        datetimeInfo.textContent = dateTimeString;
+    }
+}
+
+function updateFirebaseStatus(status, message) {
+    const indicator = document.getElementById('firebase-indicator');
+    const statusText = document.getElementById('firebase-status-text');
+    
+    if (indicator && statusText) {
+        indicator.className = `status-indicator status-indicator--${status}`;
+        statusText.textContent = message;
+    }
+    
+    const syncIndicator = document.getElementById('sync-indicator');
+    const syncText = document.getElementById('sync-status-text');
+    
+    if (syncIndicator && syncText) {
+        syncIndicator.className = `status-indicator status-indicator--${status}`;
+        syncText.textContent = status === 'success' ? 'Sincronizado' : 'Offline';
+    }
+}
+
+function updateRecordCount() {
+    const totalRecords = document.getElementById('total-records');
+    if (totalRecords) {
+        totalRecords.textContent = `${allEntries.length} registro(s)`;
+    }
+}
+
+function formatDateBR(dateString) {
+    return new Date(dateString + 'T00:00:00').toLocaleDateString('pt-BR');
+}
+
+function truncateText(text, maxLength) {
+    if (!text || text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+}
+
+function setButtonLoading(button, loading) {
     if (!button) return;
     
     if (loading) {
@@ -1669,264 +1731,3 @@ function setButtonLoading(buttonId, loading) {
         button.disabled = false;
     }
 }
-
-function showLoadingOverlay(show) {
-    const overlay = document.getElementById('loading-overlay');
-    if (overlay) {
-        if (show) {
-            overlay.classList.remove('hidden');
-        } else {
-            overlay.classList.add('hidden');
-        }
-    }
-}
-
-function showToast(message, type = 'info') {
-    let toast = document.getElementById('toast');
-    if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'toast';
-        toast.className = 'toast';
-        document.body.appendChild(toast);
-    }
-    
-    toast.textContent = message;
-    toast.className = `toast toast--${type}`;
-    toast.classList.remove('hidden');
-    
-    setTimeout(() => {
-        toast.classList.add('hidden');
-    }, 3000);
-}
-
-function updateLastSync() {
-    const lastSyncElement = document.getElementById('last-sync');
-    if (lastSyncElement) {
-        const now = new Date();
-        lastSyncElement.textContent = `Última sincronização: ${now.toLocaleTimeString('pt-BR')}`;
-    }
-}
-
-function refreshCurrentView() {
-    const currentScreen = document.querySelector('.screen.active');
-    if (!currentScreen) return;
-    
-    const screenId = currentScreen.id;
-    
-    if (screenId === 'database-screen') {
-        loadDatabaseTable();
-    } else if (screenId === 'search-screen') {
-        const searchInput = document.getElementById('search-process');
-        if (searchInput && searchInput.value.trim()) {
-            handleSearch();
-        }
-    }
-}
-
-async function syncLocalData() {
-    if (!isFirebaseInitialized || !isOnline) return;
-    
-    try {
-        debugLog('Syncing local data to Firebase...');
-        showToast('Sincronizando dados...', 'info');
-        
-        await loadFirebaseData();
-        
-        showToast('Dados sincronizados com sucesso!', 'success');
-        
-    } catch (error) {
-        console.error('Error syncing data:', error);
-        showToast('Erro na sincronização', 'error');
-    }
-}
-
-function saveToLocalStorage() {
-    try {
-        localStorage.setItem('gluos_entries', JSON.stringify(allEntries));
-        debugLog('Entries saved to localStorage');
-    } catch (error) {
-        console.error('Error saving to localStorage:', error);
-    }
-}
-
-function savePasswordsToLocalStorage() {
-    try {
-        localStorage.setItem('gluos_user_passwords', JSON.stringify(userPasswords));
-        debugLog('Passwords saved to localStorage');
-    } catch (error) {
-        console.error('Error saving passwords to localStorage:', error);
-    }
-}
-
-// ===== DATA/HORA =====
-function updateDateTime() {
-    const now = new Date();
-    const dateTimeString = now.toLocaleString('pt-BR', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-    });
-    
-    const datetimeInfo = document.getElementById('datetime-info');
-    if (datetimeInfo) {
-        datetimeInfo.textContent = dateTimeString;
-    }
-}
-
-// ===== POPULAR SELECTS - VERSÃO CORRIGIDA =====
-function populateSubjectSelect() {
-    debugLog('Populating subject select');
-    
-    const select = document.getElementById('subject-select');
-    if (!select) {
-        debugLog('Subject select element not found!');
-        return;
-    }
-    
-    // Garantir que o select funcione
-    select.style.pointerEvents = 'auto';
-    select.style.zIndex = '1000';
-    select.disabled = false;
-    
-    select.innerHTML = '';
-    
-    const defaultOption = document.createElement('option');
-    defaultOption.value = '';
-    defaultOption.textContent = '-- Selecione o assunto --';
-    select.appendChild(defaultOption);
-    
-    GLUOS_DATA.assuntos.forEach(assunto => {
-        const option = document.createElement('option');
-        option.value = assunto.id;
-        option.textContent = `${assunto.id} - ${assunto.texto}`;
-        select.appendChild(option);
-    });
-    
-    debugLog(`Subject select populated with ${GLUOS_DATA.assuntos.length} options`);
-}
-
-function populateEditSubjectSelect() {
-    debugLog('Populating edit subject select');
-    
-    const select = document.getElementById('edit-subject-select');
-    if (!select) {
-        debugLog('Edit subject select element not found!');
-        return;
-    }
-    
-    // Garantir que o select funcione
-    select.style.pointerEvents = 'auto';
-    select.disabled = false;
-    
-    select.innerHTML = '';
-    
-    const defaultOption = document.createElement('option');
-    defaultOption.value = '';
-    defaultOption.textContent = '-- Selecione o assunto --';
-    select.appendChild(defaultOption);
-    
-    GLUOS_DATA.assuntos.forEach(assunto => {
-        const option = document.createElement('option');
-        option.value = assunto.id;
-        option.textContent = `${assunto.id} - ${assunto.texto}`;
-        select.appendChild(option);
-    });
-    
-    debugLog(`Edit subject select populated with ${GLUOS_DATA.assuntos.length} options`);
-}
-
-function populateFilterSelects() {
-    debugLog('Populating filter selects');
-    
-    const serverSelect = document.getElementById('filter-server');
-    if (serverSelect) {
-        serverSelect.style.pointerEvents = 'auto';
-        serverSelect.disabled = false;
-        
-        serverSelect.innerHTML = '<option value="">Todos</option>';
-        GLUOS_DATA.usuarios.forEach(usuario => {
-            const option = document.createElement('option');
-            option.value = usuario;
-            option.textContent = usuario;
-            serverSelect.appendChild(option);
-        });
-        debugLog('Server filter populated');
-    }
-    
-    const subjectSelect = document.getElementById('filter-subject');
-    if (subjectSelect) {
-        subjectSelect.style.pointerEvents = 'auto';
-        subjectSelect.disabled = false;
-        
-        subjectSelect.innerHTML = '<option value="">Todos</option>';
-        GLUOS_DATA.assuntos.forEach(assunto => {
-            const option = document.createElement('option');
-            option.value = assunto.id;
-            option.textContent = `${assunto.id} - ${assunto.texto}`;
-            subjectSelect.appendChild(option);
-        });
-        debugLog('Subject filter populated');
-    }
-}
-
-// ===== MANIPULAÇÃO DE ASSUNTOS =====
-function handleSubjectNumberChange(e) {
-    const number = parseInt(e.target.value);
-    const select = document.getElementById('subject-select');
-    
-    if (number >= 1 && number <= 44 && select) {
-        select.value = number;
-    } else if (select) {
-        select.value = '';
-    }
-}
-
-function handleSubjectSelectChange(e) {
-    const subjectNumber = document.getElementById('subject-number');
-    if (subjectNumber) {
-        subjectNumber.value = e.target.value;
-    }
-}
-
-// ===== MODAL =====
-function showSuccessModal(message) {
-    const modal = document.getElementById('success-modal');
-    const messageElement = document.getElementById('success-message');
-    
-    if (messageElement) {
-        messageElement.textContent = message;
-    }
-    
-    if (modal) {
-        modal.classList.remove('hidden');
-    }
-}
-
-function hideModal() {
-    const modal = document.getElementById('success-modal');
-    if (modal) {
-        modal.classList.add('hidden');
-    }
-}
-
-// ===== FUNÇÕES GLOBAIS =====
-window.showEditModal = showEditModal;
-window.showDeleteModal = showDeleteModal;
-
-// ===== CLEANUP =====
-window.addEventListener('beforeunload', () => {
-    if (entriesListener && window.firebaseFunctions) {
-        const { ref, off } = window.firebaseFunctions;
-        off(ref(database, 'gluos_entries'), 'value', entriesListener);
-    }
-    if (passwordsListener && window.firebaseFunctions) {
-        const { ref, off } = window.firebaseFunctions;
-        off(ref(database, 'gluos_passwords'), 'value', passwordsListener);
-    }
-});
-
-debugLog('GLUOS Firebase application loaded with FIXED connectivity and dropdown solution');
