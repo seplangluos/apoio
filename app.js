@@ -1,5 +1,5 @@
 // Sistema GLUOS - Versão Simplificada com Login Corrigido
-const DEBUG_MODE = true;
+
 
 // ===== CONFIGURAÇÃO FIREBASE =====
 // INSTRUÇÃO: Substitua os valores abaixo pela sua configuração do Firebase
@@ -13,7 +13,7 @@ const firebaseConfig = {
   appId: "1:200346424322:web:d359faf0c8582c58c0031b"
 };
 
-
+const DEBUG_MODE = true;
 
 // Dados da aplicação
 const GLUOS_DATA = {
@@ -35,74 +35,18 @@ const GLUOS_DATA = {
 // Estado global
 let currentUser = null;
 
-// Dados de exemplo para demonstração
-const allEntries = [
-    {
-        id: 1,
-        date: "15/09/2024",
-        time: "08:30",
-        server: "Eduardo",
-        processNumber: "2024/001",
-        ctm: "12345",
-        contributor: "João Silva",
-        subjectId: 1,
-        subjectText: "Separar e Preparar os Processos Agendados no Dia",
-        observation: "Processo urgente",
-        timestamp: Date.now() - 86400000
-    },
-    {
-        id: 2,
-        date: "15/09/2024",
-        time: "09:15",
-        server: "Wendel",
-        processNumber: "2024/002",
-        ctm: "54321",
-        contributor: "Maria Santos",
-        subjectId: 5,
-        subjectText: "Atendimento ao Contribuinte",
-        observation: "",
-        timestamp: Date.now() - 82800000
-    },
-    {
-        id: 3,
-        date: "16/09/2024",
-        time: "10:00",
-        server: "Júlia",
-        processNumber: "2024/003",
-        ctm: "98765",
-        contributor: "Carlos Oliveira",
-        subjectId: 7,
-        subjectText: "Atendimento ao Telefone",
-        observation: "Atendimento especial",
-        timestamp: Date.now() - 50400000
-    },
-    {
-        id: 4,
-        date: "17/09/2024",
-        time: "14:00",
-        server: "Tati",
-        processNumber: "2024/004",
-        ctm: "11111",
-        contributor: "Ana Costa",
-        subjectId: 3,
-        subjectText: "Arquivamento de Processos",
-        observation: "",
-        timestamp: Date.now() - 36000000
-    },
-    {
-        id: 5,
-        date: "17/09/2024",
-        time: "15:30",
-        server: "Sônia",
-        processNumber: "2024/005",
-        ctm: "22222",
-        contributor: "Pedro Lima",
-        subjectId: 8,
-        subjectText: "Apoio aos Arquitetos/Engenheiros",
-        observation: "Consulta técnica",
-        timestamp: Date.now() - 32400000
-    }
-];
+function testFirebaseConnection() {
+    const testRef = ref(database, '.info/connected');
+    onValue(testRef, (snapshot) => {
+        isConnected = snapshot.val();
+        if (isConnected) {
+            updateFirebaseStatus('success', 'Conectado ao Firebase');
+            loadEntriesFromFirebase();   // <- mantém esta linha
+        } else {
+            updateFirebaseStatus('error', 'Desconectado do Firebase');
+        }
+    });
+}
 
 function debugLog(message, data = null) {
     if (DEBUG_MODE) {
