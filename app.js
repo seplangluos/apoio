@@ -37,7 +37,7 @@ const GLUOS_DATA = {
         {id: 6, texto: "Pós Atendimento Balcão"},
         {id: 7, texto: "Atendimento ao Telefone"},
         {id: 8, texto: "Apoio aos Arquitetos/Enginheiros"},
-        {id: 9, texto: "Envio de E-mail para o Arquitetos/Engenheiros"},
+        {id: 9, texto: "Envio de E-mail para o Arquitetos/Enginheiros"},
         {id: 10, texto: "Solicitação de Desarquivamento de Processo"},
         {id: 11, texto: "Lançamento Habite-se no E&L e na Receita Federal"},
         {id: 12, texto: "Lançamento de Alvará no E&L e na Receita Federal"},
