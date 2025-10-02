@@ -5,78 +5,98 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
 import { getDatabase, ref, push, set, get, update, remove, onValue } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js';
 
-// Configuração do Firebase
+// Configuração do Firebase principal
 const firebaseConfig = {
-    apiKey: "AIzaSyDUUXFPi2qbowPjx63YBYQWyZNXKfxz7u0",
-    authDomain: "gluos-apoio.firebaseapp.com",
-    databaseURL: "https://gluos-apoio-default-rtdb.firebaseio.com",
-    projectId: "gluos-apoio",
-    storageBucket: "gluos-apoio.firebasestorage.app",
-    messagingSenderId: "200346424322",
-    appId: "1:200346424322:web:d359faf0c8582c58c0031b"
+  apiKey: "AIzaSyDUUXFPi2qbowPjx63YBYQWyZNXKfxz7u0",
+  authDomain: "gluos-apoio.firebaseapp.com",
+  databaseURL: "https://gluos-apoio-default-rtdb.firebaseio.com",
+  projectId: "gluos-apoio",
+  storageBucket: "gluos-apoio.firebasestorage.app",
+  messagingSenderId: "200346424322",
+  appId: "1:200346424322:web:d359faf0c8582c58c0031b"
 };
 
-// Inicializar Firebase
+// Configuração da base de processos (NOVA)
+const firebaseConfigProcessos = {
+  apiKey: "AIzaSyAWbo9MCRjE4776A_DpjJCWHPZap-goJDg",
+  authDomain: "processos-gluos.firebaseapp.com",
+  databaseURL: "https://processos-gluos-default-rtdb.firebaseio.com",
+  projectId: "processos-gluos",
+  storageBucket: "processos-gluos.firebasestorage.app",
+  messagingSenderId: "189917349181",
+  appId: "1:189917349181:web:efac81f4ed118cb48af154"
+};
+
+// Inicializar Firebase principal
 let app, database;
 try {
-    app = initializeApp(firebaseConfig);
-    database = getDatabase(app);
+  app = initializeApp(firebaseConfig);
+  database = getDatabase(app);
 } catch (error) {
-    console.error('Erro ao inicializar Firebase:', error);
+  console.error('Erro ao inicializar Firebase:', error);
+}
+
+// Inicializar Firebase de processos (NOVO)
+let processosApp, processosDatabase;
+try {
+  processosApp = initializeApp(firebaseConfigProcessos, 'processosApp');
+  processosDatabase = getDatabase(processosApp);
+} catch (error) {
+  console.error('Erro ao inicializar Firebase de processos:', error);
 }
 
 // Dados da aplicação
 const GLUOS_DATA = {
-    usuarios: ["Eduardo", "Wendel", "Júlia", "Tati", "Sônia", "Rita", "Mara", "Admin"],
-    assuntos: [
-        {id: 1, texto: "Separar e Preparar os Processos Agendados no Dia"},
-        {id: 2, texto: "Inserção de Avisos de Vistoria na E&L"},
-        {id: 3, texto: "Arquivamento de Processos"},
-        {id: 4, texto: "Solicitação de Desarquivamento"},
-        {id: 5, texto: "Atendimento ao Contribuinte"},
-        {id: 6, texto: "Pós Atendimento Balcão"},
-        {id: 7, texto: "Atendimento ao Telefone"},
-        {id: 8, texto: "Apoio aos Arquitetos/Enginheiros"},
-        {id: 9, texto: "Envio de E-mail para o Arquitetos/Enginheiros"},
-        {id: 10, texto: "Solicitação de Desarquivamento de Processo"},
-        {id: 11, texto: "Lançamento Habite-se no E&L e na Receita Federal"},
-        {id: 12, texto: "Lançamento de Alvará no E&L e na Receita Federal"},
-        {id: 13, texto: "Lançamento de Sanção"},
-        {id: 14, texto: "Preenchimento da Planilha de Controle Interno GLUOS"},
-        {id: 15, texto: "Controle de Ponto GLUOS"},
-        {id: 16, texto: "Confecção de Ofícios"},
-        {id: 17, texto: "Solicitação de Materiais de Escritório"},
-        {id: 18, texto: "Atendimento/Notificação de Alvará de Funcionamento"},
-        {id: 19, texto: "Prorrogação de Processo Alvará de Funcionamento"},
-        {id: 20, texto: "Indeferimento de Processo Alvará de Funcionamento"},
-        {id: 21, texto: "Lançamento do Número dos Processos Finalizados"},
-        {id: 22, texto: "Notificação de Alvará de Funcionamento"},
-        {id: 23, texto: "Lançamento de Processos Novos"},
-        {id: 24, texto: "Recebimento de Processo"},
-        {id: 25, texto: "Rastreamento de Processo"},
-        {id: 26, texto: "Distribuição de Processo"},
-        {id: 27, texto: "Mudança de Passo no Sistema"},
-        {id: 28, texto: "Notificação Atendidas por E-mail"},
-        {id: 29, texto: "Separação de Processo e Distribuição para Eng/Arq"},
-        {id: 30, texto: "Lançamento no Sistema de Pendências pós Atendimento"},
-        {id: 31, texto: "Envio de Processo ao Arquivo Geral/GFO"},
-        {id: 32, texto: "Resposta as Mensagens Via WhatsApp Conforme as Notificações no Processo"},
-        {id: 33, texto: "Arquivamento de Processos Deferidos Semanal"},
-        {id: 34, texto: "Digitação de Notificações"},
-        {id: 35, texto: "Confecção de Planilha de Vistoria Semanal"},
-        {id: 36, texto: "Localização de Processo Físico e no Sistema"},
-        {id: 37, texto: "Encaminhamento de Processo para Análise"},
-        {id: 38, texto: "Estudo de Viabilidade Urbanística"},
-        {id: 39, texto: "Envio de e-mail para Contadores"},
-        {id: 40, texto: "Análise de Matrícula para Sala Mineira"},
-        {id: 41, texto: "Indeferimento de Processo"},
-        {id: 42, texto: "Requisição de Veículo"},
-        {id: 43, texto: "Encaminhamento de Processo a Outros Setores"},
-        {id: 44, texto: "Montagem de Processo Novo"},
-        {id: 45, texto: "Encaminhamento para indeferimento"},
-        {id: 46, texto: "Protocolo de informação Básica"},
-        {id: 47, texto: "Agendamento para contribuinte"}
-    ]
+  usuarios: ["Eduardo", "Wendel", "Júlia", "Tati", "Sônia", "Rita", "Mara", "Admin"],
+  assuntos: [
+    {id: 1, texto: "Separar e Preparar os Processos Agendados no Dia"},
+    {id: 2, texto: "Inserção de Avisos de Vistoria na E&L"},
+    {id: 3, texto: "Arquivamento de Processos"},
+    {id: 4, texto: "Solicitação de Desarquivamento"},
+    {id: 5, texto: "Atendimento ao Contribuinte"},
+    {id: 6, texto: "Pós Atendimento Balcão"},
+    {id: 7, texto: "Atendimento ao Telefone"},
+    {id: 8, texto: "Apoio aos Arquitetos/Enginheiros"},
+    {id: 9, texto: "Envio de E-mail para o Arquitetos/Enginheiros"},
+    {id: 10, texto: "Solicitação de Desarquivamento de Processo"},
+    {id: 11, texto: "Lançamento Habite-se no E&L e na Receita Federal"},
+    {id: 12, texto: "Lançamento de Alvará no E&L e na Receita Federal"},
+    {id: 13, texto: "Lançamento de Sanção"},
+    {id: 14, texto: "Preenchimento da Planilha de Controle Interno GLUOS"},
+    {id: 15, texto: "Controle de Ponto GLUOS"},
+    {id: 16, texto: "Confecção de Ofícios"},
+    {id: 17, texto: "Solicitação de Materiais de Escritório"},
+    {id: 18, texto: "Atendimento/Notificação de Alvará de Funcionamento"},
+    {id: 19, texto: "Prorrogação de Processo Alvará de Funcionamento"},
+    {id: 20, texto: "Indeferimento de Processo Alvará de Funcionamento"},
+    {id: 21, texto: "Lançamento do Número dos Processos Finalizados"},
+    {id: 22, texto: "Notificação de Alvará de Funcionamento"},
+    {id: 23, texto: "Lançamento de Processos Novos"},
+    {id: 24, texto: "Recebimento de Processo"},
+    {id: 25, texto: "Rastreamento de Processo"},
+    {id: 26, texto: "Distribuição de Processo"},
+    {id: 27, texto: "Mudança de Passo no Sistema"},
+    {id: 28, texto: "Notificação Atendidas por E-mail"},
+    {id: 29, texto: "Separação de Processo e Distribuição para Eng/Arq"},
+    {id: 30, texto: "Lançamento no Sistema de Pendências pós Atendimento"},
+    {id: 31, texto: "Envio de Processo ao Arquivo Geral/GFO"},
+    {id: 32, texto: "Resposta as Mensagens Via WhatsApp Conforme as Notificações no Processo"},
+    {id: 33, texto: "Arquivamento de Processos Deferidos Semanal"},
+    {id: 34, texto: "Digitação de Notificações"},
+    {id: 35, texto: "Confecção de Planilha de Vistoria Semanal"},
+    {id: 36, texto: "Localização de Processo Físico e no Sistema"},
+    {id: 37, texto: "Encaminhamento de Processo para Análise"},
+    {id: 38, texto: "Estudo de Viabilidade Urbanística"},
+    {id: 39, texto: "Envio de e-mail para Contadores"},
+    {id: 40, texto: "Análise de Matrícula para Sala Mineira"},
+    {id: 41, texto: "Indeferimento de Processo"},
+    {id: 42, texto: "Requisição de Veículo"},
+    {id: 43, texto: "Encaminhamento de Processo a Outros Setores"},
+    {id: 44, texto: "Montagem de Processo Novo"},
+    {id: 45, texto: "Encaminhamento para indeferimento"},
+    {id: 46, texto: "Protocolo de informação Básica"},
+    {id: 47, texto: "Agendamento para contribuinte"}
+  ]
 };
 
 // Estado global
@@ -89,513 +109,547 @@ let firebaseConnected = false;
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Sistema GLUOS iniciando...');
-    
-    // Forçar recriação do select com JavaScript para garantir funcionalidade
-    fixUserSelect();
-    
-    initializeFirebase();
-    setupEventListeners();
-    populateSelectOptions();
-    showScreen('login');
-    updateDateTime();
-    setInterval(updateDateTime, 1000);
-    
-    console.log('Sistema inicializado com sucesso!');
+  console.log('Sistema GLUOS iniciando...');
+
+  // Forçar recriação do select com JavaScript para garantir funcionalidade
+  fixUserSelect();
+  initializeFirebase();
+  setupEventListeners();
+  populateSelectOptions();
+  showScreen('login');
+  updateDateTime();
+  setInterval(updateDateTime, 1000);
+
+  console.log('Sistema inicializado com sucesso!');
 });
 
 // Corrigir o select de usuário
 function fixUserSelect() {
-    const userSelect = document.getElementById('user-select');
-    if (userSelect) {
-        // Forçar z-index e pointer events
-        userSelect.style.zIndex = '1000';
-        userSelect.style.pointerEvents = 'auto';
-        userSelect.style.position = 'relative';
-        
-        // Adicionar event listeners diretos
-        userSelect.addEventListener('change', function() {
-            console.log('Usuário selecionado:', this.value);
-        });
-        
-        userSelect.addEventListener('click', function() {
-            console.log('Select clicado');
-            this.focus();
-        });
-        
-        // Garantir que está funcional
-        userSelect.removeAttribute('disabled');
-        userSelect.setAttribute('tabindex', '0');
-        
-        console.log('Select de usuário corrigido');
-    }
+  const userSelect = document.getElementById('user-select');
+  if (userSelect) {
+    // Forçar z-index e pointer events
+    userSelect.style.zIndex = '1000';
+    userSelect.style.pointerEvents = 'auto';
+    userSelect.style.position = 'relative';
+
+    // Adicionar event listeners diretos
+    userSelect.addEventListener('change', function() {
+      console.log('Usuário selecionado:', this.value);
+    });
+
+    userSelect.addEventListener('click', function() {
+      console.log('Select clicado');
+      this.focus();
+    });
+
+    // Garantir que está funcional
+    userSelect.removeAttribute('disabled');
+    userSelect.setAttribute('tabindex', '0');
+
+    console.log('Select de usuário corrigido');
+  }
 }
 
 // Inicialização do Firebase
 async function initializeFirebase() {
-    try {
-        updateFirebaseStatus('warning', 'Conectando ao Firebase...');
-        
-        if (!database) {
-            updateFirebaseStatus('error', 'Firebase não inicializado');
-            console.error('Database não inicializado');
-            return;
-        }
-        
-        // Verificar conexão com Firebase
-        const testRef = ref(database, '.info/connected');
-        onValue(testRef, (snapshot) => {
-            firebaseConnected = snapshot.val() === true;
-            if (firebaseConnected) {
-                updateFirebaseStatus('success', 'Conectado ao Firebase');
-                console.log('Firebase conectado com sucesso');
-                loadAllEntries();
-                initializePasswords();
-            } else {
-                updateFirebaseStatus('error', 'Desconectado do Firebase');
-                console.log('Firebase desconectado');
-            }
-        });
-        
-    } catch (error) {
-        console.error('Erro ao conectar Firebase:', error);
-        updateFirebaseStatus('error', 'Erro de conexão');
-        firebaseConnected = false;
+  try {
+    updateFirebaseStatus('warning', 'Conectando ao Firebase...');
+
+    if (!database) {
+      updateFirebaseStatus('error', 'Firebase não inicializado');
+      console.error('Database não inicializado');
+      return;
     }
+
+    // Verificar conexão com Firebase
+    const testRef = ref(database, '.info/connected');
+    onValue(testRef, (snapshot) => {
+      firebaseConnected = snapshot.val() === true;
+
+      if (firebaseConnected) {
+        updateFirebaseStatus('success', 'Conectado ao Firebase');
+        console.log('Firebase conectado com sucesso');
+        loadAllEntries();
+        initializePasswords();
+      } else {
+        updateFirebaseStatus('error', 'Desconectado do Firebase');
+        console.log('Firebase desconectado');
+      }
+    });
+
+  } catch (error) {
+    console.error('Erro ao conectar Firebase:', error);
+    updateFirebaseStatus('error', 'Erro de conexão');
+    firebaseConnected = false;
+  }
 }
 
 // Inicializar senhas padrão
 async function initializePasswords() {
-    if (!firebaseConnected) return;
-    
-    try {
-        const passwordsRef = ref(database, 'gluos_passwords');
-        const snapshot = await get(passwordsRef);
-        
-        if (!snapshot.exists()) {
-            console.log('Inicializando senhas padrão...');
-            const defaultPasswords = {};
-            GLUOS_DATA.usuarios.forEach(user => {
-                defaultPasswords[user] = '123';
-            });
-            await set(passwordsRef, defaultPasswords);
-            console.log('Senhas padrão inicializadas');
-        }
-    } catch (error) {
-        console.error('Erro ao inicializar senhas:', error);
+  if (!firebaseConnected) return;
+
+  try {
+    const passwordsRef = ref(database, 'gluos_passwords');
+    const snapshot = await get(passwordsRef);
+
+    if (!snapshot.exists()) {
+      console.log('Inicializando senhas padrão...');
+      const defaultPasswords = {};
+      GLUOS_DATA.usuarios.forEach(user => {
+        defaultPasswords[user] = '123';
+      });
+      await set(passwordsRef, defaultPasswords);
+      console.log('Senhas padrão inicializadas');
     }
+  } catch (error) {
+    console.error('Erro ao inicializar senhas:', error);
+  }
 }
 
 // Carregar todas as entradas
 async function loadAllEntries() {
-    if (!firebaseConnected) return;
-    
-    try {
-        const entriesRef = ref(database, 'gluos_entries');
-        onValue(entriesRef, (snapshot) => {
-            if (snapshot.exists()) {
-                const data = snapshot.val();
-                allEntries = Object.keys(data).map(key => ({
-                    id: key,
-                    ...data[key]
-                }));
-                // Ordenar por timestamp (mais recente primeiro)
-                allEntries.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-                console.log(`Carregadas ${allEntries.length} entradas`);
-            } else {
-                allEntries = [];
-                console.log('Nenhuma entrada encontrada');
-            }
-            updateRecordCount();
-        });
-    } catch (error) {
-        console.error('Erro ao carregar entradas:', error);
+  if (!firebaseConnected) return;
+
+  try {
+    const entriesRef = ref(database, 'gluos_entries');
+    onValue(entriesRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        allEntries = Object.keys(data).map(key => ({
+          id: key,
+          ...data[key]
+        }));
+
+        // Ordenar por timestamp (mais recente primeiro)
+        allEntries.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        console.log(`Carregadas ${allEntries.length} entradas`);
+      } else {
         allEntries = [];
-    }
+        console.log('Nenhuma entrada encontrada');
+      }
+
+      updateRecordCount();
+    });
+
+  } catch (error) {
+    console.error('Erro ao carregar entradas:', error);
+    allEntries = [];
+  }
 }
 
 // Configurar event listeners
 function setupEventListeners() {
-    // Login - múltiplas abordagens para garantir funcionamento
-    const loginForm = document.getElementById('login-form');
-    const loginBtn = document.getElementById('login-btn');
-    const userSelect = document.getElementById('user-select');
-    const passwordInput = document.getElementById('password');
-    
-    if (loginForm) {
-        loginForm.addEventListener('submit', handleLogin);
-        console.log('Event listener do form de login adicionado');
-    }
-    
-    if (loginBtn) {
-        loginBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            handleLogin(e);
-        });
-        console.log('Event listener do botão de login adicionado');
-    }
-    
-    // Enter nos campos
-    if (passwordInput) {
-        passwordInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                handleLogin(e);
-            }
-        });
-    }
-    
-    if (userSelect) {
-        userSelect.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && this.value) {
-                passwordInput?.focus();
-            }
-        });
-    }
-    
-    // Navegação principal
-    setupMainNavigation();
-    
-    // Nova entrada
-    setupNewEntry();
-    
-    // Múltiplas entradas
-    setupMultipleEntries();
-    
-    // Pesquisa
-    setupSearch();
-    
-    // Base de dados
-    setupDatabase();
-    
-    // Relatórios
-    setupReports();
-    
-    // Perfil
-    setupProfile();
-    
-    // Modais
-    setupModals();
-    
-    console.log('Todos os event listeners configurados');
+  // Login - múltiplas abordagens para garantir funcionamento
+  const loginForm = document.getElementById('login-form');
+  const loginBtn = document.getElementById('login-btn');
+  const userSelect = document.getElementById('user-select');
+  const passwordInput = document.getElementById('password');
+
+  if (loginForm) {
+    loginForm.addEventListener('submit', handleLogin);
+    console.log('Event listener do form de login adicionado');
+  }
+
+  if (loginBtn) {
+    loginBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      handleLogin(e);
+    });
+    console.log('Event listener do botão de login adicionado');
+  }
+
+  // Enter nos campos
+  if (passwordInput) {
+    passwordInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleLogin(e);
+      }
+    });
+  }
+
+  if (userSelect) {
+    userSelect.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter' && this.value) {
+        passwordInput?.focus();
+      }
+    });
+  }
+
+  // Navegação principal
+  setupMainNavigation();
+  // Nova entrada
+  setupNewEntry();
+  // Múltiplas entradas
+  setupMultipleEntries();
+  // Pesquisa
+  setupSearch();
+  // Base de dados
+  setupDatabase();
+  // Relatórios
+  setupReports();
+  // Perfil
+  setupProfile();
+  // Modais
+  setupModals();
+
+  console.log('Todos os event listeners configurados');
 }
 
 // Configurar navegação principal
 function setupMainNavigation() {
-    // Logout
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', handleLogout);
+  // Logout
+  const logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', handleLogout);
+  }
+
+  // Botões do dashboard
+  const navButtons = [
+    { id: 'new-entry-btn', screen: 'new-entry' },
+    { id: 'multiple-entries-btn', screen: 'multiple-entries' },
+    { id: 'search-btn', screen: 'search' },
+    { id: 'database-btn', screen: 'database', callback: loadDatabaseTable },
+    { id: 'profile-btn', callback: showProfileModal },
+    { id: 'report-btn', screen: 'report' }
+  ];
+
+  navButtons.forEach(btn => {
+    const element = document.getElementById(btn.id);
+    if (element) {
+      element.addEventListener('click', function() {
+        console.log(`Botão ${btn.id} clicado`);
+        if (btn.screen) {
+          showScreen(btn.screen);
+        }
+        if (btn.callback) {
+          btn.callback();
+        }
+      });
     }
-    
-    // Botões do dashboard
-    const navButtons = [
-        { id: 'new-entry-btn', screen: 'new-entry' },
-        { id: 'multiple-entries-btn', screen: 'multiple-entries' },
-        { id: 'search-btn', screen: 'search' },
-        { id: 'database-btn', screen: 'database', callback: loadDatabaseTable },
-        { id: 'profile-btn', callback: showProfileModal },
-        { id: 'report-btn', screen: 'report' }
-    ];
-    
-    navButtons.forEach(btn => {
-        const element = document.getElementById(btn.id);
-        if (element) {
-            element.addEventListener('click', function() {
-                console.log(`Botão ${btn.id} clicado`);
-                if (btn.screen) {
-                    showScreen(btn.screen);
-                }
-                if (btn.callback) {
-                    btn.callback();
-                }
-            });
-        }
-    });
-    
-    // Botões de voltar
-    const backButtons = [
-        'back-to-dashboard-1',
-        'back-to-dashboard-2',
-        'back-to-dashboard-3',
-        'back-to-dashboard-4',
-        'back-to-dashboard-5'
-    ];
-    
-    backButtons.forEach(btnId => {
-        const btn = document.getElementById(btnId);
-        if (btn) {
-            btn.addEventListener('click', () => showScreen('dashboard'));
-        }
-    });
+  });
+
+  // Botões de voltar
+  const backButtons = [
+    'back-to-dashboard-1',
+    'back-to-dashboard-2',
+    'back-to-dashboard-3',
+    'back-to-dashboard-4',
+    'back-to-dashboard-5'
+  ];
+
+  backButtons.forEach(btnId => {
+    const btn = document.getElementById(btnId);
+    if (btn) {
+      btn.addEventListener('click', () => showScreen('dashboard'));
+    }
+  });
 }
 
 // Login
 async function handleLogin(e) {
-    e.preventDefault();
-    console.log('=== PROCESSANDO LOGIN ===');
-    
-    const userSelect = document.getElementById('user-select');
-    const passwordInput = document.getElementById('password');
-    const loginError = document.getElementById('login-error');
-    const loginBtn = document.getElementById('login-btn');
-    
-    if (!userSelect || !passwordInput) {
-        console.error('Elementos de login não encontrados');
-        alert('Erro interno: elementos de login não encontrados');
-        return;
-    }
-    
-    const user = userSelect.value?.trim();
-    const password = passwordInput.value?.trim();
-    
-    console.log('Dados do login:', { user, password, userLength: user?.length, passwordLength: password?.length });
-    
-    // Limpar erro anterior
-    if (loginError) {
-        loginError.classList.add('hidden');
-        loginError.textContent = '';
-    }
-    
-    // Validação
-    if (!user) {
-        showLoginError('Por favor, selecione um usuário.');
-        return;
-    }
-    
-    if (!password) {
-        showLoginError('Por favor, digite sua senha.');
-        return;
-    }
-    
-    // Loading state
-    setButtonLoading(loginBtn, true);
-    
-    try {
-        let storedPassword = '123'; // Fallback
-        
-        // Se Firebase estiver conectado, verificar senha
-        if (firebaseConnected && database) {
-            try {
-                const passwordRef = ref(database, `gluos_passwords/${user}`);
-                const snapshot = await get(passwordRef);
-                
-                if (snapshot.exists()) {
-                    storedPassword = snapshot.val();
-                }
-            } catch (error) {
-                console.warn('Erro ao verificar senha no Firebase, usando padrão:', error);
-            }
+  e.preventDefault();
+  console.log('=== PROCESSANDO LOGIN ===');
+
+  const userSelect = document.getElementById('user-select');
+  const passwordInput = document.getElementById('password');
+  const loginError = document.getElementById('login-error');
+  const loginBtn = document.getElementById('login-btn');
+
+  if (!userSelect || !passwordInput) {
+    console.error('Elementos de login não encontrados');
+    alert('Erro interno: elementos de login não encontrados');
+    return;
+  }
+
+  const user = userSelect.value?.trim();
+  const password = passwordInput.value?.trim();
+
+  console.log('Dados do login:', { 
+    user, 
+    password, 
+    userLength: user?.length, 
+    passwordLength: password?.length 
+  });
+
+  // Limpar erro anterior
+  if (loginError) {
+    loginError.classList.add('hidden');
+    loginError.textContent = '';
+  }
+
+  // Validação
+  if (!user) {
+    showLoginError('Por favor, selecione um usuário.');
+    return;
+  }
+
+  if (!password) {
+    showLoginError('Por favor, digite sua senha.');
+    return;
+  }
+
+  // Loading state
+  setButtonLoading(loginBtn, true);
+
+  try {
+    let storedPassword = '123'; // Fallback
+
+    // Se Firebase estiver conectado, verificar senha
+    if (firebaseConnected && database) {
+      try {
+        const passwordRef = ref(database, `gluos_passwords/${user}`);
+        const snapshot = await get(passwordRef);
+        if (snapshot.exists()) {
+          storedPassword = snapshot.val();
         }
-        
-        if (password !== storedPassword) {
-            showLoginError('Senha incorreta.');
-            return;
-        }
-        
-        // Login bem-sucedido
-        console.log('=== LOGIN BEM-SUCEDIDO ===', { usuario: user });
-        currentUser = user;
-        updateUserInfo();
-        
-        // Limpar formulário
-        userSelect.value = '';
-        passwordInput.value = '';
-        
-        // Ir para dashboard
-        showScreen('dashboard');
-        
-    } catch (error) {
-        console.error('Erro no login:', error);
-        showLoginError('Erro ao verificar credenciais. Tente novamente.');
-    } finally {
-        setButtonLoading(loginBtn, false);
+      } catch (error) {
+        console.warn('Erro ao verificar senha no Firebase, usando padrão:', error);
+      }
     }
+
+    if (password !== storedPassword) {
+      showLoginError('Senha incorreta.');
+      return;
+    }
+
+    // Login bem-sucedido
+    console.log('=== LOGIN BEM-SUCEDIDO ===', { usuario: user });
+    currentUser = user;
+    updateUserInfo();
+
+    // Limpar formulário
+    userSelect.value = '';
+    passwordInput.value = '';
+
+    // Ir para dashboard
+    showScreen('dashboard');
+
+  } catch (error) {
+    console.error('Erro no login:', error);
+    showLoginError('Erro ao verificar credenciais. Tente novamente.');
+  } finally {
+    setButtonLoading(loginBtn, false);
+  }
 }
 
 function showLoginError(message) {
-    console.log('Erro de login:', message);
-    const loginError = document.getElementById('login-error');
-    if (loginError) {
-        loginError.textContent = message;
-        loginError.classList.remove('hidden');
-    } else {
-        alert(message);
-    }
+  console.log('Erro de login:', message);
+  const loginError = document.getElementById('login-error');
+  if (loginError) {
+    loginError.textContent = message;
+    loginError.classList.remove('hidden');
+  } else {
+    alert(message);
+  }
 }
 
 function handleLogout() {
-    currentUser = null;
-    updateUserInfo();
-    showScreen('login');
-    console.log('Logout realizado');
+  currentUser = null;
+  updateUserInfo();
+  showScreen('login');
+  console.log('Logout realizado');
 }
 
 // Nova entrada
 function setupNewEntry() {
-    const form = document.getElementById('new-entry-form');
-    const subjectNumber = document.getElementById('subject-number');
-    const subjectSelect = document.getElementById('subject-select');
-    
-    if (form) {
-        form.addEventListener('submit', handleNewEntry);
-    }
-    
-    // Auto-preencher assunto pelo número
-    if (subjectNumber && subjectSelect) {
-        subjectNumber.addEventListener('input', function() {
-            const num = parseInt(this.value);
-            if (num >= 1 && num <= 47) {
-                const assunto = GLUOS_DATA.assuntos.find(a => a.id === num);
-                if (assunto) {
-                    subjectSelect.value = assunto.id;
-                }
-            }
-        });
-        
-        // Sincronizar select com número
-        subjectSelect.addEventListener('change', function() {
-            if (this.value) {
-                subjectNumber.value = this.value;
-            }
-        });
-    }
+  const form = document.getElementById('new-entry-form');
+  const subjectNumber = document.getElementById('subject-number');
+  const subjectSelect = document.getElementById('subject-select');
+  const processNumberInput = document.getElementById('process-number');
+  const contributorInput = document.getElementById('contributor');
+  const ctmInput = document.getElementById('ctm');
+
+  if (form) {
+    form.addEventListener('submit', handleNewEntry);
+  }
+
+  // Auto-preencher assunto pelo número
+  if (subjectNumber && subjectSelect) {
+    subjectNumber.addEventListener('input', function() {
+      const num = parseInt(this.value);
+      if (num >= 1 && num <= 47) {
+        const assunto = GLUOS_DATA.assuntos.find(a => a.id === num);
+        if (assunto) {
+          subjectSelect.value = assunto.id;
+        }
+      }
+    });
+
+    // Sincronizar select com número
+    subjectSelect.addEventListener('change', function() {
+      if (this.value) {
+        subjectNumber.value = this.value;
+      }
+    });
+  }
+
+  // NOVA FUNCIONALIDADE: Autopreenchimento baseado no número do processo
+  if(processNumberInput && contributorInput && ctmInput) {
+	processNumberInput.addEventListener('input', async function () {
+   	let numeroProcesso = this.value.trim();
+   	numeroProcesso = numeroProcesso.replace(/\//g, "-"); // <-- só aqui!
+   	if (!numeroProcesso) {
+     		contributorInput.value = '';
+      		ctmInput.value = '';
+      return;
+   }
+
+      try {
+        if (processosDatabase) {
+          const refProc = ref(processosDatabase, 'processos/' + numeroProcesso);
+          const snapshot = await get(refProc);
+          if (snapshot.exists()) {
+            const dados = snapshot.val();
+            contributorInput.value = dados.Requerente || '';
+            ctmInput.value = dados.CTM || '';
+          } else {
+            contributorInput.value = '';
+            ctmInput.value = '';
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao buscar processo:', err);
+        contributorInput.value = '';
+        ctmInput.value = '';
+      }
+    });
+  }
 }
 
 async function handleNewEntry(e) {
-    e.preventDefault();
-    console.log('Processando nova entrada...');
-    
-    const form = e.target;
-    const submitBtn = form.querySelector('button[type="submit"]');
-    
-    // Coletar dados do formulário
-    const subjectId = parseInt(document.getElementById('subject-select').value);
-    const processNumber = document.getElementById('process-number').value.trim();
-    
-    if (!subjectId) {
-        alert('Por favor, selecione um assunto.');
-        return;
+  e.preventDefault();
+  console.log('Processando nova entrada...');
+
+  const form = e.target;
+  const submitBtn = form.querySelector('button[type="submit"]');
+
+  // Coletar dados do formulário
+  const subjectId = parseInt(document.getElementById('subject-select').value);
+  const processNumber = document.getElementById('process-number').value.trim();
+
+  if (!subjectId) {
+    alert('Por favor, selecione um assunto.');
+    return;
+  }
+
+  if (!processNumber) {
+    alert('Por favor, informe o número do processo.');
+    return;
+  }
+
+  const assunto = GLUOS_DATA.assuntos.find(a => a.id === subjectId);
+  const now = new Date();
+
+  const entry = {
+    subjectId: subjectId,
+    subjectText: assunto ? assunto.texto : '',
+    processNumber: processNumber,
+    contributor: document.getElementById('contributor').value.trim(),
+    ctm: document.getElementById('ctm').value.trim(),
+    observation: document.getElementById('observation').value.trim(),
+    habiteNumber: document.getElementById('habite-number').value.trim(),
+    alvaraSituation: document.getElementById('alvara-situation').value.trim(),
+    server: currentUser,
+    date: now.toLocaleDateString('pt-BR'),
+    time: now.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+    timestamp: now.getTime()
+  };
+
+  setButtonLoading(submitBtn, true);
+
+  try {
+    // Salvar no Firebase se conectado
+    if (firebaseConnected && database) {
+      const entriesRef = ref(database, 'gluos_entries');
+      await push(entriesRef, entry);
+      console.log('Entrada salva no Firebase:', entry);
+    } else {
+      // Salvar localmente se Firebase não estiver disponível
+      entry.id = 'local_' + Date.now();
+      allEntries.unshift(entry);
+      console.log('Entrada salva localmente:', entry);
     }
-    
-    if (!processNumber) {
-        alert('Por favor, informe o número do processo.');
-        return;
-    }
-    
-    const assunto = GLUOS_DATA.assuntos.find(a => a.id === subjectId);
-    const now = new Date();
-    
-    const entry = {
-        subjectId: subjectId,
-        subjectText: assunto ? assunto.texto : '',
-        processNumber: processNumber,
-        contributor: document.getElementById('contributor').value.trim(),
-        ctm: document.getElementById('ctm').value.trim(),
-        observation: document.getElementById('observation').value.trim(),
-        habiteNumber: document.getElementById('habite-number').value.trim(),
-        alvaraSituation: document.getElementById('alvara-situation').value.trim(),
-        server: currentUser,
-        date: now.toLocaleDateString('pt-BR'),
-        time: now.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
-        timestamp: now.getTime()
-    };
-    
-    setButtonLoading(submitBtn, true);
-    
-    try {
-        // Salvar no Firebase se conectado
-        if (firebaseConnected && database) {
-            const entriesRef = ref(database, 'gluos_entries');
-            await push(entriesRef, entry);
-            console.log('Entrada salva no Firebase:', entry);
-        } else {
-            // Salvar localmente se Firebase não estiver disponível
-            entry.id = 'local_' + Date.now();
-            allEntries.unshift(entry);
-            console.log('Entrada salva localmente:', entry);
-        }
-        
-        // Limpar formulário
-        form.reset();
-        document.getElementById('subject-number').value = '';
-        
-        // Mostrar sucesso
-        showSuccessModal('Entrada salva com sucesso!');
-        
-    } catch (error) {
-        console.error('Erro ao salvar entrada:', error);
-        alert('Erro ao salvar entrada. Tente novamente.');
-    } finally {
-        setButtonLoading(submitBtn, false);
-    }
+
+    // Limpar formulário
+    form.reset();
+    document.getElementById('subject-number').value = '';
+
+    // Mostrar sucesso
+    showSuccessModal('Entrada salva com sucesso!');
+
+  } catch (error) {
+    console.error('Erro ao salvar entrada:', error);
+    alert('Erro ao salvar entrada. Tente novamente.');
+  } finally {
+    setButtonLoading(submitBtn, false);
+  }
 }
 
 // Múltiplas entradas
 function setupMultipleEntries() {
-    const setSubjectBtn = document.getElementById('set-subject-btn');
-    const addProcessBtn = document.getElementById('add-process-btn');
-    const saveAllBtn = document.getElementById('save-all-btn');
-    const multiSubjectNumber = document.getElementById('multi-subject-number');
-    const multiSubjectSelect = document.getElementById('multi-subject-select');
-    
-    if (setSubjectBtn) {
-        setSubjectBtn.addEventListener('click', handleSetSubject);
-    }
-    
-    if (addProcessBtn) {
-        addProcessBtn.addEventListener('click', addProcessForm);
-    }
-    
-    if (saveAllBtn) {
-        saveAllBtn.addEventListener('click', handleSaveAllEntries);
-    }
-    
-    // Auto-preencher assunto pelo número
-    if (multiSubjectNumber && multiSubjectSelect) {
-        multiSubjectNumber.addEventListener('input', function() {
-            const num = parseInt(this.value);
-            if (num >= 1 && num <= 47) {
-                const assunto = GLUOS_DATA.assuntos.find(a => a.id === num);
-                if (assunto) {
-                    multiSubjectSelect.value = assunto.id;
-                }
-            }
-        });
-        
-        // Sincronizar select com número
-        multiSubjectSelect.addEventListener('change', function() {
-            if (this.value) {
-                multiSubjectNumber.value = this.value;
-            }
-        });
-    }
+  const setSubjectBtn = document.getElementById('set-subject-btn');
+  const addProcessBtn = document.getElementById('add-process-btn');
+  const saveAllBtn = document.getElementById('save-all-btn');
+  const multiSubjectNumber = document.getElementById('multi-subject-number');
+  const multiSubjectSelect = document.getElementById('multi-subject-select');
+
+  if (setSubjectBtn) {
+    setSubjectBtn.addEventListener('click', handleSetSubject);
+  }
+
+  if (addProcessBtn) {
+    addProcessBtn.addEventListener('click', addProcessForm);
+  }
+
+  if (saveAllBtn) {
+    saveAllBtn.addEventListener('click', handleSaveAllEntries);
+  }
+
+  // Auto-preencher assunto pelo número
+  if (multiSubjectNumber && multiSubjectSelect) {
+    multiSubjectNumber.addEventListener('input', function() {
+      const num = parseInt(this.value);
+      if (num >= 1 && num <= 47) {
+        const assunto = GLUOS_DATA.assuntos.find(a => a.id === num);
+        if (assunto) {
+          multiSubjectSelect.value = assunto.id;
+        }
+      }
+    });
+
+    // Sincronizar select com número
+    multiSubjectSelect.addEventListener('change', function() {
+      if (this.value) {
+        multiSubjectNumber.value = this.value;
+      }
+    });
+  }
 }
 
 function handleSetSubject() {
-    const subjectId = parseInt(document.getElementById('multi-subject-select').value);
-    
-    if (!subjectId) {
-        alert('Por favor, selecione um assunto.');
-        return;
-    }
-    
-    const assunto = GLUOS_DATA.assuntos.find(a => a.id === subjectId);
-    selectedSubjectForMultiple = assunto;
-    
-    // Mostrar seção de formulários
-    const container = document.getElementById('multiple-forms-container');
-    const subjectText = document.getElementById('selected-subject-text');
-    
-    if (container && subjectText && assunto) {
-        subjectText.textContent = assunto.texto;
-        container.classList.remove('hidden');
-        
-        // Limpar formulários anteriores e adicionar o primeiro
-        document.getElementById('processes-container').innerHTML = '';
-        processCounter = 1;
-        addProcessForm();
-    }
+  const subjectId = parseInt(document.getElementById('multi-subject-select').value);
+  if (!subjectId) {
+    alert('Por favor, selecione um assunto.');
+    return;
+  }
+
+  const assunto = GLUOS_DATA.assuntos.find(a => a.id === subjectId);
+  selectedSubjectForMultiple = assunto;
+
+  // Mostrar seção de formulários
+  const container = document.getElementById('multiple-forms-container');
+  const subjectText = document.getElementById('selected-subject-text');
+
+  if (container && subjectText && assunto) {
+    subjectText.textContent = assunto.texto;
+    container.classList.remove('hidden');
+
+    // Limpar formulários anteriores e adicionar o primeiro
+    document.getElementById('processes-container').innerHTML = '';
+    processCounter = 1;
+    addProcessForm();
+  }
 }
 
 function addProcessForm() {
