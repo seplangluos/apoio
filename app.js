@@ -1,9 +1,9 @@
 // Sistema GLUOS - Gerência de Licenciamento de Uso e Ocupação do Solo
-// Integração completa com Firebase - Versão Corrigida
-
+// Integração completa com Firebase - Versão com Firebase Authentication
 // Importações do Firebase v9+
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
 import { getDatabase, ref, push, set, get, update, remove, onValue } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js';
+import { getAuth, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
 
 // Configuração do Firebase principal
 const firebaseConfig = {
@@ -28,10 +28,11 @@ const firebaseConfigProcessos = {
 };
 
 // Inicializar Firebase principal
-let app, database;
+let app, database, auth;
 try {
   app = initializeApp(firebaseConfig);
   database = getDatabase(app);
+  auth = getAuth(app);
 } catch (error) {
   console.error('Erro ao inicializar Firebase:', error);
 }
@@ -45,6 +46,28 @@ try {
   console.error('Erro ao inicializar Firebase de processos:', error);
 }
 
+// Mapeamento de usuários para emails
+const USER_EMAIL_MAPPING = {
+  "Wendel": "wendel_hai@hotmail.com",
+  "Eduardo": "edu_rich@hotmail.com",
+  "Sônia": "sonia@hotmail.com",
+  "Júlia": "julia@hotmail.com",
+  "Rita": "rita@hotmail.com",
+  "Mara": "mara@hotmail.com",
+  "Tati": "tati@hotmail.com",
+  "Admin": "seplan.gluos@valadares.mg.gov.br"
+};
+
+// Função para converter email para nome de usuário
+function emailToUsername(email) {
+  for (const [username, userEmail] of Object.entries(USER_EMAIL_MAPPING)) {
+    if (userEmail === email) {
+      return username;
+    }
+  }
+  return email; // Retorna o email se não encontrar o mapeamento
+}
+
 // Dados da aplicação
 const GLUOS_DATA = {
   usuarios: ["Eduardo", "Wendel", "Júlia", "Tati", "Sônia", "Rita", "Mara", "Admin"],
@@ -56,7 +79,7 @@ const GLUOS_DATA = {
     {id: 5, texto: "Atendimento ao Contribuinte"},
     {id: 6, texto: "Pós Atendimento Balcão"},
     {id: 7, texto: "Atendimento ao Telefone"},
-    {id: 8, texto: "Apoio aos Arquitetos/Enginheiros"},
+    {id: 8, texto: "Apoio aos Arquitetos/Engenheiros"},
     {id: 9, texto: "Envio de E-mail para o Arquitetos/Enginheiros"},
     {id: 10, texto: "Solicitação de Desarquivamento de Processo"},
     {id: 11, texto: "Lançamento Habite-se no E&L e na Receita Federal"},
@@ -110,7 +133,7 @@ let firebaseConnected = false;
 // Inicialização
 document.addEventListener('DOMContentLoaded', function() {
   console.log('Sistema GLUOS iniciando...');
-
+  
   // Forçar recriação do select com JavaScript para garantir funcionalidade
   fixUserSelect();
   initializeFirebase();
@@ -119,7 +142,7 @@ document.addEventListener('DOMContentLoaded', function() {
   showScreen('login');
   updateDateTime();
   setInterval(updateDateTime, 1000);
-
+  
   console.log('Sistema inicializado com sucesso!');
 });
 
@@ -131,21 +154,21 @@ function fixUserSelect() {
     userSelect.style.zIndex = '1000';
     userSelect.style.pointerEvents = 'auto';
     userSelect.style.position = 'relative';
-
+    
     // Adicionar event listeners diretos
     userSelect.addEventListener('change', function() {
       console.log('Usuário selecionado:', this.value);
     });
-
+    
     userSelect.addEventListener('click', function() {
       console.log('Select clicado');
       this.focus();
     });
-
+    
     // Garantir que está funcional
     userSelect.removeAttribute('disabled');
     userSelect.setAttribute('tabindex', '0');
-
+    
     console.log('Select de usuário corrigido');
   }
 }
@@ -154,29 +177,27 @@ function fixUserSelect() {
 async function initializeFirebase() {
   try {
     updateFirebaseStatus('warning', 'Conectando ao Firebase...');
-
-    if (!database) {
+    
+    if (!database || !auth) {
       updateFirebaseStatus('error', 'Firebase não inicializado');
-      console.error('Database não inicializado');
+      console.error('Database ou Auth não inicializado');
       return;
     }
-
+    
     // Verificar conexão com Firebase
     const testRef = ref(database, '.info/connected');
     onValue(testRef, (snapshot) => {
       firebaseConnected = snapshot.val() === true;
-
       if (firebaseConnected) {
         updateFirebaseStatus('success', 'Conectado ao Firebase');
         console.log('Firebase conectado com sucesso');
         loadAllEntries();
-        initializePasswords();
       } else {
         updateFirebaseStatus('error', 'Desconectado do Firebase');
         console.log('Firebase desconectado');
       }
     });
-
+    
   } catch (error) {
     console.error('Erro ao conectar Firebase:', error);
     updateFirebaseStatus('error', 'Erro de conexão');
@@ -184,32 +205,10 @@ async function initializeFirebase() {
   }
 }
 
-// Inicializar senhas padrão
-async function initializePasswords() {
-  if (!firebaseConnected) return;
-
-  try {
-    const passwordsRef = ref(database, 'gluos_passwords');
-    const snapshot = await get(passwordsRef);
-
-    if (!snapshot.exists()) {
-      console.log('Inicializando senhas padrão...');
-      const defaultPasswords = {};
-      GLUOS_DATA.usuarios.forEach(user => {
-        defaultPasswords[user] = '123';
-      });
-      await set(passwordsRef, defaultPasswords);
-      console.log('Senhas padrão inicializadas');
-    }
-  } catch (error) {
-    console.error('Erro ao inicializar senhas:', error);
-  }
-}
-
 // Carregar todas as entradas
 async function loadAllEntries() {
   if (!firebaseConnected) return;
-
+  
   try {
     const entriesRef = ref(database, 'gluos_entries');
     onValue(entriesRef, (snapshot) => {
@@ -219,7 +218,7 @@ async function loadAllEntries() {
           id: key,
           ...data[key]
         }));
-
+        
         // Ordenar por timestamp (mais recente primeiro)
         allEntries.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
         console.log(`Carregadas ${allEntries.length} entradas`);
@@ -227,10 +226,8 @@ async function loadAllEntries() {
         allEntries = [];
         console.log('Nenhuma entrada encontrada');
       }
-
       updateRecordCount();
     });
-
   } catch (error) {
     console.error('Erro ao carregar entradas:', error);
     allEntries = [];
@@ -244,12 +241,12 @@ function setupEventListeners() {
   const loginBtn = document.getElementById('login-btn');
   const userSelect = document.getElementById('user-select');
   const passwordInput = document.getElementById('password');
-
+  
   if (loginForm) {
     loginForm.addEventListener('submit', handleLogin);
     console.log('Event listener do form de login adicionado');
   }
-
+  
   if (loginBtn) {
     loginBtn.addEventListener('click', function(e) {
       e.preventDefault();
@@ -257,7 +254,7 @@ function setupEventListeners() {
     });
     console.log('Event listener do botão de login adicionado');
   }
-
+  
   // Enter nos campos
   if (passwordInput) {
     passwordInput.addEventListener('keypress', function(e) {
@@ -267,7 +264,7 @@ function setupEventListeners() {
       }
     });
   }
-
+  
   if (userSelect) {
     userSelect.addEventListener('keypress', function(e) {
       if (e.key === 'Enter' && this.value) {
@@ -275,24 +272,31 @@ function setupEventListeners() {
       }
     });
   }
-
+  
   // Navegação principal
   setupMainNavigation();
+  
   // Nova entrada
   setupNewEntry();
+  
   // Múltiplas entradas
   setupMultipleEntries();
+  
   // Pesquisa
   setupSearch();
+  
   // Base de dados
   setupDatabase();
+  
   // Relatórios
   setupReports();
+  
   // Perfil
   setupProfile();
+  
   // Modais
   setupModals();
-
+  
   console.log('Todos os event listeners configurados');
 }
 
@@ -303,7 +307,7 @@ function setupMainNavigation() {
   if (logoutBtn) {
     logoutBtn.addEventListener('click', handleLogout);
   }
-
+  
   // Botões do dashboard
   const navButtons = [
     { id: 'new-entry-btn', screen: 'new-entry' },
@@ -313,7 +317,7 @@ function setupMainNavigation() {
     { id: 'profile-btn', callback: showProfileModal },
     { id: 'report-btn', screen: 'report' }
   ];
-
+  
   navButtons.forEach(btn => {
     const element = document.getElementById(btn.id);
     if (element) {
@@ -328,16 +332,13 @@ function setupMainNavigation() {
       });
     }
   });
-
+  
   // Botões de voltar
   const backButtons = [
-    'back-to-dashboard-1',
-    'back-to-dashboard-2',
-    'back-to-dashboard-3',
-    'back-to-dashboard-4',
-    'back-to-dashboard-5'
+    'back-to-dashboard-1', 'back-to-dashboard-2', 'back-to-dashboard-3', 
+    'back-to-dashboard-4', 'back-to-dashboard-5'
   ];
-
+  
   backButtons.forEach(btnId => {
     const btn = document.getElementById(btnId);
     if (btn) {
@@ -346,7 +347,7 @@ function setupMainNavigation() {
   });
 }
 
-// Login
+// Login com Firebase Authentication
 async function handleLogin(e) {
   e.preventDefault();
   console.log('=== PROCESSANDO LOGIN ===');
@@ -389,33 +390,29 @@ async function handleLogin(e) {
     return;
   }
 
+  // Obter email do usuário
+  const userEmail = USER_EMAIL_MAPPING[user];
+  if (!userEmail) {
+    showLoginError('Usuário não encontrado.');
+    return;
+  }
+
   // Loading state
   setButtonLoading(loginBtn, true);
 
   try {
-    let storedPassword = '123'; // Fallback
+    // Autenticação usando Firebase Auth
+    const userCredential = await signInWithEmailAndPassword(auth, userEmail, password);
+    const firebaseUser = userCredential.user;
 
-    // Se Firebase estiver conectado, verificar senha
-    if (firebaseConnected && database) {
-      try {
-        const passwordRef = ref(database, `gluos_passwords/${user}`);
-        const snapshot = await get(passwordRef);
-        if (snapshot.exists()) {
-          storedPassword = snapshot.val();
-        }
-      } catch (error) {
-        console.warn('Erro ao verificar senha no Firebase, usando padrão:', error);
-      }
-    }
-
-    if (password !== storedPassword) {
-      showLoginError('Senha incorreta.');
-      return;
-    }
-
-    // Login bem-sucedido
-    console.log('=== LOGIN BEM-SUCEDIDO ===', { usuario: user });
-    currentUser = user;
+    // Login bem-sucedido!
+    console.log('=== LOGIN BEM-SUCEDIDO ===', { 
+      usuario: user, 
+      email: firebaseUser.email,
+      uid: firebaseUser.uid 
+    });
+    
+    currentUser = user; // Manter o nome do usuário, não o email
     updateUserInfo();
 
     // Limpar formulário
@@ -426,8 +423,21 @@ async function handleLogin(e) {
     showScreen('dashboard');
 
   } catch (error) {
+    // Em caso de erro de autenticação
     console.error('Erro no login:', error);
-    showLoginError('Erro ao verificar credenciais. Tente novamente.');
+    
+    // Mensagens de erro mais específicas
+    if (error.code === 'auth/user-not-found') {
+      showLoginError('Usuário não encontrado no sistema.');
+    } else if (error.code === 'auth/wrong-password') {
+      showLoginError('Senha incorreta.');
+    } else if (error.code === 'auth/invalid-email') {
+      showLoginError('Email inválido.');
+    } else if (error.code === 'auth/too-many-requests') {
+      showLoginError('Muitas tentativas. Tente novamente mais tarde.');
+    } else {
+      showLoginError('Usuário ou senha inválidos.');
+    }
   } finally {
     setButtonLoading(loginBtn, false);
   }
@@ -1428,80 +1438,64 @@ function showProfileModal() {
     if (modal) modal.classList.remove('hidden');
 }
 
+import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
 async function handlePasswordChange(e) {
     e.preventDefault();
-    
+
     const currentPassword = document.getElementById('current-password').value;
     const newPassword = document.getElementById('new-password').value;
     const confirmPassword = document.getElementById('confirm-password').value;
     const errorDiv = document.getElementById('password-error');
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    
-    // Limpar erro anterior
+    const submitBtn = e.target.querySelector('button[type=\"submit\"]');
+
     if (errorDiv) errorDiv.classList.add('hidden');
-    
-    // Validação
+
     if (newPassword !== confirmPassword) {
         showPasswordError('As senhas não coincidem.');
         return;
     }
-    
-    if (newPassword.length < 3) {
-        showPasswordError('A nova senha deve ter pelo menos 3 caracteres.');
+
+    if (newPassword.length < 6) {
+        showPasswordError('A nova senha deve ter pelo menos 6 caracteres.');
         return;
     }
-    
+
     setButtonLoading(submitBtn, true);
-    
+
     try {
-        let storedPassword = '123'; // Fallback
-        
-        // Verificar senha atual
-        if (firebaseConnected && database) {
-            const passwordRef = ref(database, `gluos_passwords/${currentUser}`);
-            const snapshot = await get(passwordRef);
-            
-            if (snapshot.exists()) {
-                storedPassword = snapshot.val();
-            }
-        }
-        
-        if (currentPassword !== storedPassword) {
-            showPasswordError('Senha atual incorreta.');
+        const user = auth.currentUser;
+        if (!user || !user.email) {
+            showPasswordError('Usuário não autenticado.');
             return;
         }
-        
-        // Atualizar senha
-        if (firebaseConnected && database) {
-            const passwordRef = ref(database, `gluos_passwords/${currentUser}`);
-            await set(passwordRef, newPassword);
-        }
-        
-        // Limpar formulário
+
+        // Reautenticar usuário
+        const credential = EmailAuthProvider.credential(user.email, currentPassword);
+        await reauthenticateWithCredential(user, credential);
+
+        await updatePassword(user, newPassword);
+
         e.target.reset();
-        
-        // Fechar modal
         hideProfileModal();
-        
         showSuccessModal('Senha alterada com sucesso!');
-        
-        console.log('Senha alterada para:', currentUser);
-        
+
+        console.log('Senha alterada para:', user.email);
+
     } catch (error) {
         console.error('Erro ao alterar senha:', error);
-        showPasswordError('Erro ao alterar senha. Tente novamente.');
+        if (error.code === 'auth/wrong-password') {
+            showPasswordError('Senha atual incorreta.');
+        } else if (error.code === 'auth/weak-password') {
+            showPasswordError('A nova senha é muito fraca.');
+        } else {
+            showPasswordError('Erro ao alterar senha. Tente novamente.');
+        }
     } finally {
         setButtonLoading(submitBtn, false);
     }
 }
 
-function showPasswordError(message) {
-    const errorDiv = document.getElementById('password-error');
-    if (errorDiv) {
-        errorDiv.textContent = message;
-        errorDiv.classList.remove('hidden');
-    }
-}
 
 function hideProfileModal() {
     const modal = document.getElementById('profile-modal');
@@ -1785,3 +1779,7 @@ function setButtonLoading(button, loading) {
         button.disabled = false;
     }
 }
+
+// NOTA: Este arquivo contém apenas as principais modificações.
+// Para o arquivo completo, você deve copiar todo o conteúdo do arquivo original
+// e substituir apenas as funções modificadas acima.
