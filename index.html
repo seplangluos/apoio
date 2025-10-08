@@ -86,6 +86,10 @@
                         <span>📝📝</span>
                         Novos
                     </button>
+                    <button id="bulk-entries-btn" class="btn btn--success btn--lg">
+                        <span>📝📋</span>
+                        Vários Novos
+                    </button>
                     <button id="search-btn" class="btn btn--primary btn--lg">
                         <span>🔍</span>
                         Pesquisa
@@ -407,6 +411,67 @@
     </div>
 
     <!-- Tela de Relatórios -->
+    
+    <!-- Tela Vários Novos -->
+    <div id="bulk-entries-screen" class="screen">
+        <div class="screen-content">
+            <div class="screen-header">
+                <h2>Vários Novos</h2>
+                <p>Crie múltiplas entradas (até 10) com campos opcionais para cada processo</p>
+            </div>
+
+            <div class="content-card">
+                <!-- Seleção de Assunto -->
+                <div class="form-section">
+                    <h3>Seleção do Assunto</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="bulk-subject-number">ID do Assunto (1-47):</label>
+                            <input type="number" id="bulk-subject-number" class="form-control" min="1" max="47" placeholder="Digite o ID">
+                        </div>
+                        <div class="form-group">
+                            <label for="bulk-subject-select">Assunto:</label>
+                            <select id="bulk-subject-select" class="form-control" required>
+                                <option value="">Selecione um assunto...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="bulk-quantity">Quantidade de processos (1-10):</label>
+                        <input type="number" id="bulk-quantity" class="form-control" min="1" max="10" value="5" placeholder="Digite a quantidade">
+                    </div>
+                    <button type="button" id="generate-bulk-forms" class="btn btn--primary">Gerar Formulários</button>
+                </div>
+
+                <!-- Container dos formulários gerados -->
+                <div id="bulk-forms-container" class="form-section hidden">
+                    <h3>Processos para Cadastro</h3>
+                    <div id="bulk-selected-subject" class="selected-subject">
+                        <strong>Assunto selecionado:</strong> <span id="bulk-selected-subject-text"></span>
+                    </div>
+
+                    <div id="bulk-processes-container"></div>
+
+                    <div class="action-buttons">
+                        <button type="button" id="save-all-bulk" class="btn btn--success btn--lg">
+                            <span>💾</span>
+                            Salvar Todas as Entradas
+                        </button>
+                        <button type="button" id="reset-bulk-forms" class="btn btn--secondary">
+                            Limpar Tudo
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button id="back-to-dashboard-6" class="btn btn--secondary">
+                    ← Voltar ao Dashboard
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="report-screen" class="screen">
         <div class="screen-header">
             <div class="container">

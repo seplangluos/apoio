@@ -290,6 +290,8 @@ function setupEventListeners() {
   
   // Relatórios
   setupReports();
+    // Setup Vários Novos
+    setupBulkEntries();
   
   // Perfil
   setupProfile();
@@ -312,6 +314,7 @@ function setupMainNavigation() {
   const navButtons = [
     { id: 'new-entry-btn', screen: 'new-entry' },
     { id: 'multiple-entries-btn', screen: 'multiple-entries' },
+    { id: 'bulk-entries-btn', screen: 'bulk-entries' },
     { id: 'search-btn', screen: 'search' },
     { id: 'database-btn', screen: 'database', callback: loadDatabaseTable },
     { id: 'profile-btn', callback: showProfileModal },
@@ -336,7 +339,8 @@ function setupMainNavigation() {
   // Botões de voltar
   const backButtons = [
     'back-to-dashboard-1', 'back-to-dashboard-2', 'back-to-dashboard-3', 
-    'back-to-dashboard-4', 'back-to-dashboard-5'
+    'back-to-dashboard-4', 'back-to-dashboard-5',
+        'back-to-dashboard-6'
   ];
   
   backButtons.forEach(btnId => {
@@ -2054,3 +2058,352 @@ function setupPaginationEventListeners() {
 
     // Configurar paginação
     setupPaginationEventListeners();
+
+// ================================
+// FUNCIONALIDADE VÁRIOS NOVOS
+// ================================
+
+// Setup para funcionalidade Vários Novos
+function setupBulkEntries() {
+    const generateBtn = document.getElementById('generate-bulk-forms');
+    const saveAllBtn = document.getElementById('save-all-bulk');
+    const resetBtn = document.getElementById('reset-bulk-forms');
+    const bulkSubjectNumber = document.getElementById('bulk-subject-number');
+    const bulkSubjectSelect = document.getElementById('bulk-subject-select');
+
+if (bulkSubjectSelect) {
+  // Limpa antes de popular
+  bulkSubjectSelect.innerHTML = '<option value="">Selecione um assunto...</option>';
+  GLUOS_DATA.assuntos.forEach(assunto => {
+    const opt = document.createElement('option');
+    opt.value = assunto.id;
+    opt.textContent = `${assunto.id} - ${assunto.texto}`;
+    bulkSubjectSelect.appendChild(opt);
+  });
+}
+
+    if (generateBtn) {
+        generateBtn.addEventListener('click', handleGenerateBulkForms);
+    }
+
+    if (saveAllBtn) {
+        saveAllBtn.addEventListener('click', handleSaveAllBulkEntries);
+    }
+
+    if (resetBtn) {
+        resetBtn.addEventListener('click', handleResetBulkForms);
+    }
+
+    // Auto-preencher assunto pelo número
+    if (bulkSubjectNumber && bulkSubjectSelect) {
+        bulkSubjectNumber.addEventListener('input', function() {
+            const num = parseInt(this.value);
+            if (num >= 1 && num <= 47) {
+                const assunto = GLUOS_DATA.assuntos.find(a => a.id === num);
+                if (assunto) {
+                    bulkSubjectSelect.value = assunto.id;
+                }
+            }
+        });
+
+        // Sincronizar select com número
+        bulkSubjectSelect.addEventListener('change', function() {
+            if (this.value) {
+                bulkSubjectNumber.value = this.value;
+            }
+        });
+    }
+}
+
+// Gerar formulários em massa
+function handleGenerateBulkForms() {
+    const subjectId = parseInt(document.getElementById('bulk-subject-select').value);
+    const quantity = parseInt(document.getElementById('bulk-quantity').value);
+
+    if (!subjectId) {
+        alert('Por favor, selecione um assunto.');
+        return;
+    }
+
+    if (!quantity || quantity < 1 || quantity > 10) {
+        alert('Por favor, informe uma quantidade válida (1-10).');
+        return;
+    }
+
+    const assunto = GLUOS_DATA.assuntos.find(a => a.id === subjectId);
+    if (!assunto) {
+        alert('Assunto não encontrado.');
+        return;
+    }
+
+    // Mostrar container dos formulários
+    const container = document.getElementById('bulk-forms-container');
+    const subjectText = document.getElementById('bulk-selected-subject-text');
+    const processesContainer = document.getElementById('bulk-processes-container');
+
+    if (container && subjectText && processesContainer && assunto) {
+        subjectText.textContent = assunto.texto;
+        container.classList.remove('hidden');
+
+        // Limpar formulários anteriores
+        processesContainer.innerHTML = '';
+
+        // Gerar os formulários
+        for (let i = 1; i <= quantity; i++) {
+            const processForm = createBulkProcessForm(i);
+            processesContainer.appendChild(processForm);
+        }
+
+        console.log(`Gerados ${quantity} formulários para o assunto: ${assunto.texto}`);
+    }
+}
+
+// Criar formulário individual para processo
+function createBulkProcessForm(processNumber) {
+    const formDiv = document.createElement('div');
+    formDiv.className = 'bulk-process-form';
+    formDiv.setAttribute('data-process-number', processNumber);
+
+    formDiv.innerHTML = `
+        <div class="process-form-header">
+            <h4>Processo ${processNumber}</h4>
+            <button type="button" class="btn btn--sm btn--secondary expand-process-btn" data-process="${processNumber}">
+                + Campos Opcionais
+            </button>
+        </div>
+
+        <div class="form-group">
+            <label for="bulk-process-${processNumber}">Nº do Processo/Protocolo:</label>
+            <input type="text" id="bulk-process-${processNumber}" class="form-control bulk-process-input" 
+                   placeholder="Digite o número do processo" data-process="${processNumber}">
+        </div>
+
+        <div class="optional-fields hidden" id="optional-fields-${processNumber}">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="bulk-contributor-${processNumber}">Contribuinte:</label>
+                    <input type="text" id="bulk-contributor-${processNumber}" class="form-control" 
+                           placeholder="Nome do contribuinte">
+                </div>
+                <div class="form-group">
+                    <label for="bulk-ctm-${processNumber}">CTM:</label>
+                    <input type="text" id="bulk-ctm-${processNumber}" class="form-control" 
+                           placeholder="CTM do processo">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="bulk-observation-${processNumber}">Observação:</label>
+                <textarea id="bulk-observation-${processNumber}" class="form-control" 
+                          rows="2" placeholder="Observações sobre o processo"></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="bulk-habite-${processNumber}">Número do Habite-se/Alvará:</label>
+                    <input type="text" id="bulk-habite-${processNumber}" class="form-control" 
+                           placeholder="Número do habite-se ou alvará">
+                </div>
+                <div class="form-group">
+                    <label for="bulk-alvara-situation-${processNumber}">Situação do Alvará de Funcionamento:</label>
+                    <select id="bulk-alvara-situation-${processNumber}" class="form-control">
+                        <option value="">Selecione uma situação...</option>
+                        <option value="Deferido">Deferido</option>
+                        <option value="Indeferido">Indeferido</option>
+                        <option value="Pendente">Pendente</option>
+                        <option value="Em análise">Em análise</option>
+                        <option value="Aguardando documentação">Aguardando documentação</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Adicionar event listener para expandir campos opcionais
+    const expandBtn = formDiv.querySelector('.expand-process-btn');
+    const optionalFields = formDiv.querySelector('.optional-fields');
+    const processInput = formDiv.querySelector('.bulk-process-input');
+
+    if (expandBtn && optionalFields) {
+        expandBtn.addEventListener('click', function() {
+            const isHidden = optionalFields.classList.contains('hidden');
+            if (isHidden) {
+                optionalFields.classList.remove('hidden');
+                expandBtn.textContent = '- Campos Opcionais';
+                expandBtn.classList.remove('btn--secondary');
+                expandBtn.classList.add('btn--warning');
+            } else {
+                optionalFields.classList.add('hidden');
+                expandBtn.textContent = '+ Campos Opcionais';
+                expandBtn.classList.remove('btn--warning');
+                expandBtn.classList.add('btn--secondary');
+            }
+        });
+    }
+
+    // Adicionar autopreenchimento baseado no número do processo
+    if (processInput) {
+        processInput.addEventListener('input', async function() {
+            let numeroProcesso = this.value.trim();
+            numeroProcesso = numeroProcesso.replace(/\//g, "-");
+
+            const contributorInput = formDiv.querySelector(`#bulk-contributor-${processNumber}`);
+            const ctmInput = formDiv.querySelector(`#bulk-ctm-${processNumber}`);
+
+            if (!numeroProcesso) {
+                if (contributorInput) contributorInput.value = '';
+                if (ctmInput) ctmInput.value = '';
+                return;
+            }
+
+            try {
+                if (processosDatabase) {
+                    const refProc = ref(processosDatabase, 'processos/' + numeroProcesso);
+                    const snapshot = await get(refProc);
+
+                    if (snapshot.exists()) {
+                        const dados = snapshot.val();
+                        if (contributorInput) contributorInput.value = dados.Requerente || '';
+                        if (ctmInput) ctmInput.value = dados.CTM || '';
+                    } else {
+                        if (contributorInput) contributorInput.value = '';
+                        if (ctmInput) ctmInput.value = '';
+                    }
+                }
+            } catch (err) {
+                console.error('Erro ao buscar processo:', err);
+                if (contributorInput) contributorInput.value = '';
+                if (ctmInput) ctmInput.value = '';
+            }
+        });
+    }
+
+    return formDiv;
+}
+
+// Salvar todas as entradas em massa
+async function handleSaveAllBulkEntries() {
+    const subjectId = parseInt(document.getElementById('bulk-subject-select').value);
+    const assunto = GLUOS_DATA.assuntos.find(a => a.id === subjectId);
+
+    if (!subjectId || !assunto) {
+        alert('Erro: Assunto não selecionado.');
+        return;
+    }
+
+    const processesContainer = document.getElementById('bulk-processes-container');
+    const processForms = processesContainer.querySelectorAll('.bulk-process-form');
+
+    const entriesToSave = [];
+    let firstProcessFilled = false;
+
+    // Validar e coletar dados
+    for (let i = 0; i < processForms.length; i++) {
+        const form = processForms[i];
+        const processNumber = form.getAttribute('data-process-number');
+        const processInput = form.querySelector(`#bulk-process-${processNumber}`);
+
+        if (!processInput) continue;
+
+        const processValue = processInput.value.trim();
+
+        // Se é o primeiro processo, deve estar preenchido
+        if (i === 0 && !processValue) {
+            alert('O primeiro processo deve ser preenchido.');
+            processInput.focus();
+            return;
+        }
+
+        // Se o primeiro está preenchido, marcar flag
+        if (i === 0 && processValue) {
+            firstProcessFilled = true;
+        }
+
+        // Se tem valor no processo, coletar todos os dados
+        if (processValue) {
+            const now = new Date();
+            const entry = {
+                subjectId: subjectId,
+                subjectText: assunto.texto,
+                processNumber: processValue,
+                contributor: form.querySelector(`#bulk-contributor-${processNumber}`)?.value.trim() || '',
+                ctm: form.querySelector(`#bulk-ctm-${processNumber}`)?.value.trim() || '',
+                observation: form.querySelector(`#bulk-observation-${processNumber}`)?.value.trim() || '',
+                habiteNumber: form.querySelector(`#bulk-habite-${processNumber}`)?.value.trim() || '',
+                alvaraSituation: form.querySelector(`#bulk-alvara-situation-${processNumber}`)?.value.trim() || '',
+                server: currentUser,
+                date: now.toLocaleDateString('pt-BR'),
+                time: now.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+                timestamp: now.getTime()
+            };
+
+            entriesToSave.push(entry);
+        }
+    }
+
+    if (!firstProcessFilled) {
+        alert('Pelo menos o primeiro processo deve ser preenchido.');
+        return;
+    }
+
+    if (entriesToSave.length === 0) {
+        alert('Nenhum processo foi preenchido.');
+        return;
+    }
+
+    // Confirmar salvamento
+    const confirmMessage = `Deseja salvar ${entriesToSave.length} entrada(s) para o assunto "${assunto.texto}"?`;
+    if (!confirm(confirmMessage)) {
+        return;
+    }
+
+    const saveBtn = document.getElementById('save-all-bulk');
+    setButtonLoading(saveBtn, true);
+
+    try {
+        // Salvar cada entrada
+        for (const entry of entriesToSave) {
+            if (firebaseConnected && database) {
+                const entriesRef = ref(database, 'gluos_entries');
+                await push(entriesRef, entry);
+            } else {
+                // Salvar localmente se Firebase não estiver disponível
+                entry.id = 'local_' + Date.now() + '_' + Math.random();
+                allEntries.unshift(entry);
+            }
+        }
+
+        console.log(`${entriesToSave.length} entradas salvas com sucesso`);
+        showSuccessModal(`${entriesToSave.length} entrada(s) salva(s) com sucesso!`);
+
+        // Limpar formulários após salvamento
+        handleResetBulkForms();
+
+    } catch (error) {
+        console.error('Erro ao salvar entradas em massa:', error);
+        alert('Erro ao salvar as entradas. Tente novamente.');
+    } finally {
+        setButtonLoading(saveBtn, false);
+    }
+}
+
+// Resetar formulários
+function handleResetBulkForms() {
+    const container = document.getElementById('bulk-forms-container');
+    const processesContainer = document.getElementById('bulk-processes-container');
+
+    if (container) {
+        container.classList.add('hidden');
+    }
+
+    if (processesContainer) {
+        processesContainer.innerHTML = '';
+    }
+
+    // Limpar campos de seleção
+    document.getElementById('bulk-subject-number').value = '';
+    document.getElementById('bulk-subject-select').value = '';
+    document.getElementById('bulk-quantity').value = '5';
+
+    console.log('Formulários de entrada em massa resetados');
+}
