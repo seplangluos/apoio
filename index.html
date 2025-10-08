@@ -343,6 +343,24 @@
                 </div>
                 
                 <div class="database-results">
+                    <!-- Controles de paginação superiores -->
+                    <div class="pagination-container">
+                        <div class="pagination-info">
+                            <span id="pagination-info-text">Mostrando 1-500 de 1000 registros</span>
+                        </div>
+                        <div class="pagination-controls">
+                            <button id="first-page-btn" class="btn btn--sm btn--outline" title="Primeira página">« Primeira</button>
+                            <button id="prev-page-btn" class="btn btn--sm btn--outline" title="Página anterior">‹ Anterior</button>
+
+                            <div class="page-numbers" id="page-numbers-top">
+                                <!-- Números das páginas serão inseridos aqui -->
+                            </div>
+
+                            <button id="next-page-btn" class="btn btn--sm btn--outline" title="Próxima página">Próximo ›</button>
+                            <button id="last-page-btn" class="btn btn--sm btn--outline" title="Última página">Última »</button>
+                        </div>
+                    </div>
+
                     <div class="results-header">
                         <h3>Registros</h3>
                         <span id="total-records" class="records-count">0 registros</span>
@@ -364,6 +382,24 @@
                             </thead>
                             <tbody></tbody>
                         </table>
+                    </div>
+
+                    <!-- Controles de paginação inferiores -->
+                    <div class="pagination-container">
+                        <div class="pagination-info">
+                            <span id="pagination-info-text-bottom">Mostrando 1-500 de 1000 registros</span>
+                        </div>
+                        <div class="pagination-controls">
+                            <button id="first-page-btn-bottom" class="btn btn--sm btn--outline" title="Primeira página">« Primeira</button>
+                            <button id="prev-page-btn-bottom" class="btn btn--sm btn--outline" title="Página anterior">‹ Anterior</button>
+
+                            <div class="page-numbers" id="page-numbers-bottom">
+                                <!-- Números das páginas serão inseridos aqui -->
+                            </div>
+
+                            <button id="next-page-btn-bottom" class="btn btn--sm btn--outline" title="Próxima página">Próximo ›</button>
+                            <button id="last-page-btn-bottom" class="btn btn--sm btn--outline" title="Última página">Última »</button>
+                        </div>
                     </div>
                 </div>
             </div>

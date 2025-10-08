@@ -934,55 +934,47 @@ function setupDatabase() {
     if (clearBtn) {
         clearBtn.addEventListener('click', clearDatabaseFilters);
     }
+    
+    // Configurar paginação
+    setupPaginationEventListeners();
+} {
+    const applyBtn = document.getElementById('apply-filters');
+    const clearBtn = document.getElementById('clear-filters');
+    
+    if (applyBtn) {
+        applyBtn.addEventListener('click', applyDatabaseFilters);
+    }
+    
+    if (clearBtn) {
+        clearBtn.addEventListener('click', clearDatabaseFilters);
+    }
 }
 
 function loadDatabaseTable(entries = null) {
-    const tableBody = document.querySelector('#database-table tbody');
-    const totalRecords = document.getElementById('total-records');
-    
-    if (!tableBody) return;
-    
     const entriesToShow = entries || allEntries;
-    
-    tableBody.innerHTML = '';
-    
+
+    // Atualizar contador total
+    const totalRecords = document.getElementById('total-records');
     if (totalRecords) {
         totalRecords.textContent = `${entriesToShow.length} registro(s)`;
     }
-    
+
+    // Se não há entradas, mostrar mensagem
     if (entriesToShow.length === 0) {
-        tableBody.innerHTML = `
-            <tr>
-                <td colspan="9" class="text-center">Nenhum registro encontrado.</td>
-            </tr>
-        `;
+        const tableBody = document.querySelector('#database-table tbody');
+        if (tableBody) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="9" class="text-center">Nenhum registro encontrado.</td>
+                </tr>
+            `;
+        }
+        hidePaginationControls();
         return;
     }
-    
-    entriesToShow.forEach(entry => {
-        const row = document.createElement('tr');
-        
-        const canEdit = entry.server === currentUser;
-        const actionsHtml = canEdit ? `
-            <div class="action-buttons">
-                <button class="btn--edit" onclick="editEntry('${entry.id}')">Editar</button>
-                <button class="btn--delete" onclick="deleteEntry('${entry.id}')">Excluir</button>
-            </div>
-        ` : '-';
-        
-        row.innerHTML = `
-            <td>${entry.date || '-'}</td>
-            <td>${entry.time || '-'}</td>
-            <td>${entry.server || '-'}</td>
-            <td>${entry.processNumber || '-'}</td>
-            <td title="${entry.subjectText || '-'}">${truncateText(entry.subjectText || '-', 30)}</td>
-            <td>${entry.contributor || '-'}</td>
-            <td>${entry.ctm || '-'}</td>
-            <td title="${entry.observation || '-'}">${truncateText(entry.observation || '-', 40)}</td>
-            <td>${actionsHtml}</td>
-        `;
-        tableBody.appendChild(row);
-    });
+
+    // Inicializar paginação
+    initializePagination(entriesToShow);
 }
 
 function applyDatabaseFilters() {
@@ -1783,3 +1775,282 @@ function setButtonLoading(button, loading) {
 // NOTA: Este arquivo contém apenas as principais modificações.
 // Para o arquivo completo, você deve copiar todo o conteúdo do arquivo original
 // e substituir apenas as funções modificadas acima.
+
+// ============================================
+// SISTEMA DE PAGINAÇÃO PARA BASE DE DADOS
+// ============================================
+
+// Variáveis globais da paginação
+let currentPage = 1;
+let itemsPerPage = 500;
+let currentEntries = [];
+let totalPages = 1;
+
+// Inicializar sistema de paginação
+function initializePagination(entries) {
+    currentEntries = entries;
+    currentPage = 1;
+    totalPages = Math.ceil(entries.length / itemsPerPage);
+
+    // Atualizar display
+    displayCurrentPage();
+    updatePaginationControls();
+    setupPaginationEventListeners();
+}
+
+// Exibir página atual
+function displayCurrentPage() {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const pageEntries = currentEntries.slice(startIndex, endIndex);
+
+    const tableBody = document.querySelector('#database-table tbody');
+    if (!tableBody) return;
+
+    // Limpar tabela
+    tableBody.innerHTML = '';
+
+    // Preencher com entradas da página atual
+    pageEntries.forEach(entry => {
+        const row = document.createElement('tr');
+
+        const canEdit = entry.server === currentUser;
+        const actionsHtml = canEdit ? `
+            <div class="action-buttons">
+                <button class="btn--edit" onclick="editEntry('${entry.id}')">Editar</button>
+                <button class="btn--delete" onclick="deleteEntry('${entry.id}')">Excluir</button>
+            </div>
+        ` : '-';
+
+        row.innerHTML = `
+            <td>${entry.date || '-'}</td>
+            <td>${entry.time || '-'}</td>
+            <td>${entry.server || '-'}</td>
+            <td>${entry.processNumber || '-'}</td>
+            <td title="${entry.subjectText || '-'}">${truncateText(entry.subjectText || '-', 30)}</td>
+            <td>${entry.contributor || '-'}</td>
+            <td>${entry.ctm || '-'}</td>
+            <td title="${entry.observation || '-'}">${truncateText(entry.observation || '-', 40)}</td>
+            <td>${actionsHtml}</td>
+        `;
+        tableBody.appendChild(row);
+    });
+
+    // Atualizar informações de paginação
+    updatePaginationInfo();
+}
+
+// Atualizar informações de paginação
+function updatePaginationInfo() {
+    const startIndex = (currentPage - 1) * itemsPerPage + 1;
+    const endIndex = Math.min(currentPage * itemsPerPage, currentEntries.length);
+    const totalEntries = currentEntries.length;
+
+    const infoText = `Mostrando ${startIndex}-${endIndex} de ${totalEntries} registros`;
+
+    // Atualizar ambos os elementos de informação (superior e inferior)
+    const infoElements = [
+        document.getElementById('pagination-info-text'),
+        document.getElementById('pagination-info-text-bottom')
+    ];
+
+    infoElements.forEach(element => {
+        if (element) {
+            element.textContent = infoText;
+        }
+    });
+}
+
+// Atualizar controles de paginação
+function updatePaginationControls() {
+    if (totalPages <= 1) {
+        hidePaginationControls();
+        return;
+    }
+
+    showPaginationControls();
+
+    // Atualizar botões de navegação
+    updateNavigationButtons();
+
+    // Atualizar números das páginas
+    updatePageNumbers();
+}
+
+// Mostrar controles de paginação
+function showPaginationControls() {
+    const containers = document.querySelectorAll('.pagination-container');
+    containers.forEach(container => {
+        if (container) {
+            container.style.display = 'flex';
+        }
+    });
+}
+
+// Esconder controles de paginação
+function hidePaginationControls() {
+    const containers = document.querySelectorAll('.pagination-container');
+    containers.forEach(container => {
+        if (container) {
+            container.style.display = 'none';
+        }
+    });
+}
+
+// Atualizar botões de navegação
+function updateNavigationButtons() {
+    const navigationButtons = [
+        { ids: ['first-page-btn', 'first-page-btn-bottom'], condition: currentPage === 1 },
+        { ids: ['prev-page-btn', 'prev-page-btn-bottom'], condition: currentPage === 1 },
+        { ids: ['next-page-btn', 'next-page-btn-bottom'], condition: currentPage === totalPages },
+        { ids: ['last-page-btn', 'last-page-btn-bottom'], condition: currentPage === totalPages }
+    ];
+
+    navigationButtons.forEach(buttonGroup => {
+        buttonGroup.ids.forEach(id => {
+            const button = document.getElementById(id);
+            if (button) {
+                button.disabled = buttonGroup.condition;
+            }
+        });
+    });
+}
+
+// Atualizar números das páginas
+function updatePageNumbers() {
+    const pageNumberContainers = [
+        document.getElementById('page-numbers-top'),
+        document.getElementById('page-numbers-bottom')
+    ];
+
+    pageNumberContainers.forEach(container => {
+        if (container) {
+            container.innerHTML = generatePageNumbers();
+        }
+    });
+}
+
+// Gerar HTML dos números das páginas
+function generatePageNumbers() {
+    let html = '';
+
+    // Mostrar páginas 1-15, depois reticências e botões de navegação
+    const maxVisiblePages = 15;
+
+    if (totalPages <= maxVisiblePages) {
+        // Mostrar todas as páginas se forem 15 ou menos
+        for (let i = 1; i <= totalPages; i++) {
+            html += createPageButton(i);
+        }
+    } else {
+        // Lógica mais complexa para muitas páginas
+        if (currentPage <= 10) {
+            // Início: mostrar 1-15
+            for (let i = 1; i <= 15; i++) {
+                html += createPageButton(i);
+            }
+            if (totalPages > 15) {
+                html += '<span class="pagination-ellipsis">...</span>';
+            }
+        } else if (currentPage > totalPages - 10) {
+            // Fim: mostrar últimas 15 páginas
+            if (totalPages > 15) {
+                html += '<span class="pagination-ellipsis">...</span>';
+            }
+            for (let i = Math.max(1, totalPages - 14); i <= totalPages; i++) {
+                html += createPageButton(i);
+            }
+        } else {
+            // Meio: mostrar contexto ao redor da página atual
+            html += createPageButton(1);
+            html += '<span class="pagination-ellipsis">...</span>';
+
+            const start = Math.max(2, currentPage - 7);
+            const end = Math.min(totalPages - 1, currentPage + 7);
+
+            for (let i = start; i <= end; i++) {
+                html += createPageButton(i);
+            }
+
+            html += '<span class="pagination-ellipsis">...</span>';
+            html += createPageButton(totalPages);
+        }
+    }
+
+    return html;
+}
+
+// Criar botão de página
+function createPageButton(pageNumber) {
+    const isActive = pageNumber === currentPage;
+    const activeClass = isActive ? ' active' : '';
+
+    return `<button class="page-number-btn${activeClass}" onclick="goToPage(${pageNumber})">${pageNumber}</button>`;
+}
+
+// Navegar para página específica
+function goToPage(pageNumber) {
+    if (pageNumber < 1 || pageNumber > totalPages || pageNumber === currentPage) {
+        return;
+    }
+
+    currentPage = pageNumber;
+    displayCurrentPage();
+    updatePaginationControls();
+
+    // Scroll para o topo da tabela
+    const tableContainer = document.querySelector('.table-container');
+    if (tableContainer) {
+        tableContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+// Navegação por botões
+function goToFirstPage() {
+    goToPage(1);
+}
+
+function goToPrevPage() {
+    goToPage(currentPage - 1);
+}
+
+function goToNextPage() {
+    goToPage(currentPage + 1);
+}
+
+function goToLastPage() {
+    goToPage(totalPages);
+}
+
+// Configurar event listeners da paginação
+function setupPaginationEventListeners() {
+    // Botões primeira/última/anterior/próxima (superior e inferior)
+    const paginationButtons = [
+        { ids: ['first-page-btn', 'first-page-btn-bottom'], handler: goToFirstPage },
+        { ids: ['prev-page-btn', 'prev-page-btn-bottom'], handler: goToPrevPage },
+        { ids: ['next-page-btn', 'next-page-btn-bottom'], handler: goToNextPage },
+        { ids: ['last-page-btn', 'last-page-btn-bottom'], handler: goToLastPage }
+    ];
+
+    paginationButtons.forEach(buttonGroup => {
+        buttonGroup.ids.forEach(id => {
+            const button = document.getElementById(id);
+            if (button) {
+                // Remover listeners antigos
+                button.removeEventListener('click', buttonGroup.handler);
+                // Adicionar novo listener
+                button.addEventListener('click', buttonGroup.handler);
+            }
+        });
+    });
+}
+
+// Modificar a função setupDatabase para incluir a paginação
+
+
+    if (clearBtn) {
+        clearBtn.addEventListener('click', clearDatabaseFilters);
+    }
+
+    // Configurar paginação
+    setupPaginationEventListeners();
