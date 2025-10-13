@@ -292,6 +292,8 @@ function setupEventListeners() {
   setupReports();
     // Setup Vários Novos
     setupBulkEntries();
+    // Setup Novo: Vários assuntos
+    setupMultiSubjectEntries();
   
   // Perfil
   setupProfile();
@@ -314,7 +316,8 @@ function setupMainNavigation() {
   const navButtons = [
     { id: 'new-entry-btn', screen: 'new-entry' },
     { id: 'multiple-entries-btn', screen: 'multiple-entries' },
-    { id: 'bulk-entries-btn', screen: 'bulk-entries' },
+    { id: 'bulk-entries-btn', screen: 'bulk-entries' },,
+        { id: 'multi-subject-entries-btn', screen: 'multi-subject-entries' }
     { id: 'search-btn', screen: 'search' },
     { id: 'database-btn', screen: 'database', callback: loadDatabaseTable },
     { id: 'profile-btn', callback: showProfileModal },
@@ -340,7 +343,8 @@ function setupMainNavigation() {
   const backButtons = [
     'back-to-dashboard-1', 'back-to-dashboard-2', 'back-to-dashboard-3', 
     'back-to-dashboard-4', 'back-to-dashboard-5',
-        'back-to-dashboard-6'
+        'back-to-dashboard-6',
+        'back-to-dashboard-7'
   ];
   
   backButtons.forEach(btnId => {
@@ -1632,7 +1636,12 @@ function populateSelectOptions() {
         'subject-select',
         'multi-subject-select',
         'edit-subject-select',
-        'filter-subject'
+        'filter-subject',
+        'subject1-select',
+        'subject2-select',
+        'subject3-select',
+        'subject4-select',
+        'subject5-select'
     ];
     
     subjectSelects.forEach(selectId => {
@@ -2406,4 +2415,209 @@ function handleResetBulkForms() {
     document.getElementById('bulk-quantity').value = '5';
 
     console.log('Formulários de entrada em massa resetados');
+}
+
+// ============================================================================
+// NOVO: VÁRIOS ASSUNTOS - Funcionalidades
+// ============================================================================
+
+// Setup para Novo: Vários assuntos
+function setupMultiSubjectEntries() {
+    const form = document.getElementById('multi-subject-form');
+    const processNumberInput = document.getElementById('multi-process-number');
+    const contributorInput = document.getElementById('multi-contributor');
+    const ctmInput = document.getElementById('multi-ctm');
+
+    if (form) {
+        form.addEventListener('submit', handleMultiSubjectSubmit);
+    }
+
+    // Autopreenchimento baseado no número do processo
+    if (processNumberInput && contributorInput && ctmInput) {
+        processNumberInput.addEventListener('input', async function() {
+            let numeroProcesso = this.value.trim();
+            numeroProcesso = numeroProcesso.replace(/\//g, "-");
+
+            if (!numeroProcesso) {
+                contributorInput.value = '';
+                ctmInput.value = '';
+                return;
+            }
+
+            try {
+                if (processosDatabase) {
+                    const refProc = ref(processosDatabase, 'processos/' + numeroProcesso);
+                    const snapshot = await get(refProc);
+
+                    if (snapshot.exists()) {
+                        const dados = snapshot.val();
+                        contributorInput.value = dados.Requerente || '';
+                        ctmInput.value = dados.CTM || '';
+                    } else {
+                        contributorInput.value = '';
+                        ctmInput.value = '';
+                    }
+                }
+            } catch (err) {
+                console.error('Erro ao buscar processo:', err);
+                contributorInput.value = '';
+                ctmInput.value = '';
+            }
+        });
+    }
+
+    // Configurar os pares de ID e Select para os 5 assuntos
+    for (let i = 1; i <= 5; i++) {
+        setupSubjectPair(i);
+    }
+
+    // Popular os selects de assunto
+    populateMultiSubjectSelects();
+}
+
+function setupSubjectPair(index) {
+    const idInput = document.getElementById(`subject${index}-id`);
+    const selectInput = document.getElementById(`subject${index}-select`);
+
+    if (idInput && selectInput) {
+        // Quando o ID é digitado, atualizar o select
+        idInput.addEventListener('input', function() {
+            const num = parseInt(this.value);
+            if (num >= 1 && num <= 47) {
+                const assunto = GLUOS_DATA.assuntos.find(a => a.id === num);
+                if (assunto) {
+                    selectInput.value = assunto.id;
+                }
+            } else if (!this.value) {
+                selectInput.value = '';
+            }
+        });
+
+        // Quando o select é escolhido, atualizar o ID
+        selectInput.addEventListener('change', function() {
+            if (this.value) {
+                idInput.value = this.value;
+            } else {
+                idInput.value = '';
+            }
+        });
+    }
+}
+
+function populateMultiSubjectSelects() {
+    for (let i = 1; i <= 5; i++) {
+        const select = document.getElementById(`subject${i}-select`);
+        if (select && select.options.length <= 1) {
+            // Limpar opções existentes exceto a primeira
+            while (select.options.length > 1) {
+                select.removeChild(select.lastChild);
+            }
+
+            // Adicionar todas as opções de assunto
+            GLUOS_DATA.assuntos.forEach(assunto => {
+                const option = document.createElement('option');
+                option.value = assunto.id;
+                option.textContent = `${assunto.id} - ${assunto.texto}`;
+                select.appendChild(option);
+            });
+        }
+    }
+}
+
+async function handleMultiSubjectSubmit(e) {
+    e.preventDefault();
+    console.log('Processando múltiplas entradas de assuntos...');
+
+    const form = e.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    // Coletar dados principais
+    const processNumber = document.getElementById('multi-process-number').value.trim();
+    const contributor = document.getElementById('multi-contributor').value.trim();
+    const ctm = document.getElementById('multi-ctm').value.trim();
+    const observation = document.getElementById('multi-observation').value.trim();
+    const habiteNumber = document.getElementById('multi-habite-number').value.trim();
+    const alvaraSituation = document.getElementById('multi-alvara-situation').value.trim();
+
+    if (!processNumber) {
+        alert('Por favor, informe o número do processo.');
+        return;
+    }
+
+    // Coletar assuntos selecionados
+    const selectedSubjects = [];
+    for (let i = 1; i <= 5; i++) {
+        const subjectId = parseInt(document.getElementById(`subject${i}-select`).value);
+        if (subjectId) {
+            const assunto = GLUOS_DATA.assuntos.find(a => a.id === subjectId);
+            if (assunto) {
+                selectedSubjects.push({
+                    id: subjectId,
+                    text: assunto.texto
+                });
+            }
+        }
+    }
+
+    if (selectedSubjects.length === 0) {
+        alert('Por favor, selecione pelo menos um assunto.');
+        return;
+    }
+
+    setButtonLoading(submitBtn, true);
+
+    try {
+        const now = new Date();
+        const savedEntries = [];
+
+        // Criar uma entrada para cada assunto selecionado
+        for (const subject of selectedSubjects) {
+            const entry = {
+                subjectId: subject.id,
+                subjectText: subject.text,
+                processNumber: processNumber,
+                contributor: contributor,
+                ctm: ctm,
+                observation: observation,
+                habiteNumber: habiteNumber,
+                alvaraSituation: alvaraSituation,
+                server: currentUser,
+                date: now.toLocaleDateString('pt-BR'),
+                time: now.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+                timestamp: now.getTime()
+            };
+
+            // Salvar no Firebase se conectado
+            if (firebaseConnected && database) {
+                const entriesRef = ref(database, 'gluos_entries');
+                await push(entriesRef, entry);
+                console.log('Entrada salva no Firebase:', entry);
+            } else {
+                // Salvar localmente se Firebase não estiver disponível
+                entry.id = 'local_' + Date.now() + '_' + subject.id;
+                allEntries.unshift(entry);
+                console.log('Entrada salva localmente:', entry);
+            }
+
+            savedEntries.push(entry);
+        }
+
+        // Limpar formulário
+        form.reset();
+
+        // Limpar os campos de ID também
+        for (let i = 1; i <= 5; i++) {
+            document.getElementById(`subject${i}-id`).value = '';
+        }
+
+        // Mostrar sucesso
+        const message = `${savedEntries.length} entradas salvas com sucesso!\n\nAssuntos cadastrados:\n${savedEntries.map(e => `- ${e.subjectText}`).join('\n')}`;
+        showSuccessModal(message);
+
+    } catch (error) {
+        console.error('Erro ao salvar entradas:', error);
+        alert('Erro ao salvar entradas. Tente novamente.');
+    } finally {
+        setButtonLoading(submitBtn, false);
+    }
 }

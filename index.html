@@ -90,6 +90,10 @@
                         <span>📝📋</span>
                         Vários Novos
                     </button>
+                    <button id="multi-subject-entries-btn" class="btn btn--success btn--lg">
+                        <span>📑</span>
+                        Novo: Vários assuntos
+                    </button>
                     <button id="search-btn" class="btn btn--primary btn--lg">
                         <span>🔍</span>
                         Pesquisa
@@ -677,5 +681,172 @@
     </div>
 
     <script type="module" src="app.js"></script>
-</body>
+
+    <!-- Tela de Novo: Vários assuntos -->
+    <div id="multi-subject-entries-screen" class="screen">
+        <div class="screen-header">
+            <div class="container">
+                <div class="header-content">
+                    <h2>Novo: Vários assuntos</h2>
+                    <button id="back-to-dashboard-7" class="btn btn--outline">Voltar</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="form-container">
+                <form id="multi-subject-form" class="card">
+                    <div class="card-body">
+                        <!-- Dados principais do processo -->
+                        <div class="form-section">
+                            <h3>Dados do Processo</h3>
+
+                            <div class="form-group">
+                                <label for="multi-process-number" class="form-label">Nº Processo/Protocolo *</label>
+                                <input type="text" id="multi-process-number" class="form-control" 
+                                       placeholder="Informe o número do processo ou protocolo" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="multi-contributor" class="form-label">Contribuinte</label>
+                                <input type="text" id="multi-contributor" class="form-control" 
+                                       placeholder="Nome do contribuinte">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="multi-ctm" class="form-label">CTM</label>
+                                <input type="text" id="multi-ctm" class="form-control" 
+                                       placeholder="CTM">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="multi-observation" class="form-label">Observação</label>
+                                <textarea id="multi-observation" class="form-control" rows="3"
+                                          placeholder="Digite suas observações aqui..."></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="multi-habite-number" class="form-label">Número do Habite-se/Alvará</label>
+                                <input type="text" id="multi-habite-number" class="form-control" 
+                                       placeholder="Número do Habite-se/Alvará">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="multi-alvara-situation" class="form-label">Situação do Alvará de Funcionamento/Estudo de Viabilidade</label>
+                                <select id="multi-alvara-situation" class="form-control">
+                                    <option value="">-- Selecione --</option>
+                                    <option value="Deferido">Deferido</option>
+                                    <option value="Indeferido">Indeferido</option>
+                                    <option value="Em Análise">Em Análise</option>
+                                    <option value="Pendente">Pendente</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Seção dos assuntos -->
+                        <div class="form-section">
+                            <h3>Assuntos (até 5)</h3>
+                            <p class="help-text">Preencha os assuntos relacionados a este processo. Você pode usar o ID ou selecionar na lista.</p>
+
+                            <!-- Assunto 1 -->
+                            <div class="subject-row">
+                                <h4>Assunto 1</h4>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="subject1-id" class="form-label">ID do Assunto (1-47)</label>
+                                        <input type="number" id="subject1-id" class="form-control subject-id" 
+                                               min="1" max="47" placeholder="Digite o ID">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="subject1-select" class="form-label">Ou selecione o assunto</label>
+                                        <select id="subject1-select" class="form-control subject-select">
+                                            <option value="">-- Selecione o assunto --</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Assunto 2 -->
+                            <div class="subject-row">
+                                <h4>Assunto 2</h4>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="subject2-id" class="form-label">ID do Assunto (1-47)</label>
+                                        <input type="number" id="subject2-id" class="form-control subject-id" 
+                                               min="1" max="47" placeholder="Digite o ID">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="subject2-select" class="form-label">Ou selecione o assunto</label>
+                                        <select id="subject2-select" class="form-control subject-select">
+                                            <option value="">-- Selecione o assunto --</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Assunto 3 -->
+                            <div class="subject-row">
+                                <h4>Assunto 3</h4>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="subject3-id" class="form-label">ID do Assunto (1-47)</label>
+                                        <input type="number" id="subject3-id" class="form-control subject-id" 
+                                               min="1" max="47" placeholder="Digite o ID">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="subject3-select" class="form-label">Ou selecione o assunto</label>
+                                        <select id="subject3-select" class="form-control subject-select">
+                                            <option value="">-- Selecione o assunto --</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Assunto 4 -->
+                            <div class="subject-row">
+                                <h4>Assunto 4</h4>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="subject4-id" class="form-label">ID do Assunto (1-47)</label>
+                                        <input type="number" id="subject4-id" class="form-control subject-id" 
+                                               min="1" max="47" placeholder="Digite o ID">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="subject4-select" class="form-label">Ou selecione o assunto</label>
+                                        <select id="subject4-select" class="form-control subject-select">
+                                            <option value="">-- Selecione o assunto --</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Assunto 5 -->
+                            <div class="subject-row">
+                                <h4>Assunto 5</h4>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="subject5-id" class="form-label">ID do Assunto (1-47)</label>
+                                        <input type="number" id="subject5-id" class="form-control subject-id" 
+                                               min="1" max="47" placeholder="Digite o ID">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="subject5-select" class="form-label">Ou selecione o assunto</label>
+                                        <select id="subject5-select" class="form-control subject-select">
+                                            <option value="">-- Selecione o assunto --</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn--success btn--full-width">
+                            <span id="multi-save-btn-text">Salvar Entradas</span>
+                            <span id="multi-save-loader" class="hidden">Salvando...</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    </body>
 </html>
