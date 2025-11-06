@@ -1468,18 +1468,20 @@ display: block;
 
 /* Tela de Login */
 .login-container {
-min-height: 100vh;
-display: flex;
-align-items: center;
-justify-content: center;
-background: var(--color-bg-1);
-padding: var(--space-20);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: url('bg.png') no-repeat center center;
+  background-size: cover;
+  position: relative;
+  /* Se quiser um overlay escurecido, adicione antes do .login-card um extra opcional */
 }
 
 .login-card {
-width: 100%;
-max-width: 400px;
-text-align: center;
+  background: rgba(255,255,255,0.4);  /* branco, 40% opacidade */
+  box-shadow: 0 4px 32px rgba(0,0,0,0.9);
+  /* pode mexer no border-radius, padding etc se quiser */
 }
 
 .login-title {
