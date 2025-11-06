@@ -1273,6 +1273,9 @@ function displayPersonalReport(reportData, totalEntries, startDate, endDate) {
 }
 
 function generateCompleteReport(startDate, endDate) {
+    // Filtra "Admin" da lista de usuários
+    const usersWithoutAdmin = GLUOS_DATA.usuarios.filter(user => user !== "Admin");
+    
     // Filtrar entradas no período
     const startTimestamp = new Date(startDate + 'T00:00:00').getTime();
     const endTimestamp = new Date(endDate + 'T23:59:59').getTime();
@@ -1288,7 +1291,7 @@ function generateCompleteReport(startDate, endDate) {
     let grandTotal = 0;
     
     // Inicializar totais
-    GLUOS_DATA.usuarios.forEach(user => {
+    usersWithoutAdmin.forEach(user => {
         userTotals[user] = 0;
     });
     
@@ -1301,7 +1304,7 @@ function generateCompleteReport(startDate, endDate) {
         };
         subjectTotals[subject.id] = 0;
         
-        GLUOS_DATA.usuarios.forEach(user => {
+        usersWithoutAdmin.forEach(user => {
             reportMatrix[subject.id].users[user] = 0;
         });
     });
@@ -1311,7 +1314,7 @@ function generateCompleteReport(startDate, endDate) {
         const subjectId = entry.subjectId;
         const user = entry.server;
         
-        if (reportMatrix[subjectId] && GLUOS_DATA.usuarios.includes(user)) {
+        if (reportMatrix[subjectId] && usersWithoutAdmin.includes(user)) {
             reportMatrix[subjectId].users[user]++;
             subjectTotals[subjectId]++;
             userTotals[user]++;
@@ -1330,10 +1333,10 @@ function generateCompleteReport(startDate, endDate) {
     
     reportData.sort((a, b) => b.total - a.total);
     
-    displayCompleteReport(reportData, userTotals, grandTotal, startDate, endDate);
+    displayCompleteReport(reportData, userTotals, grandTotal, startDate, endDate, usersWithoutAdmin);
 }
 
-function displayCompleteReport(reportData, userTotals, grandTotal, startDate, endDate) {
+function displayCompleteReport(reportData, userTotals, grandTotal, startDate, endDate, usersWithoutAdmin) {
     // Atualizar cabeçalho
     const reportTitle = document.getElementById('report-title');
     const reportMeta = document.getElementById('report-meta');
@@ -1350,12 +1353,12 @@ function displayCompleteReport(reportData, userTotals, grandTotal, startDate, en
         `;
     }
     
-    // Criar cabeçalho da tabela
+    // Criar cabeçalho da tabela sem Admin
     const tableHead = document.getElementById('report-table-head');
     if (tableHead) {
         let headerHtml = '<tr><th style="text-align: left; min-width: 300px;">Assunto</th>';
         
-        GLUOS_DATA.usuarios.forEach(user => {
+        usersWithoutAdmin.forEach(user => {
             headerHtml += `<th style="text-align: center; min-width: 80px;">${user}</th>`;
         });
         
@@ -1364,13 +1367,13 @@ function displayCompleteReport(reportData, userTotals, grandTotal, startDate, en
         tableHead.innerHTML = headerHtml;
     }
     
-    // Preencher corpo da tabela
+    // Preencher corpo da tabela sem Admin
     const tableBody = document.getElementById('report-table-body');
     if (tableBody) {
         tableBody.innerHTML = '';
         
         if (reportData.length === 0) {
-            const colspan = GLUOS_DATA.usuarios.length + 3;
+            const colspan = usersWithoutAdmin.length + 3;
             tableBody.innerHTML = `
                 <tr>
                     <td colspan="${colspan}" class="text-center">Nenhum registro encontrado no período.</td>
@@ -1382,7 +1385,7 @@ function displayCompleteReport(reportData, userTotals, grandTotal, startDate, en
                 
                 let rowHtml = `<td style="text-align: left; max-width: 300px; word-wrap: break-word;">${subject.text}</td>`;
                 
-                GLUOS_DATA.usuarios.forEach(user => {
+                usersWithoutAdmin.forEach(user => {
                     const count = subject.users[user] || 0;
                     rowHtml += `<td style="text-align: center; ${count > 0 ? 'font-weight: bold;' : ''}">${count}</td>`;
                 });
@@ -1396,12 +1399,12 @@ function displayCompleteReport(reportData, userTotals, grandTotal, startDate, en
         }
     }
     
-    // Rodapé da tabela (totais)
+    // Rodapé da tabela (totais) sem Admin
     const tableFoot = document.getElementById('report-table-foot');
     if (tableFoot) {
         let footerHtml = '<tr style="background: var(--color-bg-6); font-weight: bold;"><th style="text-align: left;">TOTAL GERAL</th>';
         
-        GLUOS_DATA.usuarios.forEach(user => {
+        usersWithoutAdmin.forEach(user => {
             footerHtml += `<th style="text-align: center;">${userTotals[user]}</th>`;
         });
         
