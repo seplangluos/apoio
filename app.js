@@ -118,7 +118,10 @@ const GLUOS_DATA = {
     {id: 44, texto: "Montagem de Processo Novo"},
     {id: 45, texto: "Encaminhamento para indeferimento"},
     {id: 46, texto: "Protocolo de informação Básica"},
-    {id: 47, texto: "Agendamento para contribuinte"}
+    {id: 47, texto: "Agendamento para contribuinte"},
+    {id: 48, texto: "Viabilidade Pessoa Física"},
+    {id: 49, texto: "Licenciamento (GV)"},
+    {id: 50, texto: "Situação Imóvel"},
   ]
 };
 
@@ -486,7 +489,7 @@ function setupNewEntry() {
   if (subjectNumber && subjectSelect) {
     subjectNumber.addEventListener('input', function() {
       const num = parseInt(this.value);
-      if (num >= 1 && num <= 47) {
+      if (num >= 1 && num <= 50) {
         const assunto = GLUOS_DATA.assuntos.find(a => a.id === num);
         if (assunto) {
           subjectSelect.value = assunto.id;
@@ -628,7 +631,7 @@ function setupMultipleEntries() {
   if (multiSubjectNumber && multiSubjectSelect) {
     multiSubjectNumber.addEventListener('input', function() {
       const num = parseInt(this.value);
-      if (num >= 1 && num <= 47) {
+      if (num >= 1 && num <= 50) {
         const assunto = GLUOS_DATA.assuntos.find(a => a.id === num);
         if (assunto) {
           multiSubjectSelect.value = assunto.id;
@@ -2110,7 +2113,7 @@ if (bulkSubjectSelect) {
     if (bulkSubjectNumber && bulkSubjectSelect) {
         bulkSubjectNumber.addEventListener('input', function() {
             const num = parseInt(this.value);
-            if (num >= 1 && num <= 47) {
+            if (num >= 1 && num <= 50) {
                 const assunto = GLUOS_DATA.assuntos.find(a => a.id === num);
                 if (assunto) {
                     bulkSubjectSelect.value = assunto.id;
@@ -2486,7 +2489,7 @@ function setupSubjectPair(index) {
         // Quando o ID é digitado, atualizar o select
         idInput.addEventListener('input', function() {
             const num = parseInt(this.value);
-            if (num >= 1 && num <= 47) {
+            if (num >= 1 && num <= 50) {
                 const assunto = GLUOS_DATA.assuntos.find(a => a.id === num);
                 if (assunto) {
                     selectInput.value = assunto.id;
