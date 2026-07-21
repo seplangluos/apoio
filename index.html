@@ -6,6 +6,7 @@
     <title>GLUOS - Sistema de Produtividade</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="favicon.png" type="image/png" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <!-- Tela de Login -->
@@ -58,64 +59,85 @@
     </div>
 
     <!-- Dashboard Principal -->
-    <div id="dashboard-screen" class="screen">
-        <div class="dashboard-header">
-            <div class="container">
-                <div class="header-content">
-                    <div class="header-info">
-                        <h2>Sistema GLUOS</h2>
-                        <p id="user-info">Bem-vindo!</p>
-                        <p id="datetime-info">Data e hora</p>
-                        <div class="sync-status">
-                            <span id="sync-indicator" class="status-indicator status-indicator--success"></span>
-                            <span id="sync-status-text">Sincronizado</span>
-                        </div>
-                    </div>
-                    <button id="logout-btn" class="btn btn--outline">Sair</button>
-                </div>
-            </div>
-        </div>
-        
+<div id="dashboard-screen" class="screen">
+    <div class="dashboard-header">
         <div class="container">
-            <div class="dashboard-content">
-                <h3>Selecione uma opção:</h3>
-                <div class="dashboard-buttons">
-                    <button id="new-entry-btn" class="btn btn--success btn--lg">
-                        <span>📝</span>
-                        Novo
-                    </button>
-                    <button id="multiple-entries-btn" class="btn btn--success btn--lg">
-                        <span>📝📝</span>
-                        Novos
-                    </button>
-                    <button id="bulk-entries-btn" class="btn btn--success btn--lg">
-                        <span>📝📋</span>
-                        Vários Novos
-                    </button>
-                    <button id="multi-subject-entries-btn" class="btn btn--success btn--lg">
-                        <span>📑</span>
-                        Novo: Vários assuntos
-                    </button>
-                    <button id="search-btn" class="btn btn--primary btn--lg">
-                        <span>🔍</span>
-                        Pesquisa
-                    </button>
-                    <button id="database-btn" class="btn btn--secondary btn--lg">
-                        <span>🗄️</span>
-                        Base de Dados Completa
-                    </button>
-                    <button id="profile-btn" class="btn btn--profile btn--lg">
-                        <span>👤</span>
-                        Perfil
-                    </button>
-                    <button id="report-btn" class="btn btn--info btn--lg">
-                        <span>📊</span>
-                        Relatório
-                    </button>
+            <div class="header-content">
+                <div class="header-info">
+                    <h2>Sistema GLUOS</h2>
+                    <p id="user-info">Bem-vindo!</p>
+                    <p id="datetime-info">Data e hora</p>
+                    <div class="sync-status">
+                        <span id="sync-indicator" class="status-indicator status-indicator--success"></span>
+                        <span id="sync-status-text">Sincronizado</span>
+                    </div>
                 </div>
+                <button id="logout-btn" class="btn btn--outline">Sair</button>
             </div>
         </div>
     </div>
+    
+    <div class="container">
+        <div class="dashboard-content">
+            <h3>Selecione uma opção:</h3>
+            
+            <!-- Grid de Botões Principais (Botão "Novos" Removido) -->
+            <div class="dashboard-buttons">
+                <button id="new-entry-btn" class="btn btn--success btn--lg">
+                    <span>📝</span>
+                    Novo
+                </button>
+                <button id="bulk-entries-btn" class="btn btn--success btn--lg">
+                    <span>📝📋</span>
+                    Vários Novos
+                </button>
+                <button id="multi-subject-entries-btn" class="btn btn--success btn--lg">
+                    <span>📑</span>
+                    Novo: Vários assuntos
+                </button>
+                <button id="search-btn" class="btn btn--primary btn--lg">
+                    <span>🔍</span>
+                    Pesquisa
+                </button>
+                <button id="database-btn" class="btn btn--secondary btn--lg">
+                    <span>🗄️</span>
+                    Base de Dados Completa
+                </button>
+                <button id="profile-btn" class="btn btn--profile btn--lg">
+                    <span>👤</span>
+                    Perfil
+                </button>
+                <button id="report-btn" class="btn btn--info btn--lg">
+                    <span>📊</span>
+                    Relatório
+                </button>
+                <button id="stats-btn" class="btn btn--primary btn--lg">
+                    <span>📈</span>
+                    Estatísticas
+                </button>
+            </div>
+
+            <!-- Campo Guia do Sistema (Abaixo dos Botões) -->
+            <div class="system-guide-card card">
+                <div class="card__header">
+                    <h4>📖 Guia do Sistema</h4>
+                </div>
+                <div class="card__body">
+                    <ul class="guide-list">
+                        <li><strong>Novo:</strong> Cadastre uma única entrada indicando o número do assunto e do processo/protocolo.</li>
+                        <li><strong>Vários Novos:</strong> Cadastre múltiplos processos (até 10) sob um mesmo assunto de forma rápida.</li>
+                        <li><strong>Novo: Vários Assuntos:</strong> Vincule até 5 assuntos diferentes a um único número de processo/protocolo.</li>
+                        <li><strong>Pesquisa:</strong> Busque processos já lançados por número, data ou servidor responsável.</li>
+                        <li><strong>Base de Dados Completa:</strong> Visualize, filtre, edite ou exclua todos os registros armazenados no sistema.</li>
+                        <li><strong>Perfil:</strong> Altere sua senha e gerencie suas credenciais de acesso.</li>
+                        <li><strong>Relatório:</strong> Gere relatórios pessoais de produtividade ou relatórios consolidados por equipe.</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
 
     <!-- Tela de Nova Entrada -->
     <div id="new-entry-screen" class="screen">
@@ -850,5 +872,115 @@
             </div>
         </div>
     </div>
+<!-- Tela de Estatísticas -->
+<div id="stats-screen" class="screen">
+    <div class="screen-header">
+        <div class="container">
+            <div class="header-content">
+                <h2>Estatísticas do Sistema</h2>
+                <button id="back-to-dashboard-stats" class="btn btn--outline">Voltar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Filtro de Mês/Ano -->
+        <div class="card mb-8">
+            <div class="card__body flex items-center gap-16 flex-wrap">
+                <label for="stats-month-filter" class="form-label m-0"><strong>Selecione o Mês/Ano:</strong></label>
+                <input type="month" id="stats-month-filter" class="form-control" style="width: auto;">
+                <button id="stats-filter-btn" class="btn btn--primary btn--sm">Filtrar</button>
+            </div>
+        </div>
+
+        <!-- Quadro de Estatísticas Principais -->
+        <div class="stats-summary-grid">
+            <div class="card stat-card">
+                <div class="card__body text-center">
+                    <span class="stat-icon">📂</span>
+                    <h3 id="stat-total-entries">0</h3>
+                    <p class="stat-label">Total Geral de Entradas</p>
+                </div>
+            </div>
+            <div class="card stat-card">
+                <div class="card__body text-center">
+                    <span class="stat-icon">📅</span>
+                    <h3 id="stat-monthly-entries">0</h3>
+                    <p class="stat-label">Entradas no Mês</p>
+                </div>
+            </div>
+            <div class="card stat-card">
+                <div class="card__body text-center">
+                    <span class="stat-icon">📊</span>
+                    <h3 id="stat-daily-avg">0</h3>
+                    <p class="stat-label">Média Diária (Dias Ativos)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quadro Top 10 Assuntos Mensais -->
+        <div class="card mt-8 mb-8">
+            <div class="card__header">
+                <h4>🏆 Top 10 Assuntos Mais Utilizados no Mês</h4>
+            </div>
+            <div class="card__body">
+                <ol id="stat-top10-list" class="top10-list">
+                    <li>Nenhum dado encontrado no mês.</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Gráficos Mensais -->
+        <div class="card mt-8 mb-8">
+            <div class="card__header">
+                <h4>📈 Evolução Diária - Top 1 a 5 Assuntos do Mês</h4>
+            </div>
+            <div class="card__body">
+                <div class="chart-container">
+                    <canvas id="chart-top1-5"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-8 mb-8">
+            <div class="card__header">
+                <h4>📉 Evolução Diária - Top 6 a 10 Assuntos do Mês</h4>
+            </div>
+            <div class="card__body">
+                <div class="chart-container">
+                    <canvas id="chart-top6-10"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela Geral de Assuntos com % -->
+        <div class="card mt-8 mb-8">
+            <div class="card__header">
+                <h4>📋 Distribuição Geral por Tipo de Assunto</h4>
+            </div>
+            <div class="card__body">
+                <div class="table-container">
+                    <table class="data-table" id="stats-subject-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Nome do Assunto</th>
+                                <th>Quantidade Total</th>
+                                <th>Porcentagem (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Preenchido via JS -->
+                        </tbody>
+                        <tfoot>
+                            <!-- Soma total preenchida via JS -->
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
     </body>
 </html>

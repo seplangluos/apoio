@@ -4,7 +4,8 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
 import { getDatabase, ref, push, set, get, update, remove, onValue } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js';
 import { getAuth, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
-
+let chartTop15Instance = null;
+let chartTop610Instance = null;
 // Configuração do Firebase principal
 const firebaseConfig = {
   apiKey: "AIzaSyDUUXFPi2qbowPjx63YBYQWyZNXKfxz7u0",
@@ -311,6 +312,26 @@ function setupEventListeners() {
 
 // Configurar navegação principal
 function setupMainNavigation() {
+// Abrir tela de estatísticas
+const statsBtn = document.getElementById('stats-btn');
+if (statsBtn) {
+  statsBtn.addEventListener('click', () => {
+    showScreen('stats');
+    initStatsScreen();
+  });
+}
+
+// Botão de voltar
+const backStatsBtn = document.getElementById('back-to-dashboard-stats');
+if (backStatsBtn) {
+  backStatsBtn.addEventListener('click', () => showScreen('dashboard'));
+}
+
+// Evento de filtro de mês
+const statsFilterBtn = document.getElementById('stats-filter-btn');
+if (statsFilterBtn) {
+  statsFilterBtn.addEventListener('click', renderStats);
+}
   // Logout
   const logoutBtn = document.getElementById('logout-btn');
   if (logoutBtn) {
@@ -2628,4 +2649,226 @@ async function handleMultiSubjectSubmit(e) {
     } finally {
         setButtonLoading(submitBtn, false);
     }
+}
+// Inicializar valores padrão da tela de estatísticas
+function initStatsScreen() {
+  const monthInput = document.getElementById('stats-month-filter');
+  if (monthInput && !monthInput.value) {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    monthInput.value = `${yyyy}-${mm}`;
+  }
+  renderStats();
+}
+
+// Renderizar todas as estatísticas
+function renderStats() {
+  const monthInputValue = document.getElementById('stats-month-filter')?.value;
+  if (!monthInputValue) return;
+
+  const [yearStr, monthStr] = monthInputValue.split('-');
+  const selectedYear = parseInt(yearStr, 10);
+  const selectedMonth = parseInt(monthStr, 10); // 1-12
+
+  // 1. Total Geral de Entradas
+  const totalEntriesCount = allEntries.length;
+  document.getElementById('stat-total-entries').textContent = totalEntriesCount;
+
+  // Filtrar entradas do mês selecionado
+  const monthlyEntries = allEntries.filter(entry => {
+    if (!entry.date) return false;
+    // Formato de data assumido: DD/MM/YYYY
+    const parts = entry.date.split('/');
+    if (parts.length !== 3) return false;
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    const year = parseInt(parts[2], 10);
+    return month === selectedMonth && year === selectedYear;
+  });
+
+  // 2. Quantidade de entradas mensais
+  const monthlyCount = monthlyEntries.length;
+  document.getElementById('stat-monthly-entries').textContent = monthlyCount;
+
+  // 3. Média de entradas diárias (apenas dias COM entradas)
+  const activeDays = new Set(monthlyEntries.map(e => e.date)).size;
+  const dailyAverage = activeDays > 0 ? (monthlyCount / activeDays).toFixed(1) : '0.0';
+  document.getElementById('stat-daily-avg').textContent = dailyAverage;
+
+  // 4. Agrupamento por Assunto no mês para o Top 10
+  const monthlySubjectCounts = {};
+  monthlyEntries.forEach(e => {
+    const sId = e.subjectId;
+    const sText = e.subjectText || (GLUOS_DATA.assuntos.find(a => a.id === sId)?.texto) || `Assunto ${sId}`;
+    if (!monthlySubjectCounts[sId]) {
+      monthlySubjectCounts[sId] = { id: sId, text: sText, count: 0 };
+    }
+    monthlySubjectCounts[sId].count++;
+  });
+
+  const sortedMonthlySubjects = Object.values(monthlySubjectCounts).sort((a, b) => b.count - a.count);
+
+  // Renderizar lista Top 10
+  const top10Container = document.getElementById('stat-top10-list');
+  top10Container.innerHTML = '';
+  if (sortedMonthlySubjects.length === 0) {
+    top10Container.innerHTML = '<li>Nenhum registro encontrado no mês selecionado.</li>';
+  } else {
+    const top10List = sortedMonthlySubjects.slice(0, 10);
+    top10List.forEach(item => {
+      const li = document.createElement('li');
+      li.innerHTML = `${item.id} - ${item.text}: <strong>${item.count} entrada(s)</strong>`;
+      top10Container.appendChild(li);
+    });
+  }
+
+  // Renderizar Gráficos
+  renderSubjectCharts(monthlyEntries, sortedMonthlySubjects, selectedYear, selectedMonth);
+
+  // Renderizar Tabela de Assuntos Geral com Porcentagem
+  renderGeneralSubjectTable(totalEntriesCount);
+}
+
+// Renderizar os Gráficos de Linha (Top 1-5 e Top 6-10)
+function renderSubjectCharts(monthlyEntries, sortedMonthlySubjects, year, month) {
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const xAxisLabels = Array.from({ length: daysInMonth }, (_, i) => `${i + 1}`);
+
+  const top1to5 = sortedMonthlySubjects.slice(0, 5);
+  const top6to10 = sortedMonthlySubjects.slice(5, 10);
+
+  const colors = [
+    '#21808d', '#e68161', '#22c55e', '#a855f7', '#06b6d4',
+    '#3b82f6', '#f59e0b', '#ec4899', '#6366f1', '#14b8a6'
+  ];
+
+  // Montar datasets para um grupo de assuntos
+  const buildDatasets = (subjectList, colorStartIndex) => {
+    return subjectList.map((subj, idx) => {
+      const dailyCounts = new Array(daysInMonth).fill(0);
+
+      monthlyEntries.forEach(entry => {
+        if (entry.subjectId === subj.id) {
+          const parts = entry.date.split('/');
+          const day = parseInt(parts[0], 10);
+          if (day >= 1 && day <= daysInMonth) {
+            dailyCounts[day - 1]++;
+          }
+        }
+      });
+
+      const color = colors[(colorStartIndex + idx) % colors.length];
+      return {
+        label: `${subj.id} - ${truncateText(subj.text, 25)}`,
+        data: dailyCounts,
+        borderColor: color,
+        backgroundColor: color,
+        tension: 0.2,
+        fill: false
+      };
+    });
+  };
+
+  // Destruir gráficos anteriores se existirem
+  if (chartTop15Instance) chartTop15Instance.destroy();
+  if (chartTop610Instance) chartTop610Instance.destroy();
+
+  const ctx1 = document.getElementById('chart-top1-5')?.getContext('2d');
+  const ctx2 = document.getElementById('chart-top6-10')?.getContext('2d');
+
+  if (ctx1) {
+    chartTop15Instance = new Chart(ctx1, {
+      type: 'line',
+      data: {
+        labels: xAxisLabels,
+        datasets: buildDatasets(top1to5, 0)
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top' },
+          title: { display: true, text: 'Progresso Diário (Top 1 ao 5)' }
+        },
+        scales: {
+          x: { title: { display: true, text: 'Dia do Mês' } },
+          y: { beginAtZero: true, ticks: { stepSize: 1 }, title: { display: true, text: 'Quantidade de Entradas' } }
+        }
+      }
+    });
+  }
+
+  if (ctx2) {
+    chartTop610Instance = new Chart(ctx2, {
+      type: 'line',
+      data: {
+        labels: xAxisLabels,
+        datasets: buildDatasets(top6to10, 5)
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top' },
+          title: { display: true, text: 'Progresso Diário (Top 6 ao 10)' }
+        },
+        scales: {
+          x: { title: { display: true, text: 'Dia do Mês' } },
+          y: { beginAtZero: true, ticks: { stepSize: 1 }, title: { display: true, text: 'Quantidade de Entradas' } }
+        }
+      }
+    });
+  }
+}
+
+// Renderizar Tabela Consolidada de Assuntos
+function renderGeneralSubjectTable(totalGlobalEntries) {
+  const tbody = document.querySelector('#stats-subject-table tbody');
+  const tfoot = document.querySelector('#stats-subject-table tfoot');
+  if (!tbody || !tfoot) return;
+
+  // Mapear todos os assuntos da base + lista GLUOS
+  const subjectTotals = {};
+  GLUOS_DATA.assuntos.forEach(a => {
+    subjectTotals[a.id] = { id: a.id, text: a.texto, count: 0 };
+  });
+
+  allEntries.forEach(entry => {
+    const sId = entry.subjectId;
+    if (subjectTotals[sId]) {
+      subjectTotals[sId].count++;
+    } else if (sId) {
+      subjectTotals[sId] = {
+        id: sId,
+        text: entry.subjectText || `Assunto ${sId}`,
+        count: 1
+      };
+    }
+  });
+
+  // Ordenar da maior para a menor quantidade
+  const sortedSubjects = Object.values(subjectTotals).sort((a, b) => b.count - a.count);
+
+  tbody.innerHTML = '';
+  sortedSubjects.forEach(item => {
+    const percentage = totalGlobalEntries > 0 ? ((item.count / totalGlobalEntries) * 100).toFixed(2) : '0.00';
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td><strong>${item.id}</strong></td>
+      <td>${item.text}</td>
+      <td>${item.count}</td>
+      <td>${percentage}%</td>
+    `;
+    tbody.appendChild(row);
+  });
+
+  // Linha final com a soma total
+  tfoot.innerHTML = `
+    <tr style="background: var(--color-bg-3); font-weight: bold;">
+      <td colspan="2" style="text-align: right;">SOMA TOTAL:</td>
+      <td>${totalGlobalEntries}</td>
+      <td>100.00%</td>
+    </tr>
+  `;
 }
