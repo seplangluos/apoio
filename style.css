@@ -2976,3 +2976,24 @@ resize: vertical;
   min-height: 300px;
   max-height: 450px;
 }
+/* ========================================= */
+/* NOVAS ADIÇÕES PARA A ABA DE PESQUISA      */
+/* ========================================= */
+
+.search-wide {
+    max-width: 98% !important; /* Preenche a tela quase inteira na área de pesquisa */
+}
+
+/* Modificação para que o container dos resultados de pesquisa possa crescer em altura mas tenha um limite confortável */
+#search-results .table-container {
+    max-height: 75vh;
+    overflow-y: auto;
+}
+
+/* Classe aplicada especificamente para que a observação tenha linha multilinhas sem cortar */
+.obs-cell {
+    white-space: pre-wrap; 
+    word-wrap: break-word;
+    max-width: none !important; /* Sobrescreve o 200px da tabela global */
+    min-width: 250px; /* Garante tamanho suficiente para leituras grandes */
+}

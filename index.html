@@ -127,7 +127,7 @@
                         <li><strong>Novo:</strong> Cadastre uma única entrada indicando o número do assunto e do processo/protocolo.</li>
                         <li><strong>Vários Novos:</strong> Cadastre múltiplos processos (até 10) sob um mesmo assunto de forma rápida.</li>
                         <li><strong>Novo: Vários Assuntos:</strong> Vincule até 5 assuntos diferentes a um único número de processo/protocolo.</li>
-                        <li><strong>Pesquisa:</strong> Busque processos já lançados por número, data ou servidor responsável.</li>
+                        <li><strong>Pesquisa:</strong> Busque processos já lançados por número, data, servidor, contribuinte ou CTM responsável.</li>
                         <li><strong>Base de Dados Completa:</strong> Visualize, filtre, edite ou exclua todos os registros armazenados no sistema.</li>
                         <li><strong>Perfil:</strong> Altere sua senha e gerencie suas credenciais de acesso.</li>
                         <li><strong>Relatório:</strong> Gere relatórios pessoais de produtividade ou relatórios consolidados por equipe.</li>
@@ -271,7 +271,7 @@
             </div>
         </div>
         
-        <div class="container">
+        <div class="container search-wide">
             <div class="search-container">
                 <div class="search-form card">
                     <div class="card__body">
@@ -279,6 +279,8 @@
                             <button type="button" class="tab-btn active" data-tab="process">Por Processo</button>
                             <button type="button" class="tab-btn" data-tab="date">Por Data</button>
                             <button type="button" class="tab-btn" data-tab="server">Por Servidor</button>
+                            <button type="button" class="tab-btn" data-tab="contributor">Por Contribuinte</button>
+                            <button type="button" class="tab-btn" data-tab="ctm">Por CTM</button>
                         </div>
                         
                         <div id="process-search" class="search-tab active">
@@ -301,6 +303,20 @@
                                 <select id="search-server" class="form-control">
                                     <option value="">-- Selecione --</option>
                                 </select>
+                            </div>
+                        </div>
+
+                        <div id="contributor-search" class="search-tab">
+                            <div class="form-group">
+                                <label for="search-contributor" class="form-label">Nome do Contribuinte:</label>
+                                <input type="text" id="search-contributor" class="form-control" placeholder="Digite o nome do contribuinte">
+                            </div>
+                        </div>
+
+                        <div id="ctm-search" class="search-tab">
+                            <div class="form-group">
+                                <label for="search-ctm" class="form-label">CTM:</label>
+                                <input type="text" id="search-ctm" class="form-control" placeholder="Digite o CTM">
                             </div>
                         </div>
                         
@@ -438,8 +454,6 @@
         </div>
     </div>
 
-    <!-- Tela de Relatórios -->
-    
     <!-- Tela Vários Novos -->
     <div id="bulk-entries-screen" class="screen">
         <div class="screen-content">
@@ -500,6 +514,7 @@
         </div>
     </div>
 
+    <!-- Tela de Relatórios -->
     <div id="report-screen" class="screen">
         <div class="screen-header">
             <div class="container">
