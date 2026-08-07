@@ -60,6 +60,7 @@ const USER_EMAIL_MAPPING = {
   "Tati": "tati@hotmail.com",
   "Gabriella": "gabriela@hotmail.com",
   "Fabiano": "fabiano@hotmail.com",
+  "Andre": "andre@hotmail.com",
   "Admin": "seplan.gluos@valadares.mg.gov.br"
 };
 
@@ -75,7 +76,7 @@ function emailToUsername(email) {
 
 // Dados da aplicação
 const GLUOS_DATA = {
-  usuarios: ["Eduardo", "Wendel", "Júlia", "Tati", "Sônia", "Rita", "Mara", "Gabriella", "Fabiano", "Admin"],
+  usuarios: ["Eduardo", "Wendel", "Júlia", "Tati", "Sônia", "Rita", "Mara", "Gabriella", "Fabiano", "Andre", "Admin"],
   assuntos: [
     {id: 1, texto: "Separar e Preparar os Processos Agendados no Dia"},
     {id: 2, texto: "Inserção de Avisos de Vistoria na E&L"},
