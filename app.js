@@ -242,23 +242,10 @@ function setupEventListeners() {
 
 // Configurar navegação principal
 function setupMainNavigation() {
-  const statsBtn = document.getElementById('stats-btn');
-  if (statsBtn) {
-    statsBtn.addEventListener('click', () => {
-      showScreen('stats');
-      initStatsScreen();
-    });
-  }
-
-  const backStatsBtn = document.getElementById('back-to-dashboard-stats');
-  if (backStatsBtn) backStatsBtn.addEventListener('click', () => showScreen('dashboard'));
-
   const statsFilterBtn = document.getElementById('stats-filter-btn');
   if (statsFilterBtn) statsFilterBtn.addEventListener('click', renderStats);
 
-  const logoutBtn = document.getElementById('logout-btn');
-  if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
-  
+  // Navegação pelos botões do Dashboard
   const navButtons = [
     { id: 'new-entry-btn', screen: 'new-entry' },
     { id: 'multiple-entries-btn', screen: 'multiple-entries' },
@@ -267,7 +254,8 @@ function setupMainNavigation() {
     { id: 'search-btn', screen: 'search' },
     { id: 'database-btn', screen: 'database', callback: loadDatabaseTable },
     { id: 'profile-btn', callback: showProfileModal },
-    { id: 'report-btn', screen: 'report' }
+    { id: 'report-btn', screen: 'report' },
+    { id: 'stats-btn', screen: 'stats', callback: initStatsScreen }
   ];
   
   navButtons.forEach(btn => {
@@ -279,16 +267,40 @@ function setupMainNavigation() {
       });
     }
   });
-  
-  const backButtons = [
-    'back-to-dashboard-1', 'back-to-dashboard-2', 'back-to-dashboard-3', 
-    'back-to-dashboard-4', 'back-to-dashboard-5', 'back-to-dashboard-6', 'back-to-dashboard-7'
-  ];
-  
-  backButtons.forEach(btnId => {
-    const btn = document.getElementById(btnId);
-    if (btn) btn.addEventListener('click', () => showScreen('dashboard'));
+
+  // Navegação pelos links da Sidebar
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      const target = this.getAttribute('data-target');
+      if (target) {
+        showScreen(target);
+        if (target === 'database') loadDatabaseTable();
+        if (target === 'stats') initStatsScreen();
+      }
+    });
   });
+
+  // Toggle do menu mobile
+  document.querySelectorAll('.mobile-menu-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('sidebar').classList.add('mobile-open');
+    });
+  });
+
+  const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+  if (closeSidebarBtn) {
+    closeSidebarBtn.addEventListener('click', () => {
+      document.getElementById('sidebar').classList.remove('mobile-open');
+    });
+  }
+
+  // Ações do rodapé da Sidebar
+  const sidebarProfileBtn = document.getElementById('sidebar-profile-btn');
+  if (sidebarProfileBtn) sidebarProfileBtn.addEventListener('click', showProfileModal);
+
+  const sidebarLogoutBtn = document.getElementById('sidebar-logout-btn');
+  if (sidebarLogoutBtn) sidebarLogoutBtn.addEventListener('click', handleLogout);
 }
 
 // Login com Firebase Authentication
@@ -322,6 +334,13 @@ async function handleLogin(e) {
     updateUserInfo();
     userSelect.value = '';
     passwordInput.value = '';
+    
+    // Revela a sidebar e aplica padding ao body
+    document.getElementById('sidebar').classList.remove('hidden');
+    document.body.classList.add('has-sidebar');
+    const sidebarUserName = document.getElementById('sidebar-user-name');
+    if(sidebarUserName) sidebarUserName.textContent = currentUser;
+
     showScreen('dashboard');
 
   } catch (error) {
@@ -348,6 +367,12 @@ function showLoginError(message) {
 function handleLogout() {
   currentUser = null;
   updateUserInfo();
+  
+  // Esconde a sidebar e retira padding
+  document.getElementById('sidebar').classList.add('hidden');
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  document.body.classList.remove('has-sidebar');
+  
   showScreen('login');
 }
 
@@ -721,7 +746,6 @@ function displaySearchResults(entries) {
     } else {
         entries.forEach(entry => {
             const row = document.createElement('tr');
-            // Nota: truncateText removido da observação, e substituído por uma classe
             row.innerHTML = `
                 <td>${entry.date || '-'}</td>
                 <td>${entry.time || '-'}</td>
@@ -1245,6 +1269,15 @@ function showScreen(screenName) {
             currentReportType = null;
         }
     }
+
+    // Atualiza o link ativo da Sidebar
+    document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+    const activeLink = document.querySelector(`.nav-link[data-target="${screenName}"]`);
+    if (activeLink) activeLink.classList.add('active');
+
+    // Esconde o menu no mobile ao clicar em um link
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) sidebar.classList.remove('mobile-open');
 }
 
 function updateUserInfo() {
@@ -1485,12 +1518,12 @@ function handleGenerateBulkForms() {
     const container = document.getElementById('bulk-forms-container');
     const subjectText = document.getElementById('bulk-selected-subject-text');
     const processesContainer = document.getElementById('bulk-processes-container');
-    const selectionSection = document.getElementById('bulk-selection-section'); // Seção a ser escondida
+    const selectionSection = document.getElementById('bulk-selection-section'); 
 
     if (container && subjectText && processesContainer && assunto) {
         subjectText.textContent = assunto.texto;
         container.classList.remove('hidden');
-        if (selectionSection) selectionSection.classList.add('hidden'); // Esconde a parte de gerar os processos
+        if (selectionSection) selectionSection.classList.add('hidden'); 
         processesContainer.innerHTML = '';
         for (let i = 1; i <= quantity; i++) processesContainer.appendChild(createBulkProcessForm(i));
     }
@@ -1649,7 +1682,7 @@ async function handleSaveAllBulkEntries() {
 function handleResetBulkForms() {
     const container = document.getElementById('bulk-forms-container');
     const processesContainer = document.getElementById('bulk-processes-container');
-    const selectionSection = document.getElementById('bulk-selection-section'); // Seleção que volta a aparecer
+    const selectionSection = document.getElementById('bulk-selection-section');
     
     if (container) container.classList.add('hidden');
     if (selectionSection) selectionSection.classList.remove('hidden'); 

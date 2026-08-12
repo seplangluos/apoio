@@ -9,6 +9,32 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+
+    <!-- Menu Lateral (Sidebar) -->
+    <aside id="sidebar" class="sidebar hidden">
+        <div class="sidebar-header">
+            <h2>GLUOS</h2>
+            <button id="close-sidebar-btn" class="btn-icon">&times;</button>
+        </div>
+        <div class="sidebar-nav">
+            <a href="#" data-target="dashboard" class="nav-link active">🏠 Dashboard</a>
+            <a href="#" data-target="new-entry" class="nav-link">📝 Novo</a>
+            <a href="#" data-target="bulk-entries" class="nav-link">📝📋 Vários Novos</a>
+            <a href="#" data-target="multi-subject-entries" class="nav-link">📑 Vários Assuntos</a>
+            <a href="#" data-target="search" class="nav-link">🔍 Pesquisa</a>
+            <a href="#" data-target="database" class="nav-link">🗄️ Base de Dados</a>
+            <a href="#" data-target="report" class="nav-link">📊 Relatórios</a>
+            <a href="#" data-target="stats" class="nav-link">📈 Estatísticas</a>
+        </div>
+        <div class="sidebar-footer">
+            <div class="user-profile">
+                <span id="sidebar-user-name">Usuário</span>
+                <button id="sidebar-profile-btn" class="btn-icon" title="Perfil">👤</button>
+            </div>
+            <button id="sidebar-logout-btn" class="btn btn--outline btn--full-width">Sair</button>
+        </div>
+    </aside>
+
     <!-- Tela de Login -->
     <div id="login-screen" class="screen active">
         <div class="login-container">
@@ -64,16 +90,18 @@
     <div class="dashboard-header">
         <div class="container">
             <div class="header-content">
-                <div class="header-info">
-                    <h2>Sistema GLUOS</h2>
-                    <p id="user-info">Bem-vindo!</p>
-                    <p id="datetime-info">Data e hora</p>
-                    <div class="sync-status">
-                        <span id="sync-indicator" class="status-indicator status-indicator--success"></span>
-                        <span id="sync-status-text">Sincronizado</span>
+                <div class="header-info flex items-center gap-16">
+                    <button class="mobile-menu-btn btn btn--outline">☰ Menu</button>
+                    <div>
+                        <h2>Sistema GLUOS</h2>
+                        <p id="user-info">Bem-vindo!</p>
+                        <p id="datetime-info">Data e hora</p>
+                        <div class="sync-status">
+                            <span id="sync-indicator" class="status-indicator status-indicator--success"></span>
+                            <span id="sync-status-text">Sincronizado</span>
+                        </div>
                     </div>
                 </div>
-                <button id="logout-btn" class="btn btn--outline">Sair</button>
             </div>
         </div>
     </div>
@@ -144,8 +172,10 @@
         <div class="screen-header">
             <div class="container">
                 <div class="header-content">
-                    <h2>Nova Entrada</h2>
-                    <button id="back-to-dashboard-1" class="btn btn--outline">Voltar</button>
+                    <div class="flex items-center gap-16">
+                        <button class="mobile-menu-btn btn btn--outline">☰ Menu</button>
+                        <h2>Nova Entrada</h2>
+                    </div>
                 </div>
             </div>
         </div>
@@ -217,8 +247,10 @@
         <div class="screen-header">
             <div class="container">
                 <div class="header-content">
-                    <h2>Múltiplas Entradas</h2>
-                    <button id="back-to-dashboard-2" class="btn btn--outline">Voltar</button>
+                    <div class="flex items-center gap-16">
+                        <button class="mobile-menu-btn btn btn--outline">☰ Menu</button>
+                        <h2>Múltiplas Entradas</h2>
+                    </div>
                 </div>
             </div>
         </div>
@@ -265,8 +297,10 @@
         <div class="screen-header">
             <div class="container">
                 <div class="header-content">
-                    <h2>Pesquisar Processos</h2>
-                    <button id="back-to-dashboard-3" class="btn btn--outline">Voltar</button>
+                    <div class="flex items-center gap-16">
+                        <button class="mobile-menu-btn btn btn--outline">☰ Menu</button>
+                        <h2>Pesquisar Processos</h2>
+                    </div>
                 </div>
             </div>
         </div>
@@ -356,8 +390,10 @@
         <div class="screen-header">
             <div class="container">
                 <div class="header-content">
-                    <h2>Base de Dados Completa</h2>
-                    <button id="back-to-dashboard-4" class="btn btn--outline">Voltar</button>
+                    <div class="flex items-center gap-16">
+                        <button class="mobile-menu-btn btn btn--outline">☰ Menu</button>
+                        <h2>Base de Dados Completa</h2>
+                    </div>
                 </div>
             </div>
         </div>
@@ -459,8 +495,10 @@
         <div class="screen-header">
             <div class="container">
                 <div class="header-content">
-                    <h2>Vários Novos</h2>
-                    <button id="back-to-dashboard-6" class="btn btn--outline">Voltar</button>
+                    <div class="flex items-center gap-16">
+                        <button class="mobile-menu-btn btn btn--outline">☰ Menu</button>
+                        <h2>Vários Novos</h2>
+                    </div>
                 </div>
             </div>
         </div>
@@ -521,8 +559,10 @@
         <div class="screen-header">
             <div class="container">
                 <div class="header-content">
-                    <h2>Relatórios</h2>
-                    <button id="back-to-dashboard-5" class="btn btn--outline">Voltar</button>
+                    <div class="flex items-center gap-16">
+                        <button class="mobile-menu-btn btn btn--outline">☰ Menu</button>
+                        <h2>Relatórios</h2>
+                    </div>
                 </div>
             </div>
         </div>
@@ -594,142 +634,15 @@
         </div>
     </div>
 
-    <!-- Modal de Sucesso -->
-    <div id="success-modal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Sucesso!</h3>
-            </div>
-            <div class="modal-body">
-                <p id="success-message">Operação realizada com sucesso!</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" id="close-modal" class="btn btn--primary">OK</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Perfil -->
-    <div id="profile-modal" class="modal hidden">
-        <div class="modal-content modal-content--large">
-            <div class="modal-header">
-                <h3>Perfil do Usuário</h3>
-            </div>
-            <div class="modal-body">
-                <div class="profile-info">
-                    <p><strong>Usuário:</strong> <span id="profile-username"></span></p>
-                </div>
-                
-                <form id="password-change-form">
-                    <div class="form-group">
-                        <label for="current-password" class="form-label">Senha Atual: *</label>
-                        <input type="password" id="current-password" class="form-control" placeholder="Digite sua senha atual" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="new-password" class="form-label">Nova Senha: *</label>
-                        <input type="password" id="new-password" class="form-control" placeholder="Digite sua nova senha (mín. 6 caracteres)" required minlength="3">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="confirm-password" class="form-label">Confirmar Nova Senha: *</label>
-                        <input type="password" id="confirm-password" class="form-control" placeholder="Confirme sua nova senha" required>
-                    </div>
-                    
-                    <div id="password-error" class="error-message hidden"></div>
-                    
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn--success">
-                            <span id="password-btn-text">Salvar Alterações</span>
-                            <span id="password-loader" class="hidden">Salvando...</span>
-                        </button>
-                        <button type="button" id="cancel-profile" class="btn btn--outline">Cancelar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Edição -->
-    <div id="edit-modal" class="modal hidden">
-        <div class="modal-content modal-content--large">
-            <div class="modal-header">
-                <h3>Editar Entrada</h3>
-            </div>
-            <div class="modal-body">
-                <form id="edit-entry-form">
-                    <input type="hidden" id="edit-entry-id">
-                    
-                    <div class="form-group">
-                        <label for="edit-subject-select" class="form-label">Assunto: *</label>
-                        <select id="edit-subject-select" class="form-control" required></select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="edit-process-number" class="form-label">Nº Processo/Protocolo: *</label>
-                        <input type="text" id="edit-process-number" class="form-control" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="edit-contributor" class="form-label">Contribuinte:</label>
-                        <input type="text" id="edit-contributor" class="form-control">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="edit-ctm" class="form-label">CTM:</label>
-                        <input type="text" id="edit-ctm" class="form-control">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="edit-observation" class="form-label">Observação:</label>
-                        <textarea id="edit-observation" class="form-control" rows="4"></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="edit-habite-number" class="form-label">Número do Habite-se/Alvará:</label>
-                        <input type="text" id="edit-habite-number" class="form-control">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="edit-alvara-situation" class="form-label">Situação do Alvará de Funcionamento/Estudo de Viabilidade:</label>
-                        <select id="edit-alvara-situation" class="form-control">
-                            <option value="">-- Selecione --</option>
-                            <option value="Deferido">Deferido</option>
-                            <option value="Indeferido">Indeferido</option>
-                            <option value="Em Análise">Em Análise</option>
-                            <option value="Pendente">Pendente</option>
-                        </select>
-                    </div>
-                    
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn--success">
-                            <span id="edit-btn-text">Salvar Alterações</span>
-                            <span id="edit-loader" class="hidden">Salvando...</span>
-                        </button>
-                        <button type="button" id="cancel-edit" class="btn btn--outline">Cancelar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Loading Overlay -->
-    <div id="loading-overlay" class="loading-overlay hidden">
-        <div class="loading-content">
-            <div class="loading-spinner"></div>
-            <p>Conectando ao Firebase...</p>
-        </div>
-    </div>
-
-    <script type="module" src="app.js"></script>
-
-<!-- Tela de Novo: Vários assuntos (LADO A LADO: Processo na Esquerda, Assuntos na Direita) -->
+    <!-- Tela de Novo: Vários assuntos (LADO A LADO: Processo na Esquerda, Assuntos na Direita) -->
     <div id="multi-subject-entries-screen" class="screen">
         <div class="screen-header">
             <div class="container multi-subject-wide">
                 <div class="header-content">
-                    <h2>Novo: Vários assuntos</h2>
-                    <button id="back-to-dashboard-7" class="btn btn--outline">Voltar</button>
+                    <div class="flex items-center gap-16">
+                        <button class="mobile-menu-btn btn btn--outline">☰ Menu</button>
+                        <h2>Novo: Vários assuntos</h2>
+                    </div>
                 </div>
             </div>
         </div>
@@ -900,8 +813,10 @@
         <div class="screen-header">
             <div class="container">
                 <div class="header-content">
-                    <h2>Estatísticas do Sistema</h2>
-                    <button id="back-to-dashboard-stats" class="btn btn--outline">Voltar</button>
+                    <div class="flex items-center gap-16">
+                        <button class="mobile-menu-btn btn btn--outline">☰ Menu</button>
+                        <h2>Estatísticas do Sistema</h2>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1004,6 +919,136 @@
             </div>
         </div>
     </div>
+
+    <!-- Modais -->
+    <!-- Modal de Sucesso -->
+    <div id="success-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Sucesso!</h3>
+            </div>
+            <div class="modal-body">
+                <p id="success-message">Operação realizada com sucesso!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="close-modal" class="btn btn--primary">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Perfil -->
+    <div id="profile-modal" class="modal hidden">
+        <div class="modal-content modal-content--large">
+            <div class="modal-header">
+                <h3>Perfil do Usuário</h3>
+            </div>
+            <div class="modal-body">
+                <div class="profile-info">
+                    <p><strong>Usuário:</strong> <span id="profile-username"></span></p>
+                </div>
+                
+                <form id="password-change-form">
+                    <div class="form-group">
+                        <label for="current-password" class="form-label">Senha Atual: *</label>
+                        <input type="password" id="current-password" class="form-control" placeholder="Digite sua senha atual" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="new-password" class="form-label">Nova Senha: *</label>
+                        <input type="password" id="new-password" class="form-control" placeholder="Digite sua nova senha (mín. 6 caracteres)" required minlength="3">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirm-password" class="form-label">Confirmar Nova Senha: *</label>
+                        <input type="password" id="confirm-password" class="form-control" placeholder="Confirme sua nova senha" required>
+                    </div>
+                    
+                    <div id="password-error" class="error-message hidden"></div>
+                    
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn--success">
+                            <span id="password-btn-text">Salvar Alterações</span>
+                            <span id="password-loader" class="hidden">Salvando...</span>
+                        </button>
+                        <button type="button" id="cancel-profile" class="btn btn--outline">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Edição -->
+    <div id="edit-modal" class="modal hidden">
+        <div class="modal-content modal-content--large">
+            <div class="modal-header">
+                <h3>Editar Entrada</h3>
+            </div>
+            <div class="modal-body">
+                <form id="edit-entry-form">
+                    <input type="hidden" id="edit-entry-id">
+                    
+                    <div class="form-group">
+                        <label for="edit-subject-select" class="form-label">Assunto: *</label>
+                        <select id="edit-subject-select" class="form-control" required></select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-process-number" class="form-label">Nº Processo/Protocolo: *</label>
+                        <input type="text" id="edit-process-number" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-contributor" class="form-label">Contribuinte:</label>
+                        <input type="text" id="edit-contributor" class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-ctm" class="form-label">CTM:</label>
+                        <input type="text" id="edit-ctm" class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-observation" class="form-label">Observação:</label>
+                        <textarea id="edit-observation" class="form-control" rows="4"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-habite-number" class="form-label">Número do Habite-se/Alvará:</label>
+                        <input type="text" id="edit-habite-number" class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-alvara-situation" class="form-label">Situação do Alvará de Funcionamento/Estudo de Viabilidade:</label>
+                        <select id="edit-alvara-situation" class="form-control">
+                            <option value="">-- Selecione --</option>
+                            <option value="Deferido">Deferido</option>
+                            <option value="Indeferido">Indeferido</option>
+                            <option value="Em Análise">Em Análise</option>
+                            <option value="Pendente">Pendente</option>
+                        </select>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn--success">
+                            <span id="edit-btn-text">Salvar Alterações</span>
+                            <span id="edit-loader" class="hidden">Salvando...</span>
+                        </button>
+                        <button type="button" id="cancel-edit" class="btn btn--outline">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p>Conectando ao Firebase...</p>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
 
 </body>
 </html>
