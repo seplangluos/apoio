@@ -82,7 +82,6 @@
         <div class="dashboard-content">
             <h3>Selecione uma opção:</h3>
             
-            <!-- Grid de Botões Principais (Botão "Novos" Removido) -->
             <div class="dashboard-buttons">
                 <button id="new-entry-btn" class="btn btn--success btn--lg">
                     <span>📝</span>
@@ -118,7 +117,7 @@
                 </button>
             </div>
 
-            <!-- Campo Guia do Sistema (Abaixo dos Botões) -->
+            <!-- Campo Guia do Sistema -->
             <div class="system-guide-card card">
                 <div class="card__header">
                     <h4>📖 Guia do Sistema</h4>
@@ -457,60 +456,62 @@
 
     <!-- Tela Vários Novos -->
     <div id="bulk-entries-screen" class="screen">
-        <div class="screen-content">
-            <div class="screen-header">
-                <h2>Vários Novos</h2>
-                <p>Crie múltiplas entradas (até 10) com campos opcionais para cada processo</p>
-            </div>
-
-            <div class="content-card">
-                <!-- Seleção de Assunto -->
-                <div class="form-section">
-                    <h3>Seleção do Assunto</h3>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="bulk-subject-number">ID do Assunto (1-50):</label>
-                            <input type="number" id="bulk-subject-number" class="form-control" min="1" max="50" placeholder="Digite o ID">
-                        </div>
-                        <div class="form-group">
-                            <label for="bulk-subject-select">Assunto:</label>
-                            <select id="bulk-subject-select" class="form-control" required>
-                                <option value="">Selecione um assunto...</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="bulk-quantity">Quantidade de processos (1-10):</label>
-                        <input type="number" id="bulk-quantity" class="form-control" min="1" max="10" value="5" placeholder="Digite a quantidade">
-                    </div>
-                    <button type="button" id="generate-bulk-forms" class="btn btn--primary">Gerar Formulários</button>
-                </div>
-
-                <!-- Container dos formulários gerados -->
-                <div id="bulk-forms-container" class="form-section hidden">
-                    <h3>Processos para Cadastro</h3>
-                    <div id="bulk-selected-subject" class="selected-subject">
-                        <strong>Assunto selecionado:</strong> <span id="bulk-selected-subject-text"></span>
-                    </div>
-
-                    <div id="bulk-processes-container"></div>
-
-                    <div class="action-buttons">
-                        <button type="button" id="save-all-bulk" class="btn btn--success btn--lg">
-                            <span>💾</span>
-                            Salvar Todas as Entradas
-                        </button>
-                        <button type="button" id="reset-bulk-forms" class="btn btn--secondary">
-                            Limpar Tudo
-                        </button>
-                    </div>
+        <div class="screen-header">
+            <div class="container">
+                <div class="header-content">
+                    <h2>Vários Novos</h2>
+                    <button id="back-to-dashboard-6" class="btn btn--outline">Voltar</button>
                 </div>
             </div>
+        </div>
 
-            <div class="action-buttons">
-                <button id="back-to-dashboard-6" class="btn btn--secondary">
-                    ← Voltar ao Dashboard
-                </button>
+        <div class="container">
+            <div class="form-container">
+                <div class="content-card card">
+                    <div class="card__body">
+                        <!-- Seleção de Assunto -->
+                        <div id="bulk-selection-section" class="form-section">
+                            <h3 style="margin-bottom: 20px;">Seleção do Assunto</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="bulk-subject-number" class="form-label">ID do Assunto (1-50):</label>
+                                    <input type="number" id="bulk-subject-number" class="form-control" min="1" max="50" placeholder="Digite o ID">
+                                </div>
+                                <div class="form-group">
+                                    <label for="bulk-subject-select" class="form-label">Assunto:</label>
+                                    <select id="bulk-subject-select" class="form-control" required>
+                                        <option value="">Selecione um assunto...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="bulk-quantity" class="form-label">Quantidade de processos (1-10):</label>
+                                <input type="number" id="bulk-quantity" class="form-control" min="1" max="10" value="5" placeholder="Digite a quantidade">
+                            </div>
+                            <button type="button" id="generate-bulk-forms" class="btn btn--primary">Gerar Formulários</button>
+                        </div>
+
+                        <!-- Container dos formulários gerados -->
+                        <div id="bulk-forms-container" class="form-section hidden">
+                            <h3 style="margin-bottom: 15px;">Processos para Cadastro</h3>
+                            <div id="bulk-selected-subject" class="selected-subject">
+                                <strong>Assunto selecionado:</strong> <span id="bulk-selected-subject-text"></span>
+                            </div>
+
+                            <div id="bulk-processes-container"></div>
+
+                            <div class="action-buttons" style="margin-top: 25px; display: flex; gap: 15px;">
+                                <button type="button" id="save-all-bulk" class="btn btn--success btn--lg">
+                                    <span>💾</span>
+                                    Salvar Todas as Entradas
+                                </button>
+                                <button type="button" id="reset-bulk-forms" class="btn btn--secondary btn--lg">
+                                    Limpar Tudo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -722,10 +723,10 @@
 
     <script type="module" src="app.js"></script>
 
-    <!-- Tela de Novo: Vários assuntos -->
+<!-- Tela de Novo: Vários assuntos (LADO A LADO: Processo na Esquerda, Assuntos na Direita) -->
     <div id="multi-subject-entries-screen" class="screen">
         <div class="screen-header">
-            <div class="container">
+            <div class="container multi-subject-wide">
                 <div class="header-content">
                     <h2>Novo: Vários assuntos</h2>
                     <button id="back-to-dashboard-7" class="btn btn--outline">Voltar</button>
@@ -733,13 +734,14 @@
             </div>
         </div>
 
-        <div class="container">
-            <div class="form-container">
-                <form id="multi-subject-form" class="card">
-                    <div class="card-body">
-                        <!-- Dados principais do processo -->
+        <div class="container multi-subject-wide">
+            <form id="multi-subject-form" class="card">
+                <div class="card__body">
+                    <div class="multi-subject-grid">
+                        
+                        <!-- Coluna ESQUERDA: Dados do Processo (1º na ordem do Tab) -->
                         <div class="form-section">
-                            <h3>Dados do Processo</h3>
+                            <h3 class="section-title">Dados do Processo</h3>
 
                             <div class="form-group">
                                 <label for="multi-process-number" class="form-label">Nº Processo/Protocolo *</label>
@@ -747,58 +749,61 @@
                                        placeholder="Informe o número do processo ou protocolo" required>
                             </div>
 
-                            <div class="form-group">
-                                <label for="multi-contributor" class="form-label">Contribuinte</label>
-                                <input type="text" id="multi-contributor" class="form-control" 
-                                       placeholder="Nome do contribuinte">
-                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="multi-contributor" class="form-label">Contribuinte</label>
+                                    <input type="text" id="multi-contributor" class="form-control" 
+                                           placeholder="Nome do contribuinte">
+                                </div>
 
-                            <div class="form-group">
-                                <label for="multi-ctm" class="form-label">CTM</label>
-                                <input type="text" id="multi-ctm" class="form-control" 
-                                       placeholder="CTM">
+                                <div class="form-group">
+                                    <label for="multi-ctm" class="form-label">CTM</label>
+                                    <input type="text" id="multi-ctm" class="form-control" 
+                                           placeholder="CTM">
+                                </div>
                             </div>
 
                             <div class="form-group">
                                 <label for="multi-observation" class="form-label">Observação</label>
-                                <textarea id="multi-observation" class="form-control" rows="3"
+                                <textarea id="multi-observation" class="form-control" rows="2"
                                           placeholder="Digite suas observações aqui..."></textarea>
                             </div>
 
-                            <div class="form-group">
-                                <label for="multi-habite-number" class="form-label">Número do Habite-se/Alvará</label>
-                                <input type="text" id="multi-habite-number" class="form-control" 
-                                       placeholder="Número do Habite-se/Alvará">
-                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="multi-habite-number" class="form-label">Número do Habite-se/Alvará</label>
+                                    <input type="text" id="multi-habite-number" class="form-control" 
+                                           placeholder="Número do Habite-se/Alvará">
+                                </div>
 
-                            <div class="form-group">
-                                <label for="multi-alvara-situation" class="form-label">Situação do Alvará de Funcionamento/Estudo de Viabilidade</label>
-                                <select id="multi-alvara-situation" class="form-control">
-                                    <option value="">-- Selecione --</option>
-                                    <option value="Deferido">Deferido</option>
-                                    <option value="Indeferido">Indeferido</option>
-                                    <option value="Em Análise">Em Análise</option>
-                                    <option value="Pendente">Pendente</option>
-                                </select>
+                                <div class="form-group">
+                                    <label for="multi-alvara-situation" class="form-label">Situação do Alvará/Estudo</label>
+                                    <select id="multi-alvara-situation" class="form-control">
+                                        <option value="">-- Selecione --</option>
+                                        <option value="Deferido">Deferido</option>
+                                        <option value="Indeferido">Indeferido</option>
+                                        <option value="Em Análise">Em Análise</option>
+                                        <option value="Pendente">Pendente</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Seção dos assuntos -->
+                        <!-- Coluna DIREITA: Assuntos (2º na ordem do Tab) -->
                         <div class="form-section">
-                            <h3>Assuntos (até 5)</h3>
-                            <p class="help-text">Preencha os assuntos relacionados a este processo. Você pode usar o ID ou selecionar na lista.</p>
+                            <h3 class="section-title">Assuntos (até 5)</h3>
 
                             <!-- Assunto 1 -->
                             <div class="subject-row">
                                 <h4>Assunto 1</h4>
                                 <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="subject1-id" class="form-label">ID do Assunto (1-50)</label>
+                                    <div class="form-group id-group">
+                                        <label for="subject1-id" class="form-label">ID (1-50)</label>
                                         <input type="number" id="subject1-id" class="form-control subject-id" 
-                                               min="1" max="50" placeholder="Digite o ID">
+                                               min="1" max="50" placeholder="ID">
                                     </div>
-                                    <div class="form-group">
-                                        <label for="subject1-select" class="form-label">Ou selecione o assunto</label>
+                                    <div class="form-group select-group">
+                                        <label for="subject1-select" class="form-label">Selecione o assunto</label>
                                         <select id="subject1-select" class="form-control subject-select">
                                             <option value="">-- Selecione o assunto --</option>
                                         </select>
@@ -810,13 +815,13 @@
                             <div class="subject-row">
                                 <h4>Assunto 2</h4>
                                 <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="subject2-id" class="form-label">ID do Assunto (1-50)</label>
+                                    <div class="form-group id-group">
+                                        <label for="subject2-id" class="form-label">ID (1-50)</label>
                                         <input type="number" id="subject2-id" class="form-control subject-id" 
-                                               min="1" max="50" placeholder="Digite o ID">
+                                               min="1" max="50" placeholder="ID">
                                     </div>
-                                    <div class="form-group">
-                                        <label for="subject2-select" class="form-label">Ou selecione o assunto</label>
+                                    <div class="form-group select-group">
+                                        <label for="subject2-select" class="form-label">Selecione o assunto</label>
                                         <select id="subject2-select" class="form-control subject-select">
                                             <option value="">-- Selecione o assunto --</option>
                                         </select>
@@ -828,13 +833,13 @@
                             <div class="subject-row">
                                 <h4>Assunto 3</h4>
                                 <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="subject3-id" class="form-label">ID do Assunto (1-50)</label>
+                                    <div class="form-group id-group">
+                                        <label for="subject3-id" class="form-label">ID (1-50)</label>
                                         <input type="number" id="subject3-id" class="form-control subject-id" 
-                                               min="1" max="50" placeholder="Digite o ID">
+                                               min="1" max="50" placeholder="ID">
                                     </div>
-                                    <div class="form-group">
-                                        <label for="subject3-select" class="form-label">Ou selecione o assunto</label>
+                                    <div class="form-group select-group">
+                                        <label for="subject3-select" class="form-label">Selecione o assunto</label>
                                         <select id="subject3-select" class="form-control subject-select">
                                             <option value="">-- Selecione o assunto --</option>
                                         </select>
@@ -846,13 +851,13 @@
                             <div class="subject-row">
                                 <h4>Assunto 4</h4>
                                 <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="subject4-id" class="form-label">ID do Assunto (1-50)</label>
+                                    <div class="form-group id-group">
+                                        <label for="subject4-id" class="form-label">ID (1-50)</label>
                                         <input type="number" id="subject4-id" class="form-control subject-id" 
-                                               min="1" max="50" placeholder="Digite o ID">
+                                               min="1" max="50" placeholder="ID">
                                     </div>
-                                    <div class="form-group">
-                                        <label for="subject4-select" class="form-label">Ou selecione o assunto</label>
+                                    <div class="form-group select-group">
+                                        <label for="subject4-select" class="form-label">Selecione o assunto</label>
                                         <select id="subject4-select" class="form-control subject-select">
                                             <option value="">-- Selecione o assunto --</option>
                                         </select>
@@ -864,13 +869,13 @@
                             <div class="subject-row">
                                 <h4>Assunto 5</h4>
                                 <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="subject5-id" class="form-label">ID do Assunto (1-50)</label>
+                                    <div class="form-group id-group">
+                                        <label for="subject5-id" class="form-label">ID (1-50)</label>
                                         <input type="number" id="subject5-id" class="form-control subject-id" 
-                                               min="1" max="50" placeholder="Digite o ID">
+                                               min="1" max="50" placeholder="ID">
                                     </div>
-                                    <div class="form-group">
-                                        <label for="subject5-select" class="form-label">Ou selecione o assunto</label>
+                                    <div class="form-group select-group">
+                                        <label for="subject5-select" class="form-label">Selecione o assunto</label>
                                         <select id="subject5-select" class="form-control subject-select">
                                             <option value="">-- Selecione o assunto --</option>
                                         </select>
@@ -879,124 +884,126 @@
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn--success btn--full-width">
-                            <span id="multi-save-btn-text">Salvar Entradas</span>
-                            <span id="multi-save-loader" class="hidden">Salvando...</span>
-                        </button>
                     </div>
-                </form>
-            </div>
+
+                    <button type="submit" class="btn btn--success btn--full-width" style="margin-top: 20px;">
+                        <span id="multi-save-btn-text">Salvar Entradas</span>
+                        <span id="multi-save-loader" class="hidden">Salvando...</span>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
-<!-- Tela de Estatísticas -->
-<div id="stats-screen" class="screen">
-    <div class="screen-header">
+
+    <!-- Tela de Estatísticas -->
+    <div id="stats-screen" class="screen">
+        <div class="screen-header">
+            <div class="container">
+                <div class="header-content">
+                    <h2>Estatísticas do Sistema</h2>
+                    <button id="back-to-dashboard-stats" class="btn btn--outline">Voltar</button>
+                </div>
+            </div>
+        </div>
+
         <div class="container">
-            <div class="header-content">
-                <h2>Estatísticas do Sistema</h2>
-                <button id="back-to-dashboard-stats" class="btn btn--outline">Voltar</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="container">
-        <!-- Filtro de Mês/Ano -->
-        <div class="card mb-8">
-            <div class="card__body flex items-center gap-16 flex-wrap">
-                <label for="stats-month-filter" class="form-label m-0"><strong>Selecione o Mês/Ano:</strong></label>
-                <input type="month" id="stats-month-filter" class="form-control" style="width: auto;">
-                <button id="stats-filter-btn" class="btn btn--primary btn--sm">Filtrar</button>
-            </div>
-        </div>
-
-        <!-- Quadro de Estatísticas Principais -->
-        <div class="stats-summary-grid">
-            <div class="card stat-card">
-                <div class="card__body text-center">
-                    <span class="stat-icon">📂</span>
-                    <h3 id="stat-total-entries">0</h3>
-                    <p class="stat-label">Total Geral de Entradas</p>
+            <!-- Filtro de Mês/Ano -->
+            <div class="card mb-8">
+                <div class="card__body flex items-center gap-16 flex-wrap">
+                    <label for="stats-month-filter" class="form-label m-0"><strong>Selecione o Mês/Ano:</strong></label>
+                    <input type="month" id="stats-month-filter" class="form-control" style="width: auto;">
+                    <button id="stats-filter-btn" class="btn btn--primary btn--sm">Filtrar</button>
                 </div>
             </div>
-            <div class="card stat-card">
-                <div class="card__body text-center">
-                    <span class="stat-icon">📅</span>
-                    <h3 id="stat-monthly-entries">0</h3>
-                    <p class="stat-label">Entradas no Mês</p>
+
+            <!-- Quadro de Estatísticas Principais -->
+            <div class="stats-summary-grid">
+                <div class="card stat-card">
+                    <div class="card__body text-center">
+                        <span class="stat-icon">📂</span>
+                        <h3 id="stat-total-entries">0</h3>
+                        <p class="stat-label">Total Geral de Entradas</p>
+                    </div>
+                </div>
+                <div class="card stat-card">
+                    <div class="card__body text-center">
+                        <span class="stat-icon">📅</span>
+                        <h3 id="stat-monthly-entries">0</h3>
+                        <p class="stat-label">Entradas no Mês</p>
+                    </div>
+                </div>
+                <div class="card stat-card">
+                    <div class="card__body text-center">
+                        <span class="stat-icon">📊</span>
+                        <h3 id="stat-daily-avg">0</h3>
+                        <p class="stat-label">Média Diária (Dias Ativos)</p>
+                    </div>
                 </div>
             </div>
-            <div class="card stat-card">
-                <div class="card__body text-center">
-                    <span class="stat-icon">📊</span>
-                    <h3 id="stat-daily-avg">0</h3>
-                    <p class="stat-label">Média Diária (Dias Ativos)</p>
+
+            <!-- Quadro Top 10 Assuntos Mensais -->
+            <div class="card mt-8 mb-8">
+                <div class="card__header">
+                    <h4>🏆 Top 10 Assuntos Mais Utilizados no Mês</h4>
+                </div>
+                <div class="card__body">
+                    <ol id="stat-top10-list" class="top10-list">
+                        <li>Nenhum dado encontrado no mês.</li>
+                    </ol>
                 </div>
             </div>
-        </div>
 
-        <!-- Quadro Top 10 Assuntos Mensais -->
-        <div class="card mt-8 mb-8">
-            <div class="card__header">
-                <h4>🏆 Top 10 Assuntos Mais Utilizados no Mês</h4>
-            </div>
-            <div class="card__body">
-                <ol id="stat-top10-list" class="top10-list">
-                    <li>Nenhum dado encontrado no mês.</li>
-                </ol>
-            </div>
-        </div>
-
-        <!-- Gráficos Mensais -->
-        <div class="card mt-8 mb-8">
-            <div class="card__header">
-                <h4>📈 Evolução Diária - Top 1 a 5 Assuntos do Mês</h4>
-            </div>
-            <div class="card__body">
-                <div class="chart-container">
-                    <canvas id="chart-top1-5"></canvas>
+            <!-- Gráficos Mensais -->
+            <div class="card mt-8 mb-8">
+                <div class="card__header">
+                    <h4>📈 Evolução Diária - Top 1 a 5 Assuntos do Mês</h4>
+                </div>
+                <div class="card__body">
+                    <div class="chart-container">
+                        <canvas id="chart-top1-5"></canvas>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="card mt-8 mb-8">
-            <div class="card__header">
-                <h4>📉 Evolução Diária - Top 6 a 10 Assuntos do Mês</h4>
-            </div>
-            <div class="card__body">
-                <div class="chart-container">
-                    <canvas id="chart-top6-10"></canvas>
+            <div class="card mt-8 mb-8">
+                <div class="card__header">
+                    <h4>📉 Evolução Diária - Top 6 a 10 Assuntos do Mês</h4>
+                </div>
+                <div class="card__body">
+                    <div class="chart-container">
+                        <canvas id="chart-top6-10"></canvas>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Tabela Geral de Assuntos com % -->
-        <div class="card mt-8 mb-8">
-            <div class="card__header">
-                <h4>📋 Distribuição Geral por Tipo de Assunto</h4>
-            </div>
-            <div class="card__body">
-                <div class="table-container">
-                    <table class="data-table" id="stats-subject-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Nome do Assunto</th>
-                                <th>Quantidade Total</th>
-                                <th>Porcentagem (%)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Preenchido via JS -->
-                        </tbody>
-                        <tfoot>
-                            <!-- Soma total preenchida via JS -->
-                        </tfoot>
-                    </table>
+            <!-- Tabela Geral de Assuntos com % -->
+            <div class="card mt-8 mb-8">
+                <div class="card__header">
+                    <h4>📋 Distribuição Geral por Tipo de Assunto</h4>
+                </div>
+                <div class="card__body">
+                    <div class="table-container">
+                        <table class="data-table" id="stats-subject-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Nome do Assunto</th>
+                                    <th>Quantidade Total</th>
+                                    <th>Porcentagem (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Preenchido via JS -->
+                            </tbody>
+                            <tfoot>
+                                <!-- Soma total preenchida via JS -->
+                            </tfoot>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-    </body>
+</body>
 </html>

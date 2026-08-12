@@ -1485,10 +1485,12 @@ function handleGenerateBulkForms() {
     const container = document.getElementById('bulk-forms-container');
     const subjectText = document.getElementById('bulk-selected-subject-text');
     const processesContainer = document.getElementById('bulk-processes-container');
+    const selectionSection = document.getElementById('bulk-selection-section'); // Seção a ser escondida
 
     if (container && subjectText && processesContainer && assunto) {
         subjectText.textContent = assunto.texto;
         container.classList.remove('hidden');
+        if (selectionSection) selectionSection.classList.add('hidden'); // Esconde a parte de gerar os processos
         processesContainer.innerHTML = '';
         for (let i = 1; i <= quantity; i++) processesContainer.appendChild(createBulkProcessForm(i));
     }
@@ -1647,8 +1649,12 @@ async function handleSaveAllBulkEntries() {
 function handleResetBulkForms() {
     const container = document.getElementById('bulk-forms-container');
     const processesContainer = document.getElementById('bulk-processes-container');
+    const selectionSection = document.getElementById('bulk-selection-section'); // Seleção que volta a aparecer
+    
     if (container) container.classList.add('hidden');
+    if (selectionSection) selectionSection.classList.remove('hidden'); 
     if (processesContainer) processesContainer.innerHTML = '';
+    
     document.getElementById('bulk-subject-number').value = '';
     document.getElementById('bulk-subject-select').value = '';
     document.getElementById('bulk-quantity').value = '5';
