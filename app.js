@@ -61,9 +61,8 @@ const USER_EMAIL_MAPPING = {
   "Gabriella": "gabriela@hotmail.com",
   "Fabiano": "fabiano@hotmail.com",
   "Andre": "andre@hotmail.com",
-  "Admin": "seplan.gluos@valadares.mg.gov.br"
+  "Admin": "seplan.gluos@valadares.mg.gov.br",
   "Lúcia": "arquitetura.luciaaguilar@gmail.com"
-
 };
 
 // Função para converter email para nome de usuário
