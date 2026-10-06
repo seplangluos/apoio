@@ -2,7 +2,7 @@
 // Integração completa com Firebase - Versão com Firebase Authentication
 // Importações do Firebase v9+
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
-import { getDatabase, ref, push, set, get, update, remove, onValue } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js';
+import { getDatabase, ref, push, set, get, update, remove, onValue, query, orderByChild, equalTo } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js';
 import { getAuth, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
 import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
@@ -19,7 +19,7 @@ const firebaseConfig = {
   appId: "1:200346424322:web:d359faf0c8582c58c0031b"
 };
 
-// Configuração da base de processos (NOVA)
+// Configuração da base de processos
 const firebaseConfigProcessos = {
   apiKey: "AIzaSyAWbo9MCRjE4776A_DpjJCWHPZap-goJDg",
   authDomain: "processos-gluos.firebaseapp.com",
@@ -28,6 +28,17 @@ const firebaseConfigProcessos = {
   storageBucket: "processos-gluos.firebasestorage.app",
   messagingSenderId: "189917349181",
   appId: "1:189917349181:web:efac81f4ed118cb48af154"
+};
+
+// Configuração da base de ENGENHEIROS (NOVA)
+const firebaseConfigEngenheiro = {
+  apiKey: "AIzaSyA0VMrw376nud-wBXrgmuHwMjx4Ca0oPH8",
+  authDomain: "gluos-analistas.firebaseapp.com",
+  databaseURL: "https://gluos-analistas-default-rtdb.firebaseio.com",
+  projectId: "gluos-analistas",
+  storageBucket: "gluos-analistas.firebasestorage.app",
+  messagingSenderId: "897464498657",
+  appId: "1:897464498657:web:64ad17ffc97f44796cfaa0"
 };
 
 // Inicializar Firebase principal
@@ -40,7 +51,7 @@ try {
   console.error('Erro ao inicializar Firebase:', error);
 }
 
-// Inicializar Firebase de processos (NOVO)
+// Inicializar Firebase de processos
 let processosApp, processosDatabase;
 try {
   processosApp = initializeApp(firebaseConfigProcessos, 'processosApp');
@@ -48,6 +59,19 @@ try {
 } catch (error) {
   console.error('Erro ao inicializar Firebase de processos:', error);
 }
+
+// Inicializar Firebase de Engenheiros (NOVO)
+let engenheiroApp, engenheiroDatabase;
+try {
+  engenheiroApp = initializeApp(firebaseConfigEngenheiro, 'engenheiroApp');
+  engenheiroDatabase = getDatabase(engenheiroApp);
+} catch (error) {
+  console.error('Erro ao inicializar Firebase de engenheiros:', error);
+}
+
+// ---> MUDE AQUI PARA O NOME REAL DO NÓ DA SUA BASE DE ENGENHEIROS <---
+const ENGENHEIRO_DB_NODE = 'gluos_entries'; // Supondo que seja o mesmo nome da principal
+
 
 // Mapeamento de usuários para emails
 const USER_EMAIL_MAPPING = {
@@ -61,8 +85,7 @@ const USER_EMAIL_MAPPING = {
   "Gabriella": "gabriela@hotmail.com",
   "Fabiano": "fabiano@hotmail.com",
   "Andre": "andre@hotmail.com",
-  "Admin": "seplan.gluos@valadares.mg.gov.br",
-  "Lúcia": "arquitetura.luciaaguilar@gmail.com"
+  "Admin": "seplan.gluos@valadares.mg.gov.br"
 };
 
 // Função para converter email para nome de usuário
@@ -77,7 +100,7 @@ function emailToUsername(email) {
 
 // Dados da aplicação
 const GLUOS_DATA = {
-  usuarios: ["Eduardo", "Wendel", "Júlia", "Tati", "Sônia", "Rita", "Mara", "Gabriella", "Fabiano", "Andre", "Admin", "Lúcia"],
+  usuarios: ["Eduardo", "Wendel", "Júlia", "Tati", "Sônia", "Rita", "Mara", "Gabriella", "Fabiano", "Andre", "Admin"],
   assuntos: [
     {id: 1, texto: "Separar e Preparar os Processos Agendados no Dia"},
     {id: 2, texto: "Inserção de Avisos de Vistoria na E&L"},
@@ -233,6 +256,7 @@ function setupEventListeners() {
   setupNewEntry();
   setupMultipleEntries();
   setupSearch();
+  setupSearchEng(); // <--- INICIALIZAR NOVA PESQUISA
   setupDatabase();
   setupReports();
   setupBulkEntries();
@@ -253,6 +277,7 @@ function setupMainNavigation() {
     { id: 'bulk-entries-btn', screen: 'bulk-entries' },
     { id: 'multi-subject-entries-btn', screen: 'multi-subject-entries' },
     { id: 'search-btn', screen: 'search' },
+    { id: 'search-eng-btn', screen: 'search-eng' }, // <--- BOTÃO NOVO
     { id: 'database-btn', screen: 'database', callback: loadDatabaseTable },
     { id: 'profile-btn', callback: showProfileModal },
     { id: 'report-btn', screen: 'report' },
@@ -663,10 +688,10 @@ async function handleSaveAllEntries() {
 }
 
 // ===============================================
-// PESQUISA ATUALIZADA (INCLUINDO FILTROS NOVOS)
+// PESQUISA ORIGINAL
 // ===============================================
 function setupSearch() {
-    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabButtons = document.querySelectorAll('.tab-btn:not(.search-eng-tab)');
     tabButtons.forEach(btn => {
         btn.addEventListener('click', function() {
             const tabName = this.dataset.tab;
@@ -679,15 +704,15 @@ function setupSearch() {
 }
 
 function switchSearchTab(tabName) {
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-btn:not(.search-eng-tab)').forEach(btn => btn.classList.remove('active'));
     document.querySelector(`[data-tab="${tabName}"]`)?.classList.add('active');
     
-    document.querySelectorAll('.search-tab').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.search-tab:not(.search-eng-panel)').forEach(tab => tab.classList.remove('active'));
     document.getElementById(tabName + '-search')?.classList.add('active');
 }
 
 async function handleSearch() {
-    const activeTab = document.querySelector('.search-tab.active');
+    const activeTab = document.querySelector('.search-tab:not(.search-eng-panel).active');
     if (!activeTab) return;
     
     const searchBtn = document.getElementById('search-submit');
@@ -725,7 +750,7 @@ async function handleSearch() {
             );
         }
         
-        displaySearchResults(filteredEntries);
+        displaySearchResults(filteredEntries, 'search-table', 'search-results');
         
     } catch (error) {
         alert('Erro ao pesquisar. Tente novamente.');
@@ -734,14 +759,46 @@ async function handleSearch() {
     }
 }
 
-function displaySearchResults(entries) {
-    const resultsContainer = document.getElementById('search-results');
-    const tableBody = document.querySelector('#search-table tbody');
+function displaySearchResults(entries, tableId, containerId) {
+    const resultsContainer = document.getElementById(containerId);
+    const tableBody = document.querySelector(`#${tableId} tbody`);
     
     if (!resultsContainer || !tableBody) return;
     
     tableBody.innerHTML = '';
     
+    // --- LÓGICA DE ORDENAÇÃO DECRESCENTE (Mais Novo -> Mais Antigo) ---
+    entries.sort((a, b) => {
+        // Se o registro tiver timestamp, é a forma mais precisa de ordenar
+        if (a.timestamp && b.timestamp) {
+            return b.timestamp - a.timestamp;
+        }
+        
+        // Fallback: se não tiver timestamp, converte a string de data (DD/MM/YYYY) e hora (HH:MM)
+        const parseDate = (entry) => {
+            if (!entry.date) return 0;
+            const parts = entry.date.split('/');
+            if (parts.length !== 3) return 0;
+            
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1; // Mês no JS começa em 0
+            const year = parseInt(parts[2], 10);
+            
+            let hour = 0, minute = 0;
+            if (entry.time) {
+                const timeParts = entry.time.split(':');
+                if (timeParts.length >= 2) {
+                    hour = parseInt(timeParts[0], 10);
+                    minute = parseInt(timeParts[1], 10);
+                }
+            }
+            return new Date(year, month, day, hour, minute).getTime();
+        };
+        
+        return parseDate(b) - parseDate(a);
+    });
+    // -----------------------------------------------------------------
+
     if (entries.length === 0) {
         tableBody.innerHTML = `<tr><td colspan="8" class="text-center">Nenhum resultado encontrado.</td></tr>`;
     } else {
@@ -763,6 +820,92 @@ function displaySearchResults(entries) {
     
     resultsContainer.classList.remove('hidden');
 }
+
+
+// ===============================================
+// NOVA PESQUISA: ENGENHEIROS (Consulta Direto no Servidor)
+// ===============================================
+function setupSearchEng() {
+    const tabButtons = document.querySelectorAll('.search-eng-tab');
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const tabName = this.dataset.tab;
+            switchSearchEngTab(tabName);
+        });
+    });
+    
+    const searchBtn = document.getElementById('search-submit-eng');
+    if (searchBtn) searchBtn.addEventListener('click', handleSearchEng);
+}
+
+function switchSearchEngTab(tabName) {
+    document.querySelectorAll('.search-eng-tab').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`[data-tab="${tabName}"]`)?.classList.add('active');
+    
+    document.querySelectorAll('.search-eng-panel').forEach(tab => tab.classList.remove('active'));
+    document.getElementById(tabName)?.classList.add('active');
+}
+
+async function handleSearchEng() {
+    if (!engenheiroDatabase) return alert("Erro: O banco de dados de Engenharia não está conectado.");
+
+    const activeTab = document.querySelector('.search-eng-panel.active');
+    if (!activeTab) return;
+    
+    const searchBtn = document.getElementById('search-submit-eng');
+    setButtonLoading(searchBtn, true);
+    
+    let searchField = '';
+    let searchValue = '';
+    
+    try {
+        if (activeTab.id === 'process-search-eng') {
+            searchField = 'processNumber';
+            searchValue = document.getElementById('input-process-eng').value.trim();
+        } else if (activeTab.id === 'date-search-eng') {
+            searchField = 'date';
+            const rawDate = document.getElementById('input-date-eng').value;
+            searchValue = rawDate ? new Date(rawDate + 'T00:00:00').toLocaleDateString('pt-BR') : '';
+        } else if (activeTab.id === 'server-search-eng') {
+            searchField = 'server';
+            searchValue = document.getElementById('input-server-eng').value.trim();
+        } else if (activeTab.id === 'contributor-search-eng') {
+            searchField = 'contributor';
+            searchValue = document.getElementById('input-contributor-eng').value.trim();
+        } else if (activeTab.id === 'ctm-search-eng') {
+            searchField = 'ctm';
+            searchValue = document.getElementById('input-ctm-eng').value.trim();
+        }
+        
+        if (!searchValue) {
+            alert('Por favor, preencha o campo de busca.');
+            setButtonLoading(searchBtn, false);
+            return;
+        }
+
+        // Executa a Query Direto no Servidor para economizar Download do Firebase
+        const dbRef = ref(engenheiroDatabase, ENGENHEIRO_DB_NODE);
+        const engineQuery = query(dbRef, orderByChild(searchField), equalTo(searchValue));
+        
+        const snapshot = await get(engineQuery);
+        let results = [];
+        
+        if (snapshot.exists()) {
+            snapshot.forEach((childSnapshot) => {
+                results.push({ id: childSnapshot.key, ...childSnapshot.val() });
+            });
+        }
+        
+        displaySearchResults(results, 'search-table-eng', 'search-results-eng');
+        
+    } catch (error) {
+        console.error("Erro na busca de engenheiro:", error);
+        alert('Erro ao pesquisar. (Lembre-se de adicionar o .indexOn nas Regras do seu Firebase). Tente novamente.');
+    } finally {
+        setButtonLoading(searchBtn, false);
+    }
+}
+
 
 // Base de dados
 function setupDatabase() {
@@ -846,11 +989,14 @@ window.deleteEntry = async function(entryId) {
 function setupReports() {
     const personalBtn = document.getElementById('personal-report-btn');
     const completeBtn = document.getElementById('complete-report-btn');
+    const subjectBtn = document.getElementById('subject-report-btn');
     const generateBtn = document.getElementById('generate-report-btn');
     
     if (personalBtn) personalBtn.addEventListener('click', () => { currentReportType = 'personal'; showReportForm('Relatório Pessoal'); });
     if (completeBtn) completeBtn.addEventListener('click', () => { currentReportType = 'complete'; showReportForm('Relatório Completo'); });
+    if (subjectBtn) subjectBtn.addEventListener('click', () => { currentReportType = 'subject'; showReportForm('Relatórios por Assunto'); });
     if (generateBtn) generateBtn.addEventListener('click', handleGenerateReport);
+    setupSubjectReportModal();
 }
 
 function showReportForm(title) {
@@ -885,6 +1031,7 @@ async function handleGenerateReport() {
     try {
         if (currentReportType === 'personal') generatePersonalReport(startDate, endDate);
         else if (currentReportType === 'complete') generateCompleteReport(startDate, endDate);
+        else if (currentReportType === 'subject') generateSubjectReport(startDate, endDate);
     } catch (error) {
         alert('Erro ao gerar relatório. Tente novamente.');
     } finally {
@@ -973,6 +1120,7 @@ function displayPersonalReport(reportData, totalEntries, startDate, endDate) {
     }
     
     document.getElementById('report-results').classList.remove('hidden');
+    setupReportTableSorting();
 }
 
 function generateCompleteReport(startDate, endDate) {
@@ -1074,6 +1222,211 @@ function displayCompleteReport(reportData, userTotals, grandTotal, startDate, en
     
     document.getElementById('report-results').classList.remove('hidden');
     document.getElementById('report-summary').classList.add('hidden');
+    setupReportTableSorting();
+}
+
+// Ordenação compartilhada pelos relatórios pessoal, completo e por assunto.
+function setupReportTableSorting() {
+    const table = document.getElementById('report-table');
+    if (!table) return;
+    const headers = [...table.tHead.rows[0].cells];
+    const collator = new Intl.Collator('pt-BR', { numeric: true, sensitivity: 'base' });
+    headers.forEach((header, columnIndex) => {
+        const label = header.textContent.trim();
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'report-sort-button';
+        button.textContent = label;
+        button.title = `Ordenar por ${label}: crescente ou decrescente`;
+        header.replaceChildren(button);
+        header.setAttribute('aria-sort', 'none');
+        header.addEventListener('click', () => {
+            const ascending = header.getAttribute('aria-sort') !== 'ascending';
+            headers.forEach(other => other.setAttribute('aria-sort', 'none'));
+            header.setAttribute('aria-sort', ascending ? 'ascending' : 'descending');
+            const rows = [...table.tBodies[0].rows].filter(row => row.cells.length === headers.length);
+            const sortValue = cell => {
+                if (cell.dataset.sortValue !== undefined) return Number(cell.dataset.sortValue);
+                const value = cell.textContent.trim().replace('%', '').replace(',', '.');
+                return Number(value);
+            };
+            rows.sort((a, b) => {
+                const first = a.cells[columnIndex];
+                const second = b.cells[columnIndex];
+                const result = columnIndex === 0
+                    ? collator.compare(first.textContent.trim(), second.textContent.trim())
+                    : sortValue(first) - sortValue(second);
+                return ascending ? result : -result;
+            });
+            rows.forEach(row => table.tBodies[0].appendChild(row));
+        });
+    });
+}
+
+// Datas cadastradas são normalizadas sem converter uma data civil para UTC.
+function getSubjectReportDate(entry) {
+    const stored = String(entry.date || '').trim();
+    let match = stored.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (match) return `${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}`;
+    match = stored.match(/^(\d{4})-(\d{2})-(\d{2})(?:$|T)/);
+    if (match) return `${match[1]}-${match[2]}-${match[3]}`;
+    if (entry.timestamp == null || entry.timestamp === '') return null;
+    const date = new Date(Number(entry.timestamp));
+    if (!Number.isFinite(date.getTime())) return null;
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function collectSubjectReportEntries(startDate, endDate) {
+    return allEntries.map(entry => ({ entry, date: getSubjectReportDate(entry) }))
+        .filter(item => item.date && item.date >= startDate && item.date <= endDate);
+}
+
+function calculateSubjectReport(startDate, endDate) {
+    const entries = collectSubjectReportEntries(startDate, endDate);
+    const days = new Set(entries.map(item => item.date)).size;
+    const subjects = new Map(GLUOS_DATA.assuntos.map(subject => [String(subject.id), {
+        id: String(subject.id), text: subject.texto, count: 0
+    }]));
+    entries.forEach(({ entry }) => {
+        const id = String(entry.subjectId ?? 'sem-assunto');
+        if (!subjects.has(id)) subjects.set(id, { id, text: entry.subjectText || `Assunto ${id}`, count: 0 });
+        subjects.get(id).count++;
+    });
+    const total = entries.length;
+    const rows = [...subjects.values()].map(subject => ({
+        ...subject, days,
+        average: days > 0 ? subject.count / days : 0,
+        percentage: total > 0 ? subject.count / total * 100 : 0
+    })).sort((a, b) => b.count - a.count);
+    return { rows, total, days, average: rows.reduce((sum, row) => sum + row.average, 0) };
+}
+
+function formatSubjectReportNumber(value) {
+    return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function generateSubjectReport(startDate, endDate) {
+    const data = calculateSubjectReport(startDate, endDate);
+    document.getElementById('report-title').textContent = 'Relatórios por Assunto';
+    document.getElementById('report-meta').innerHTML = `
+        <p><strong>Período:</strong> ${formatDateBR(startDate)} a ${formatDateBR(endDate)}</p>
+        <p><strong>Total de Entradas:</strong> ${data.total}</p>
+        <p><strong>Dias úteis:</strong> ${data.days} datas com entradas na base.</p>
+        <p>Clique em um assunto para consultar os dados mensais por ano.</p>`;
+    document.getElementById('report-table').classList.remove('admin-report-table');
+    document.getElementById('report-table-head').innerHTML = '<tr><th>Assunto</th><th>Total</th><th>Dias úteis</th><th>Média</th><th>%</th></tr>';
+    const body = document.getElementById('report-table-body');
+    body.replaceChildren();
+    data.rows.forEach(subject => {
+        const row = document.createElement('tr');
+        row.className = 'subject-report-row';
+        const nameCell = document.createElement('td');
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'subject-report-link';
+        button.textContent = subject.text;
+        button.title = 'Ver relatório mensal deste assunto';
+        nameCell.appendChild(button);
+        row.appendChild(nameCell);
+        [subject.count, subject.days, subject.average, subject.percentage].forEach((value, index) => {
+            const cell = document.createElement('td');
+            cell.dataset.sortValue = String(value);
+            cell.textContent = index < 2 ? String(value) : `${formatSubjectReportNumber(value)}${index === 3 ? '%' : ''}`;
+            row.appendChild(cell);
+        });
+        row.addEventListener('click', () => showSubjectReportModal(subject, endDate, button));
+        body.appendChild(row);
+    });
+    document.getElementById('report-table-foot').innerHTML = `<tr><th>TOTAL GERAL</th><th>${data.total}</th><th>${data.days}</th><th>${formatSubjectReportNumber(data.average)}</th><th>${data.total > 0 ? '100,00' : '0,00'}%</th></tr>`;
+    document.getElementById('report-summary').classList.add('hidden');
+    document.getElementById('report-results').classList.remove('hidden');
+    setupReportTableSorting();
+}
+
+let activeSubjectReport = null;
+let subjectReportReturnFocus = null;
+
+function calculateSubjectMonthlyReport(subjectId, year) {
+    const entries = collectSubjectReportEntries(`${year}-01-01`, `${year}-12-31`);
+    const months = Array.from({ length: 12 }, () => ({ count: 0, dates: new Set() }));
+    entries.forEach(({ entry, date }) => {
+        const month = months[Number(date.slice(5, 7)) - 1];
+        if (!month) return;
+        month.dates.add(date);
+        if (String(entry.subjectId ?? 'sem-assunto') === String(subjectId)) month.count++;
+    });
+    const rows = months.map(month => ({
+        count: month.count, days: month.dates.size,
+        average: month.dates.size > 0 ? month.count / month.dates.size : 0
+    }));
+    const total = rows.reduce((sum, month) => sum + month.count, 0);
+    const days = rows.reduce((sum, month) => sum + month.days, 0);
+    // Assim como no modelo enviado, a média anual usa o total / dias do ano.
+    return { rows, total, days, average: days > 0 ? total / days : 0 };
+}
+
+function showSubjectReportModal(subject, endDate, returnFocus) {
+    activeSubjectReport = subject;
+    subjectReportReturnFocus = returnFocus;
+    document.getElementById('subject-report-modal-title').textContent = subject.text;
+    const select = document.getElementById('subject-report-year');
+    const selectedYear = Number(endDate.slice(0, 4));
+    const years = new Set([selectedYear, new Date().getFullYear()]);
+    allEntries.forEach(entry => {
+        const date = getSubjectReportDate(entry);
+        if (date) years.add(Number(date.slice(0, 4)));
+    });
+    select.replaceChildren();
+    [...years].sort((a, b) => b - a).forEach(year => {
+        const option = document.createElement('option');
+        option.value = String(year);
+        option.textContent = String(year);
+        select.appendChild(option);
+    });
+    select.value = String(selectedYear);
+    renderSubjectMonthlyReport();
+    document.getElementById('subject-report-modal').classList.remove('hidden');
+    select.focus();
+}
+
+function renderSubjectMonthlyReport() {
+    if (!activeSubjectReport) return;
+    const year = Number(document.getElementById('subject-report-year').value);
+    const data = calculateSubjectMonthlyReport(activeSubjectReport.id, year);
+    const names = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    document.getElementById('subject-monthly-body').innerHTML = data.rows.map((month, index) =>
+        `<tr><td>${names[index]}</td><td>${month.count}</td><td>${month.days}</td><td>${formatSubjectReportNumber(month.average)}</td></tr>`
+    ).join('');
+    document.getElementById('subject-monthly-foot').innerHTML = `<tr><th>TOTAL ANO</th><th>${data.total}</th><th>${data.days}</th><th>${formatSubjectReportNumber(data.average)}</th></tr>`;
+}
+
+function hideSubjectReportModal() {
+    document.getElementById('subject-report-modal').classList.add('hidden');
+    if (subjectReportReturnFocus?.isConnected) subjectReportReturnFocus.focus();
+}
+
+function setupSubjectReportModal() {
+    const modal = document.getElementById('subject-report-modal');
+    if (!modal) return;
+    document.getElementById('subject-report-year').addEventListener('change', renderSubjectMonthlyReport);
+    document.getElementById('close-subject-report-modal').addEventListener('click', hideSubjectReportModal);
+    modal.addEventListener('click', event => {
+        if (event.target === modal) hideSubjectReportModal();
+    });
+    modal.addEventListener('keydown', event => {
+        if (event.key === 'Escape') hideSubjectReportModal();
+        if (event.key === 'Tab') {
+            const select = document.getElementById('subject-report-year');
+            const close = document.getElementById('close-subject-report-modal');
+            if (event.shiftKey && document.activeElement === select) {
+                event.preventDefault();
+                close.focus();
+            } else if (!event.shiftKey && document.activeElement === close) {
+                event.preventDefault();
+                select.focus();
+            }
+        }
+    });
 }
 
 // Perfil
