@@ -152,6 +152,7 @@ const GLUOS_DATA = {
     {id: 48, texto: "Viabilidade Pessoa Física"},
     {id: 49, texto: "Licenciamento (GV)"},
     {id: 50, texto: "Situação Imóvel"},
+    {id: 51, texto: "Estudo indeferido retomado"},
   ]
 };
 
